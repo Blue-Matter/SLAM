@@ -1,0 +1,170 @@
+
+#undef TMB_OBJECTIVE_PTR
+#define TMB_OBJECTIVE_PTR obj
+
+template<class Type>
+matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> SD_LAA,
+                          int n_age, int nlbin) {
+  matrix<Type> ALK(n_age, nlbin);
+  ALK.setZero();
+
+  for(int a=0;a<n_age;a++) {
+    for(int j=0;j<nlbin;j++) {
+      if(j==nlbin-1) {
+        ALK(a,j) = Type(1.0) - pnorm(lbin(j), len_age(a), SD_LAA(a));
+      } else {
+        ALK(a,j) = pnorm(lbin(j+1), len_age(a), SD_LAA(a));
+        if(j>0) ALK(a,j) -= pnorm(lbin(j), len_age(a), SD_LAA(a));
+      }
+    }
+  }
+  return ALK;
+}
+
+template<class Type>
+Type SLAM(objective_function<Type>* obj) {
+
+  // At-Age Schedules
+  DATA_VECTOR(Len_Age);
+  DATA_VECTOR(SD_Len_Age);
+  DATA_VECTOR(Wght_Age);
+  DATA_VECTOR(Mat_at_Age);
+  DATA_VECTOR(M_at_Age); // natural mortality
+  DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
+
+  DATA_INTEGER(n_ages);
+  // Monthly data
+  DATA_VECTOR(CB); // catch-biomass by month
+
+  DATA_INTEGER(n_months);
+  DATA_SCALAR(sigma_C);
+
+  // Assumed Known Parameters
+
+  DATA_VECTOR(LenBins);
+  DATA_VECTOR(LenMids);
+
+  DATA_INTEGER(n_bins);
+  DATA_INTEGER(ts_per_yr);
+
+  // Estimated Parameters (fixed)
+  PARAMETER(log_sl50); // log length-at-50% selectivity
+  PARAMETER(log_sldelta);
+
+
+  PARAMETER_VECTOR(logR0_m); // monthly R0
+  PARAMETER(logsigmaR); // monthly rec dev sd
+
+  PARAMETER_VECTOR(logF_m); // monthly fishing mortality
+
+  // Random Effects
+  PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
+
+  // Transform Parameters
+  vector<Type> R0_m(ts_per_yr);
+  R0_m.setZero();
+  R0_m = exp(logR0_m);
+
+  vector<Type> F_m(n_months);
+  F_m.setZero();
+  F_m = exp(logF_m);
+
+  Type sigmaR = exp(logsigmaR);
+
+  // Selectivity-at-Length
+  Type SL50 = exp(log_sl50);
+  Type SLdelta = exp(log_sldelta);
+  vector<Type> selL(n_bins);
+  selL.setZero();
+
+  for(int l=0;l<n_bins;l++){
+    selL(l) = 1 / (1 + exp(-log(Type(19))*(LenMids(l) - SL50)/SLdelta));
+  }
+
+  // Generate Age-Length Key
+  matrix<Type> ALK(n_ages, n_bins);
+  ALK.setZero();
+  ALK = generate_ALK(LenBins, Len_Age, SD_Len_Age, n_ages, n_bins);
+
+  // Selectivity-at-Age
+  vector<Type> selA(n_ages);
+  selA.setZero();
+  for(int a=0;a<n_ages;a++){
+    vector<Type> temp(n_bins);
+    temp.setZero();
+    temp = ALK.row(a);
+    for(int l=0;l<n_bins;l++){
+      selA(a) += temp(l)*selL(l);
+    }
+  }
+
+  // Population Dynamics - monthly time-step
+  // first month
+  matrix<Type> N_m(n_ages, n_months);
+  N_m.setZero();
+
+  for(int a=0;a<n_ages;a++){
+    if (a==0) {
+      N_m(a,0) = exp(R0_m(0)) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
+    }
+    if ((a>=1)) {
+      N_m(a,0) = N_m(a-1,0) * exp(-M_at_Age(a-1)+F_m(0)*selA(a-1)) * (1-PSM_at_Age(a-1));
+    }
+  }
+
+  // loop over months
+  for (int m=1; m<n_months; m++) {
+    for(int a=0;a<n_ages;a++){
+      if (a==0) {
+        // month index
+        int m_ind = m % 12;
+        N_m(a,m) =  exp(R0_m(m_ind)) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+      }
+      if ((a>=1)) {
+        N_m(a,m) = N_m(a-1,m-1) * exp(-M_at_Age(a-1)+F_m(m)*selA(a-1)) * (1-PSM_at_Age(a-1));
+      }
+    }
+  }
+
+  // Calculate catch
+  matrix<Type> predC_a(n_ages, n_months);
+  matrix<Type> predCB_a(n_ages, n_months);
+  vector<Type> predCB(n_months);
+  predC_a.setZero();
+  predCB_a.setZero();
+  predCB.setZero();
+  for (int m=0; m<n_months; m++) {
+    for(int a=0;a<n_ages;a++){
+      predC_a(a,m) = N_m(a,m)*((1-Mat_at_Age(a))*exp(-M_at_Age(a)/2)+Mat_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-selA(a)*F_m(m)));
+      predCB_a(a,m) = predC_a(a,m) * Wght_Age(a);
+    }
+    predCB(m) = predCB_a.col(m).sum();
+  }
+
+  vector<Type> logPC(n_months);
+  logPC.setZero();
+  // Catch likelihood
+  for(int m=0;m<n_months;m++){
+    logPC(m) = dnorm(log(CB(m)), log(predCB(m)), sigma_C, true);
+  }
+
+  // likelihood
+  Type nll=0;
+  vector<Type> nll_joint(2);
+  nll_joint.setZero();
+
+  nll_joint(0) = Type(-1) * logPC.sum();
+
+  // rec devs
+  for(int m=0;m<n_months;m++){
+    nll_joint(1) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
+  }
+
+  nll = nll_joint.sum();
+
+
+  return(nll);
+}
+
+#undef TMB_OBJECTIVE_PTR
+#define TMB_OBJECTIVE_PTR this
