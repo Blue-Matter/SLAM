@@ -165,6 +165,12 @@ Type SLAM(objective_function<Type>* obj) {
 
   nll = nll_joint.sum();
 
+  REPORT(predCB);
+  REPORT(logRec_Devs);
+  REPORT(N_m);
+  REPORT(nll_joint);
+
+
 
   return(nll);
 }
