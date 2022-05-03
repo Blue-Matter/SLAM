@@ -201,15 +201,15 @@ Type SLAM(objective_function<Type>* obj) {
     CALns(m) = CAL.col(m).sum();
   }
 
-  for (int m=0; m<n_months; m++) {
-    if (CALns(m)>0) {
-      vector<Type> prob = predCAL.col(m);
-      vector<Type> CALm = CAL.col(m);
-      vector<Type> CALm_p = CALm/CALm.sum();
-      vector<Type> CALm_pa = CALm_p*CAL_ESS(m);
-      CALnll(m) -= dmultinom(CALm_pa, prob, true);
-    }
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   if (CALns(m)>0) {
+  //     vector<Type> prob = predCAL.col(m);
+  //     vector<Type> CALm = CAL.col(m);
+  //     vector<Type> CALm_p = CALm/CALm.sum();
+  //     vector<Type> CALm_pa = CALm_p*CAL_ESS(m);
+  //     CALnll(m) -= dmultinom(CALm_pa, prob, true);
+  //   }
+  // }
 
 
 
