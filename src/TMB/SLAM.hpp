@@ -96,7 +96,7 @@ Type SLAM(objective_function<Type>* obj) {
     for(int l=0;l<n_bins;l++){
      ALK_C(a,l) = ALK(a,l)*selL(l);
       Type total = ALK.row(a).sum();
-      ALK_C(a,l) = ALK_C(a,l)/total
+      ALK_C(a,l) = ALK_C(a,l)/total;
     }
   }
 
