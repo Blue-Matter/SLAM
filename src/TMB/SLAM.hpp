@@ -169,6 +169,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(logRec_Devs);
   REPORT(N_m);
   REPORT(nll_joint);
+  REPORT(R0_m);
 
 
 
