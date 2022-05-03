@@ -200,7 +200,9 @@ Type SLAM(objective_function<Type>* obj) {
     vector<Type> CALm = CAL.col(m);
     vector<Type> CALm_p = CALm/CALm.sum();
     vector<Type> CALm_pa = CALm_p*CAL_ESS(m);
-    CALnll(m) -= dmultinom(CALm_pa, prob, true);
+    if (CALm_pa(m)>0) {
+      CALnll(m) -= dmultinom(CALm_pa, prob, true);
+    }
   }
 
 
