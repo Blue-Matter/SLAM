@@ -10,7 +10,7 @@
 #' @examples
 EstModel <- function(data, parameters, random, starts, bounds=NULL) {
 
-  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM",
+  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
                         silent=TRUE, hessian=FALSE, random = random)
 
   step.min <- 1
