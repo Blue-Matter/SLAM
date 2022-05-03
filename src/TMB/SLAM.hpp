@@ -171,6 +171,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(nll_joint);
   REPORT(R0_m);
   REPORT(F_m);
+  REPORT(sigmaR);
 
 
   return(nll);
