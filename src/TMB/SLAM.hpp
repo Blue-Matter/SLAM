@@ -145,7 +145,10 @@ Type SLAM(objective_function<Type>* obj) {
   logPC.setZero();
   // Catch likelihood
   for(int m=0;m<n_months;m++){
-    logPC(m) = dnorm(log(CB(m)), log(predCB(m)), sigma_C, true);
+    if (CB(m)>0) {
+      logPC(m) = dnorm(log(CB(m)), log(predCB(m)), sigma_C, true);
+    }
+
   }
 
   // likelihood
