@@ -31,6 +31,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(Mat_at_Age);
   DATA_VECTOR(M_at_Age); // natural mortality
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
+  DATA_VECTOR(CAL_ESS);
 
   DATA_INTEGER(n_ages);
   // Monthly data
@@ -46,6 +47,8 @@ Type SLAM(objective_function<Type>* obj) {
 
   DATA_INTEGER(n_bins);
   DATA_INTEGER(ts_per_yr);
+
+  DATA_MATRIX(CAL);
 
   // Estimated Parameters (fixed)
   PARAMETER(log_sl50); // log length-at-50% selectivity
@@ -85,6 +88,18 @@ Type SLAM(objective_function<Type>* obj) {
   matrix<Type> ALK(n_ages, n_bins);
   ALK.setZero();
   ALK = generate_ALK(LenBins, Len_Age, SD_Len_Age, n_ages, n_bins);
+
+  // ALK for the catch
+  matrix<Type> ALK_C(n_ages, n_bins);
+  ALK_C.setZero();
+  for(int a=0;a<n_ages;a++){
+    for(int l=0;l<n_bins;l++){
+     ALK_C(a,l) = ALK(a,l)*selL(l);
+      Type total = ALK.row(a).sum();
+      ALK_C(a,l) = ALK_C(a,l)/total
+    }
+  }
+
 
   // Selectivity-at-Age
   vector<Type> selA(n_ages);
@@ -151,17 +166,52 @@ Type SLAM(objective_function<Type>* obj) {
 
   }
 
-  // likelihood
+  // Calculate catch-at-length
+  matrix<Type> predCAL(n_bins, n_months);
+  predCAL.setZero();
+  for (int m=0; m<n_months; m++) {
+    for(int l=0;l<n_bins;l++){
+      for(int a=0;a<n_ages;a++){
+        predCAL(l,n_months) += predC_a(a,m)*ALK_C(a,l);
+      }
+    }
+  }
+
+  for (int m=0; m<n_months; m++) {
+    Type temp = predCAL.col(m).sum();
+    for(int l=0;l<n_bins;l++){
+       predCAL(l,m) = predCAL(l,m)/temp;
+    }
+  }
+
+  // likelihoods
   Type nll=0;
-  vector<Type> nll_joint(2);
+  vector<Type> nll_joint(3);
   nll_joint.setZero();
 
   nll_joint(0) = Type(-1) * logPC.sum();
+
+  // CAL
+  vector<Type> CALnll(n_months);
+  CALnll.setZero();
+
+  for (int m=0; m<n_months; m++) {
+    vector<Type> prob = predCAL.col(m);
+    vector<Type> CALm = CAL.col(m);
+    vector<Type> CALm_p = CALm/CALm.sum();
+    vector<Type> CALm_pa = CALm_p*CAL_ESS(m);
+    CALnll(m) -= dmultinom(CALm_pa, prob, true);
+  }
+
+
 
   // rec devs
   for(int m=0;m<n_months;m++){
     nll_joint(1) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
   }
+
+  // CAL
+  nll_joint(2) = CALnll.sum();
 
   nll = nll_joint.sum();
 
@@ -172,6 +222,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(R0_m);
   REPORT(F_m);
   REPORT(sigmaR);
+  REPORT(predCAL);
+  REPORT(CALnll);
 
 
   return(nll);
