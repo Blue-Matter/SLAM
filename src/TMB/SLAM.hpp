@@ -167,22 +167,22 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // Calculate catch-at-length
-  matrix<Type> predCAL(n_bins, n_months);
-  predCAL.setZero();
-  for (int m=0; m<n_months; m++) {
-    for(int l=0;l<n_bins;l++){
-      for(int a=0;a<n_ages;a++){
-        predCAL(l,n_months) += predC_a(a,m)*ALK_C(a,l);
-      }
-    }
-  }
-
-  for (int m=0; m<n_months; m++) {
-    Type temp = predCAL.col(m).sum();
-    for(int l=0;l<n_bins;l++){
-       predCAL(l,m) = predCAL(l,m)/temp;
-    }
-  }
+  // matrix<Type> predCAL(n_bins, n_months);
+  // predCAL.setZero();
+  // for (int m=0; m<n_months; m++) {
+  //   for(int l=0;l<n_bins;l++){
+  //     for(int a=0;a<n_ages;a++){
+  //       predCAL(l,n_months) += predC_a(a,m)*ALK_C(a,l);
+  //     }
+  //   }
+  // }
+  //
+  // for (int m=0; m<n_months; m++) {
+  //   Type temp = predCAL.col(m).sum();
+  //   for(int l=0;l<n_bins;l++){
+  //      predCAL(l,m) = predCAL(l,m)/temp;
+  //   }
+  // }
 
   // likelihoods
   Type nll=0;
@@ -230,8 +230,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(R0_m);
   REPORT(F_m);
   REPORT(sigmaR);
-  REPORT(predCAL);
-  REPORT(CALnll);
+  // REPORT(predCAL);
+  // REPORT(CALnll);
 
 
   return(nll);
