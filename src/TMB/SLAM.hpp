@@ -24,16 +24,19 @@ matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> 
 template<class Type>
 Type SLAM(objective_function<Type>* obj) {
 
+  // Assumed known biological parameters
+
   // At-Age Schedules
-  DATA_VECTOR(Len_Age);
-  DATA_VECTOR(SD_Len_Age);
-  DATA_VECTOR(Wght_Age);
-  DATA_VECTOR(Mat_at_Age);
-  DATA_VECTOR(M_at_Age); // natural mortality
+  DATA_VECTOR(Len_Age);  // mean length at age
+  DATA_VECTOR(SD_Len_Age); // standard deviation of length at age
+  DATA_VECTOR(Wght_Age);  // mean weight at age
+  DATA_VECTOR(Mat_at_Age);  // maturity at age
+  DATA_VECTOR(M_at_Age); // natural mortality at age
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
+
   DATA_VECTOR(CAL_ESS);
 
-  DATA_INTEGER(n_ages);
+
   // Monthly data
   DATA_VECTOR(CB); // catch-biomass by month
 
@@ -70,6 +73,9 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Random Effects
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
+
+  int n_ages = Len_Age.size();
+
 
   // Transform Parameters
   vector<Type> R0_m(ts_per_yr);
