@@ -50,6 +50,11 @@ Type SLAM(objective_function<Type>* obj) {
 
   DATA_MATRIX(CAL);
 
+  // priors and penalties
+  DATA_VECTOR(sigmaRprior);
+
+
+
   // Estimated Parameters (fixed)
   PARAMETER(log_sl50); // log length-at-50% selectivity
   PARAMETER(log_sldelta);
@@ -59,6 +64,9 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(logsigmaR); // monthly rec dev sd
 
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
+
+  PARAMETER(log_sigmaF); // F standard deviation
+  PARAMETER(log_sigmaR0) // sd for random walk in monthly R0
 
   // Random Effects
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
@@ -71,6 +79,9 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> F_m(n_months);
   F_m.setZero();
   F_m = exp(logF_m);
+
+  Type sigmaF = exp(log_sigmaF);
+  Type sigmaR0 = exp(log_sigmaR0);
 
   Type sigmaR = exp(logsigmaR);
 
@@ -186,7 +197,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // likelihoods
   Type nll=0;
-  vector<Type> nll_joint(3);
+  vector<Type> nll_joint(6);
   nll_joint.setZero();
 
   nll_joint(0) = Type(-1) * logPC.sum();
@@ -221,15 +232,30 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-
+  // CAL
+  nll_joint(2) = CALnll.sum();
 
   // rec devs
   for(int m=0;m<n_months;m++){
     nll_joint(1) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
   }
 
-  // CAL
-  nll_joint(2) = CALnll.sum();
+  Type sigmaRpen;
+  sigmaRpen = 0;
+  sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
+  nll_joint(3) = sigmaRpen;
+
+  // penalty random walk in F
+  for (int m=1; m<n_months; m++) {
+    nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+  }
+
+  // penalty random walk in monthly R0
+  for (int m=1; m<ts_per_yr; m++) {
+    nll_joint(5) -= dnorm(R0_m(m), R0_m(m-1), sigmaR0, true);
+  }
+  nll_joint(5) -= dnorm(R0_m(11), R0_m(0), sigmaR0, true);
+
 
   nll = nll_joint.sum();
 
@@ -245,6 +271,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(sigmaR);
   REPORT(predCAL);
   REPORT(CALnll);
+  REPORT(sigmaF);
+  REPORT(sigmaR0);
 
 
   return(nll);
