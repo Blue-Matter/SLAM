@@ -40,7 +40,7 @@ Type SLAM(objective_function<Type>* obj) {
   // Monthly data
   DATA_VECTOR(CB); // catch-biomass by month
 
-  DATA_INTEGER(n_months);
+
   DATA_SCALAR(sigma_C);
 
   // Assumed Known Parameters
@@ -48,8 +48,6 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(LenBins);
   DATA_VECTOR(LenMids);
 
-  DATA_INTEGER(n_bins);
-  DATA_INTEGER(ts_per_yr);
 
   DATA_MATRIX(CAL);
 
@@ -75,7 +73,9 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
 
   int n_ages = Len_Age.size();
-
+  int n_bins = LenMids.size();
+  int n_months = CB.size();
+  int ts_per_yr = 12.0;
 
   // Transform Parameters
   vector<Type> R0_m(ts_per_yr);
