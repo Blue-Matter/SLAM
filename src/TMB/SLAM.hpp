@@ -200,15 +200,26 @@ Type SLAM(objective_function<Type>* obj) {
 
   vector<Type> CALnll(n_months);
   CALnll.setZero();
-  // for (int m=0; m<n_months; m++) {
-  //   if (CALns(m)>0) {
-  //     vector<Type> prob = predCAL.col(m);
-  //     vector<Type> CALm = CAL.col(m);
-  //     vector<Type> CALm_p = CALm/CALm.sum();
-  //     vector<Type> CALm_pa = CALm_p*CAL_ESS(m);
-  //     CALnll(m) -= dmultinom(CALm_pa, prob, true);
-  //   }
-  // }
+  for (int m=0; m<n_months; m++) {
+    if (CALns(m)>0) {
+      vector<Type> prob(n_bins);
+      vector<Type> CALm(n_bins);
+      vector<Type> CALm_p(n_bins);
+      vector<Type> CALm_pa(n_bins);
+
+      prob.setZero();
+      CALm.setZero();
+      CALm_p.setZero();
+      CALm_pa.setZero();
+
+      prob = predCAL.col(m);
+      CALm = CAL.col(m);
+      CALm_p = CALm/CALm.sum();
+      CALm_pa = CALm_p*CAL_ESS(m);
+
+      CALnll(m) -= dmultinom(CALm_pa, prob, true);
+    }
+  }
 
 
 
@@ -218,7 +229,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // CAL
-  // nll_joint(2) = CALnll.sum();
+  nll_joint(2) = CALnll.sum();
 
   nll = nll_joint.sum();
 
@@ -229,8 +240,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(R0_m);
   REPORT(F_m);
   REPORT(sigmaR);
-  // REPORT(predCAL);
-  // REPORT(CALnll);
+  REPORT(predCAL);
+  REPORT(CALnll);
 
 
   return(nll);
