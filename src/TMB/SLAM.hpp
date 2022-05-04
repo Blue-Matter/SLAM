@@ -192,14 +192,14 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint(0) = Type(-1) * logPC.sum();
 
   // CAL
-  vector<Type> CALnll(n_months);
-  CALnll.setZero();
-
-  vector<Type> CALns(n_months);
-  CALns.setZero();
-  for (int m=0; m<n_months; m++) {
-    CALns(m) = CAL.col(m).sum();
-  }
+  // vector<Type> CALnll(n_months);
+  // CALnll.setZero();
+  //
+  // vector<Type> CALns(n_months);
+  // CALns.setZero();
+  // for (int m=0; m<n_months; m++) {
+  //   CALns(m) = CAL.col(m).sum();
+  // }
 
   // for (int m=0; m<n_months; m++) {
   //   if (CALns(m)>0) {
@@ -219,7 +219,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // CAL
-  nll_joint(2) = CALnll.sum();
+  // nll_joint(2) = CALnll.sum();
 
   nll = nll_joint.sum();
 
