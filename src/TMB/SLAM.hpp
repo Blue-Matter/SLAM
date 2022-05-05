@@ -83,7 +83,7 @@ Type SLAM(objective_function<Type>* obj) {
   // Index variables
   int n_ages = Len_Age.size();
   int n_bins = LenMids.size();
-  int n_months = CB.size();
+  int n_months = CPUE.size();
   int ts_per_yr = 12.0;
 
 
@@ -123,9 +123,9 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // F, M, and Z by month and age
-  matrix<Type> F_ma(n_age, n_months);
-  matrix<Type> M_ma(n_age, n_months);
-  matrix<Type> Z_ma(n_age, n_months);
+  matrix<Type> F_ma(n_ages, n_months);
+  matrix<Type> M_ma(n_ages, n_months);
+  matrix<Type> Z_ma(n_ages, n_months);
   F_ma.setZero();
   M_ma.setZero();
   Z_ma.setZero();
@@ -211,8 +211,8 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> RelEffort(1);
   RelEffort.setZero();
   for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(Effort(m))) {
-      push(RelEffort, F_m(m));
+    if (!R_IsNA(asDouble(Effort(m)))) {
+      push_back(RelEffort, F_m(m));
     }
   }
 
@@ -224,9 +224,14 @@ Type SLAM(objective_function<Type>* obj) {
     StEffort(i) = RelEffort(i)/totEff;
   }
 
-  vector<Type> EffLike(n_months);
+  Type EffLike(n_months);
   EffLike.setZero();
-  EffLike  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(Effort(m)))) {
+      EffLike(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+    }
+  }
+
 
   // CAL
   vector<Type> CALns(n_months);
