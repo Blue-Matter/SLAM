@@ -224,7 +224,7 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> StEffort(n_months);
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      StEffort(m) = RelEffort(m)/totEff
+      StEffort(m) = RelEffort(m)/totEff;
     }
   }
 
