@@ -214,7 +214,7 @@ Type SLAM(objective_function<Type>* obj) {
   RelEffort.setZero();
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      RelEffort.push_back(F_m(m));
+      RelEffort.vector::push_back(F_m(m));
     }
   }
 
