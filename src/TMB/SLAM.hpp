@@ -89,9 +89,6 @@ Type SLAM(objective_function<Type>* obj) {
   Type SL50 = exp(log_sl50);
   Type SLdelta = exp(log_sldelta);
 
-
-
-
   // Selectivity-at-Length
   vector<Type> selL(n_bins);
   selL.setZero();
@@ -211,33 +208,33 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> nll_joint(6);
   nll_joint.setZero();
 
-
-  // Effort
-  vector<Type> RelEffort(nEffMonths);
-  RelEffort.setZero();
-  int i=0;
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      RelEffort(i) = F_m(m);
-      i +=1;
-    }
-  }
-
-  // mean 1
-  Type totEff = RelEffort.sum();
-  int EffRec = RelEffort.size();
-  vector<Type> StEffort(EffRec);
-  for (int i=0; i<EffRec; i++) {
-    StEffort(i) = RelEffort(i)/totEff;
-  }
-
-  vector<Type> EffLike(n_months);
-  EffLike.setZero();
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      EffLike(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
-    }
-  }
+//
+//   // Effort
+//   vector<Type> RelEffort(nEffMonths);
+//   RelEffort.setZero();
+//   int i=0;
+//   for (int m=0; m<n_months; m++) {
+//     if (!R_IsNA(asDouble(Effort(m)))) {
+//       RelEffort(i) = F_m(m);
+//       i +=1;
+//     }
+//   }
+//
+//   // mean 1
+//   Type totEff = RelEffort.sum();
+//   int EffRec = RelEffort.size();
+//   vector<Type> StEffort(EffRec);
+//   for (int i=0; i<EffRec; i++) {
+//     StEffort(i) = RelEffort(i)/totEff;
+//   }
+//
+//   vector<Type> EffLike(n_months);
+//   EffLike.setZero();
+//   for (int m=0; m<n_months; m++) {
+//     if (!R_IsNA(asDouble(Effort(m)))) {
+//       EffLike(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+//     }
+//   }
 
 
   // CAL
@@ -274,46 +271,44 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // likelihoods
-
-
   // nll_joint(0) =  EffLike.sum();
   nll_joint(1) =  CALnll.sum();
-
-  // rec devs
-  for(int m=0;m<n_months;m++){
-    nll_joint(2) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
-  }
-
-  Type sigmaRpen;
-  sigmaRpen = 0;
-  sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
-  nll_joint(3) = sigmaRpen;
-
-  // penalty random walk in F after initial
-  for (int m=2; m<n_months; m++) {
-    nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
-  }
-
-  // penalty random walk in monthly R0
-  for (int m=1; m<ts_per_yr; m++) {
-    nll_joint(5) -= dnorm(R0_m(m), R0_m(m-1), sigmaR0, true);
-  }
-  nll_joint(5) -= dnorm(R0_m(11), R0_m(0), sigmaR0, true);
+//
+//   // rec devs
+//   for(int m=0;m<n_months;m++){
+//     nll_joint(2) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
+//   }
+//
+//   Type sigmaRpen;
+//   sigmaRpen = 0;
+//   sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
+//   nll_joint(3) = sigmaRpen;
+//
+//   // penalty random walk in F after initial
+//   for (int m=2; m<n_months; m++) {
+//     nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+//   }
+//
+//   // penalty random walk in monthly R0
+//   for (int m=1; m<ts_per_yr; m++) {
+//     nll_joint(5) -= dnorm(R0_m(m), R0_m(m-1), sigmaR0, true);
+//   }
+//   nll_joint(5) -= dnorm(R0_m(11), R0_m(0), sigmaR0, true);
 
 
   nll = nll_joint.sum();
-
-  // Reports
-  REPORT(SL50);
-  REPORT(SLdelta);
-  REPORT(F_m);
-  REPORT(predCAL);
-  REPORT(sigmaF);
-  REPORT(R0_m);
-  REPORT(logRec_Devs);
-  REPORT(sigmaR);
-  REPORT(sigmaR0);
-  REPORT(nll_joint);
+//
+//   // Reports
+//   REPORT(SL50);
+//   REPORT(SLdelta);
+//   REPORT(F_m);
+//   REPORT(predCAL);
+//   REPORT(sigmaF);
+//   REPORT(R0_m);
+//   REPORT(logRec_Devs);
+//   REPORT(sigmaR);
+//   REPORT(sigmaR0);
+//   REPORT(nll_joint);
 
   return(nll);
 }
