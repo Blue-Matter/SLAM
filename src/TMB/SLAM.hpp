@@ -218,7 +218,7 @@ Type SLAM(objective_function<Type>* obj) {
   int i=0;
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      RelEffort(i) = F_m(m));
+      RelEffort(i) = F_m(m);
       i +=1;
     }
   }
