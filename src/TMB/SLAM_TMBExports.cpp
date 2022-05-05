@@ -3,7 +3,6 @@
 #define TMB_LIB_INIT R_init_SLAM_TMBExports
 #include <TMB.hpp>
 #include "SLAM.hpp"
-#include <vector>
 
 template<class Type>
 Type objective_function<Type>::operator() () {
