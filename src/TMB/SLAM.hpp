@@ -212,7 +212,7 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // // Effort
-  Type neffmonths=EffExists.sum();
+  int neffmonths=EffExists.sum();
   vector<Type> RelEffort(neffmonths);
   RelEffort.setZero();
   int i=0;
