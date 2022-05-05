@@ -43,7 +43,8 @@ Type SLAM(objective_function<Type>* obj) {
   // Monthly time-series data
   DATA_VECTOR(Effort); // monthly effort - mean 1 over time-series
   DATA_VECTOR(Effort_SD); // monthly effort SD (log-space)
-  DATA_VECTOR(EffExists); // logical (0 and 1) if effor data exists for this month
+  DATA_VECTOR(EffExists); // logical (0 and 1) if effort data exists for this month
+  DATA_INTEGER(nEffMonths); // total number of months
 
 
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
@@ -212,9 +213,7 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // // Effort
-  int neffmonths=0;
-  neffmonths = EffExists.sum();
-  vector<Type> RelEffort(neffmonths);
+  vector<Type> RelEffort(nEffMonths);
   RelEffort.setZero();
   int i=0;
   for (int m=0; m<n_months; m++) {
