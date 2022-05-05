@@ -210,22 +210,22 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // Effort
-  vector<Type> RelEffort(nEffMonths);
+  vector<Type> RelEffort(n_months);
   RelEffort.setZero();
-  int i=0;
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      RelEffort(i) = F_m(m);
-      i +=1;
+      RelEffort(m) = F_m(m);
     }
   }
 
   // mean 1
-  Type totEff = RelEffort.sum();
-  int EffRec = RelEffort.size();
-  vector<Type> StEffort(EffRec);
-  for (int i=0; i<EffRec; i++) {
-    StEffort(i) = RelEffort(i)/totEff;
+  type totEff = 0;
+  totEff = RelEffort.sum();
+  vector<Type> StEffort(n_months);
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(Effort(m)))) {
+      StEffort(m) = RelEffort(m)/totEff
+    }
   }
 
   vector<Type> EffLike(n_months);
