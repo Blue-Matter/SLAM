@@ -64,6 +64,12 @@ Type SLAM(objective_function<Type>* obj) {
   // Random Effects
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
 
+  // Index variables
+  int n_ages = Len_Age.size();
+  int n_bins = LenMids.size();
+  int n_months = CPUE.size();
+  int ts_per_yr = 12.0;
+
   // Transform Parameters
   vector<Type> R0_m(ts_per_yr);
   R0_m.setZero();
@@ -80,11 +86,7 @@ Type SLAM(objective_function<Type>* obj) {
   Type SL50 = exp(log_sl50);
   Type SLdelta = exp(log_sldelta);
 
-  // Index variables
-  int n_ages = Len_Age.size();
-  int n_bins = LenMids.size();
-  int n_months = CPUE.size();
-  int ts_per_yr = 12.0;
+
 
 
   // Selectivity-at-Length
@@ -212,7 +214,7 @@ Type SLAM(objective_function<Type>* obj) {
   RelEffort.setZero();
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      push_back(RelEffort, F_m(m));
+      vector::push_back(RelEffort, F_m(m));
     }
   }
 
@@ -224,7 +226,7 @@ Type SLAM(objective_function<Type>* obj) {
     StEffort(i) = RelEffort(i)/totEff;
   }
 
-  Type EffLike(n_months);
+  vector<Type> EffLike(n_months);
   EffLike.setZero();
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
