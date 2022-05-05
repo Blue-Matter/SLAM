@@ -210,8 +210,8 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // Effort
-  std::vector<T> RelEffort(1);
-  RelEffort.setZero();
+  std::vector RelEffort(1);
+
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
       RelEffort::push_back(F_m(m));
