@@ -211,33 +211,33 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint.setZero();
 
 
-  // Effort
-  Type neffmonths=EffExists.sum();
-  vector<Type> RelEffort(neffmonths);
-  RelEffort.setZero();
-  int i=0;
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      RelEffort(i) = F_m(m);
-      i +=1;
-    }
-  }
-
-  // mean 1
-  Type totEff = RelEffort.sum();
-  int EffRec = RelEffort.size();
-  vector<Type> StEffort(EffRec);
-  for (int i=0; i<EffRec; i++) {
-    StEffort(i) = RelEffort(i)/totEff;
-  }
-
-  vector<Type> EffLike(n_months);
-  EffLike.setZero();
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      EffLike(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
-    }
-  }
+  // // Effort
+  // Type neffmonths=EffExists.sum();
+  // vector<Type> RelEffort(neffmonths);
+  // RelEffort.setZero();
+  // int i=0;
+  // for (int m=0; m<n_months; m++) {
+  //   if (!R_IsNA(asDouble(Effort(m)))) {
+  //     RelEffort(i) = F_m(m);
+  //     i +=1;
+  //   }
+  // }
+  //
+  // // mean 1
+  // Type totEff = RelEffort.sum();
+  // int EffRec = RelEffort.size();
+  // vector<Type> StEffort(EffRec);
+  // for (int i=0; i<EffRec; i++) {
+  //   StEffort(i) = RelEffort(i)/totEff;
+  // }
+  //
+  // vector<Type> EffLike(n_months);
+  // EffLike.setZero();
+  // for (int m=0; m<n_months; m++) {
+  //   if (!R_IsNA(asDouble(Effort(m)))) {
+  //     EffLike(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+  //   }
+  // }
 
 
   // CAL
