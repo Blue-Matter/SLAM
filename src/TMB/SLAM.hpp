@@ -224,12 +224,14 @@ Type SLAM(objective_function<Type>* obj) {
 
   // mean 1
   Type totEff = 0;
-  totEff = RelEffort.mean();
+  totEff = RelEffort.sum();
+  Type Effsize = 0;
+  Effsize = RelEffort.size();
   vector<Type> StEffort(n_months);
   StEffort.setZero();
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      StEffort(m) = RelEffort(m)/totEff;
+      StEffort(m) = RelEffort(m)/Effsize;
     }
   }
 
