@@ -244,7 +244,6 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
 
-
   // CAL
   vector<Type> CALns(n_months);
   CALns.setZero();
@@ -293,9 +292,9 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint(3) = sigmaRpen;
 
   // penalty random walk in F after initial
-  for (int m=2; m<n_months; m++) {
-    nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
-  }
+  // for (int m=2; m<n_months; m++) {
+  //   nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+  // }
 
   // penalty random walk in monthly R0
   for (int m=1; m<ts_per_yr; m++) {
@@ -319,6 +318,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(sigmaR0);
   REPORT(StEffort);
   REPORT(nll_joint);
+  REPORT(N_m);
 
   return(nll);
 }
