@@ -227,11 +227,13 @@ Type SLAM(objective_function<Type>* obj) {
   totEff = RelEffort.sum();
   Type Effsize = 0;
   Effsize = RelEffort.size();
+  Type Effmean = 0;
+  Effmean = totEff/Effsize;
   vector<Type> StEffort(n_months);
   StEffort.setZero();
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      StEffort(m) = RelEffort(m)/Effsize;
+      StEffort(m) = RelEffort(m)/Effmean;
     }
   }
 
@@ -294,9 +296,9 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint(3) = sigmaRpen;
 
   // penalty random walk in F after initial
-  // for (int m=2; m<n_months; m++) {
-  //   nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
-  // }
+  for (int m=2; m<n_months; m++) {
+    nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+  }
 
   // penalty random walk in monthly R0
   for (int m=1; m<ts_per_yr; m++) {
