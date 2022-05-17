@@ -53,6 +53,10 @@ Type SLAM(objective_function<Type>* obj) {
   // priors and penalties
   DATA_VECTOR(sigmaRprior); // prior on sigmaR
 
+  // options
+  DATA_INTEGER(Fit_Effort);
+  DATA_INTEGER(Fit_CPUE);
+
   // Estimated Parameters (fixed)
   PARAMETER(log_sl50); // log length-at-50% selectivity
   PARAMETER(log_sldelta); // logSL95 - SL50
@@ -231,11 +235,14 @@ Type SLAM(objective_function<Type>* obj) {
 
   vector<Type> EffLike(n_months);
   EffLike.setZero();
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      EffLike(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+  if (Fit_Effort>0) {
+    for (int m=0; m<n_months; m++) {
+      if (!R_IsNA(asDouble(Effort(m)))) {
+        EffLike(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+      }
     }
   }
+
 
 
   // CAL
