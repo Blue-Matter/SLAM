@@ -331,7 +331,7 @@ Type SLAM(objective_function<Type>* obj) {
   //
 
 
-  nll_joint(6) = CPUELike.sum();
+  // nll_joint(6) = CPUELike.sum();
 
   nll = nll_joint.sum();
 
