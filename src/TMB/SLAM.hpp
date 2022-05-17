@@ -225,10 +225,8 @@ Type SLAM(objective_function<Type>* obj) {
   // mean 1
   Type totEff = 0;
   totEff = RelEffort.sum();
-  Type Effsize = 0;
-  Effsize = RelEffort.size();
   Type Effmean = 0;
-  Effmean = totEff/Effsize;
+  Effmean = totEff/nEffMonths;
   vector<Type> StEffort(n_months);
   StEffort.setZero();
   for (int m=0; m<n_months; m++) {
