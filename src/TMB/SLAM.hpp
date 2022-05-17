@@ -325,10 +325,10 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint(3) = sigmaRpen;
 
   // penalty random walk in F after initial
-  for (int m=1; m<n_months; m++) {
-    nll_joint(4) -= dnorm(F_m(m), F_m(m-1), Type(0.2), true);
-  }
-
+  // for (int m=1; m<n_months; m++) {
+  //   nll_joint(4) -= dnorm(F_m(m), F_m(m-1), Type(0.2), true);
+  // }
+  //
 
 
   nll_joint(6) = CPUELike.sum();
@@ -352,6 +352,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(stpredCPUE);
   REPORT(CALnll);
   REPORT(Z_ma);
+  REPORT(predCB)
 
 
   return(nll);
