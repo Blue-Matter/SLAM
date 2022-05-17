@@ -224,7 +224,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // mean 1
   Type totEff = 0;
-  totEff = RelEffort.sum();
+  totEff = RelEffort.mean();
   vector<Type> StEffort(n_months);
   StEffort.setZero();
   for (int m=0; m<n_months; m++) {
