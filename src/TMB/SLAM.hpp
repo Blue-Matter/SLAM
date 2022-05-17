@@ -309,8 +309,6 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // CPUE
-
 
   // likelihoods
   nll_joint(0) =  EffLike.sum();
@@ -356,6 +354,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(nll_joint);
   REPORT(N_m);
   REPORT(stpredCPUE);
+  REPORT(CALnll);
+
 
   return(nll);
 }
