@@ -251,7 +251,7 @@ Type SLAM(objective_function<Type>* obj) {
   if (Fit_CPUE>0) {
     for (int m=0; m<n_months; m++) {
       if (!R_IsNA(asDouble(Effort(m)))) {
-        predCPUE(m) = predCB(m)/StEffort(m)
+        predCPUE(m) = predCB(m)/StEffort(m);
       }
     }
   }
