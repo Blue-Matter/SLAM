@@ -303,6 +303,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SL50);
   REPORT(SLdelta);
   REPORT(F_m);
+  REPORT(RelEffort);
   REPORT(predCAL);
   REPORT(sigmaF);
   REPORT(R0_m);
