@@ -152,7 +152,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   for(int a=0;a<n_ages;a++){
     if (a==0) {
-      N_m(a,0) = exp(R0_m(0)); //  * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
+      N_m(a,0) = exp(R0_m(0)) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
     }
     if ((a>=1)) {
       N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
@@ -165,7 +165,7 @@ Type SLAM(objective_function<Type>* obj) {
       if (a==0) {
         // month index
         int m_ind = m % 12;
-        N_m(a,m) =  exp(R0_m(m_ind)); // * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+        N_m(a,m) =  exp(R0_m(m_ind)) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
       }
       if ((a>=1)) {
         N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
@@ -209,7 +209,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Likelihood
   Type nll=0;
-  vector<Type> nll_joint(6);
+  vector<Type> nll_joint(7);
   nll_joint.setZero();
 
 
@@ -245,6 +245,39 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // CPUE
+  vector<Type> predCPUE(n_months);
+  predCPUE.setZero();
+  if (Fit_CPUE>0) {
+    for (int m=0; m<n_months; m++) {
+      if (!R_IsNA(asDouble(Effort(m)))) {
+        predCPUE(m) = predCB(m)/StEffort(m)
+      }
+    }
+  }
+
+  vector<Type> stpredCPUE(n_months);
+  stpredCPUE.setZero();
+  Type totCPUE = 0;
+  totCPUE = predCPUE.sum();
+  Type CPUEmean = 0;
+  CPUEmean = totCPUE/nEffMonths;
+
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(Effort(m)))) {
+      stpredCPUE(m) = predCPUE(m)/CPUEmean;
+    }
+  }
+
+  vector<Type> CPUELike(n_months);
+  CPUELike.setZero();
+  if (Fit_CPUE>0) {
+    for (int m=0; m<n_months; m++) {
+      if (!R_IsNA(asDouble(Effort(m)))) {
+        CPUELike(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
+      }
+    }
+  }
 
   // CAL
   vector<Type> CALns(n_months);
@@ -294,7 +327,7 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint(3) = sigmaRpen;
 
   // penalty random walk in F after initial
-  for (int m=2; m<n_months; m++) {
+  for (int m=1; m<n_months; m++) {
     nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
   }
 
@@ -304,6 +337,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
   nll_joint(5) -= dnorm(R0_m(11), R0_m(0), sigmaR0, true);
 
+  nll_joint(6) = CPUELike.sum();
 
   nll = nll_joint.sum();
 
@@ -321,6 +355,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(StEffort);
   REPORT(nll_joint);
   REPORT(N_m);
+  REPORT(stpredCPUE);
 
   return(nll);
 }
