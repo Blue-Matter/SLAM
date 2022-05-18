@@ -110,8 +110,8 @@ Type SLAM(objective_function<Type>* obj) {
   ALK_C.setZero();
   for(int a=0;a<n_ages;a++){
     for(int l=0;l<n_bins;l++){
-     ALK_C(a,l) = ALK(a,l)*selL(l);
-      Type total = ALK.row(a).sum();
+      ALK_C(a,l) = ALK(a,l)*selL(l);
+      Type total = ALK_C.row(a).sum();
       ALK_C(a,l) = ALK_C(a,l)/total;
     }
   }
@@ -152,7 +152,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   for(int a=0;a<n_ages;a++){
     if (a==0) {
-      N_m(a,0) = 1; // exp(R0_m(0)); //* exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
+      N_m(a,0) = 1; // R0_m(0); //* exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
     }
     if ((a>=1)) {
       N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
@@ -165,7 +165,7 @@ Type SLAM(objective_function<Type>* obj) {
       if (a==0) {
         // month index
         int m_ind = m % 12;
-        N_m(a,m) =  1; // exp(R0_m(m_ind)); //  * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+        N_m(a,m) =  1; // R0_m(m_ind); //  * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
       }
       if ((a>=1)) {
         N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
