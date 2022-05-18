@@ -81,7 +81,11 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> R0_m(ts_per_yr);
   R0_m.setZero();
   R0_m = exp(logR0_m); // monthly mean rec
-
+  Type R0_mtotal = R0_m.sum();
+  // standardize to sum to 1
+  for(int m=0;m<ts_per_yr;m++){
+    R0_m(m) = R0_m(m)/R0_mtotal;
+  }
   vector<Type> F_m(n_months);
   F_m.setZero();
   F_m = exp(logF_m); // monthly fishing mortality
