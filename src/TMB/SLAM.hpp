@@ -334,7 +334,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // penalty random walk in F after initial
   for (int m=1; m<n_months; m++) {
-    nll_joint(5) -= dnorm(F_m(m), F_m(m-1), Type(0.2), true);
+    nll_joint(5) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
   }
 
   nll_joint(6) = CPUELike.sum();
