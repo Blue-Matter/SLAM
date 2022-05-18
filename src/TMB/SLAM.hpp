@@ -377,6 +377,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(ALK_C);
   REPORT(predC_a);
   REPORT(EffLike);
+  REPORT(CPUELike);
 
   return(nll);
 }
