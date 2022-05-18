@@ -352,8 +352,11 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(stpredCPUE);
   REPORT(CALnll);
   REPORT(Z_ma);
-  REPORT(predCB)
-
+  REPORT(predCB);
+  REPORT(selL);
+  REPORT(selA);
+  REPORT(ALK);
+  REPORT(ALK_C);
 
   return(nll);
 }
