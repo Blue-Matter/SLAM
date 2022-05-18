@@ -119,8 +119,6 @@ Type SLAM(objective_function<Type>* obj) {
     ALK_C.row(a) = ALK_C.row(a)/total;
   }
 
-
-
   // Selectivity-at-Age
   vector<Type> selA(n_ages);
   selA.setZero();
@@ -362,6 +360,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(selA);
   REPORT(ALK);
   REPORT(ALK_C);
+  REPORT(predC_a);
 
   return(nll);
 }
