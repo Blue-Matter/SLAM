@@ -173,7 +173,7 @@ Type SLAM(objective_function<Type>* obj) {
       if (a==0) {
         // month index
         int m_ind = m % 12;
-        N_m(a,m) =   R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+        N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
       }
       if ((a>=1)) {
         N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
@@ -376,6 +376,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(ALK);
   REPORT(ALK_C);
   REPORT(predC_a);
+  REPORT(EffLike);
 
   return(nll);
 }
