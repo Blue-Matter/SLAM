@@ -317,15 +317,15 @@ Type SLAM(objective_function<Type>* obj) {
   // nll_joint(0) =  EffLike.sum();
   nll_joint(1) =  CALnll.sum();
 
-  // // rec devs
-  // for(int m=0;m<n_months;m++){
-  //   nll_joint(2) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
-  // }
-  //
-  // Type sigmaRpen;
-  // sigmaRpen = 0;
-  // sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
-  // nll_joint(3) = sigmaRpen;
+  // rec devs
+  for(int m=0;m<n_months;m++){
+    nll_joint(2) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
+  }
+
+  Type sigmaRpen;
+  sigmaRpen = 0;
+  sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
+  nll_joint(3) = sigmaRpen;
 
   // penalty random walk in F after initial
   // for (int m=1; m<n_months; m++) {
