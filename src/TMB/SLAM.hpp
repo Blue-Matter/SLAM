@@ -52,6 +52,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // priors and penalties
   DATA_VECTOR(sigmaRprior); // prior on sigmaR
+  DATA_VECTOR(F_meanprior); // prior on mean F
 
   // options
   DATA_INTEGER(Fit_Effort);
@@ -216,7 +217,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Likelihood
   Type nll=0;
-  vector<Type> nll_joint(7);
+  vector<Type> nll_joint(8);
   nll_joint.setZero();
 
 
@@ -331,6 +332,7 @@ Type SLAM(objective_function<Type>* obj) {
   sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
   nll_joint(3) = sigmaRpen;
 
+
   // R0 pattern
   for(int m=1;m<ts_per_yr;m++){
     nll_joint(4) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
@@ -342,7 +344,12 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(5) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
   }
 
-  nll_joint(6) = CPUELike.sum();
+  // penalty for mean F
+  Type F_mean = 0;
+  F_mean = F_m.sum()/F_m.length();
+  nll_joint(8) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
+
+  nll_joint(7) = CPUELike.sum();
 
   nll = nll_joint.sum();
 
