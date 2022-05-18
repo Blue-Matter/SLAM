@@ -113,12 +113,13 @@ Type SLAM(objective_function<Type>* obj) {
       ALK_C(a,l) = ALK(a,l)*selL(l);
     }
   }
+
   for(int a=0;a<n_ages;a++){
-    for(int l=0;l<n_bins;l++){
-      Type total = ALK_C.row(a).sum();
-      ALK_C(a,l) = ALK_C(a,l)/total;
-    }
+    Type total = ALK_C.row(a).sum();
+    ALK_C.row(a) = ALK_C.row(a)/total;
   }
+
+
 
   // Selectivity-at-Age
   vector<Type> selA(n_ages);
