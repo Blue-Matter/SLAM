@@ -328,9 +328,10 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint(3) = sigmaRpen;
 
   // R0 pattern
-  for(int m=0;m<ts_per_yr;m++){
-    nll_joint(4) -= dnorm(logR0_m(m), Type(0.0), sigmaR0, true);
+  for(int m=1;m<ts_per_yr;m++){
+    nll_joint(4) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
   }
+  nll_joint(4) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
 
   // penalty random walk in F after initial
   for (int m=1; m<n_months; m++) {
