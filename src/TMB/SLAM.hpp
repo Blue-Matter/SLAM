@@ -87,7 +87,7 @@ Type SLAM(objective_function<Type>* obj) {
   F_m = exp(logF_m); // monthly fishing mortality
 
   Type sigmaF = exp(log_sigmaF); // F standard deviation
-  Type sigmaR0 = exp(log_sigmaR0); // sd for random walk in monthly R0
+  Type sigmaR0 = exp(log_sigmaR0); // sd for monthly R0
   Type sigmaR = exp(logsigmaR); // monthly rec dev sd
 
   Type SL50 = exp(log_sl50);
@@ -326,6 +326,11 @@ Type SLAM(objective_function<Type>* obj) {
   sigmaRpen = 0;
   sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
   nll_joint(3) = sigmaRpen;
+
+  // R0 pattern
+  for(int m=0;m<ts_per_yr;m++){
+    nll_joint(4) -= dnorm(logR0_m(m), Type(0.0), sigmaR0, true);
+  }
 
   // penalty random walk in F after initial
   // for (int m=1; m<n_months; m++) {
