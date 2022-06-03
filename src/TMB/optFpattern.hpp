@@ -47,7 +47,7 @@ Type optFpattern(objective_function<Type>* obj) {
   }
 
   // numbers
-  matrix<Type> N_m(n_ages, 36);  // run-out for 3 years to get rid of initial conditions
+  matrix<Type> N_m(n_ages, 12);  // run-out for 3 years to get rid of initial conditions
   N_m.setZero();
 
   for(int a=0;a<n_ages;a++){
@@ -105,6 +105,8 @@ Type optFpattern(objective_function<Type>* obj) {
   }
 
   REPORT(F_m);
+  REPORT(N_m);
+  REPORT(predC_a);
   return(nll);
 
 }
