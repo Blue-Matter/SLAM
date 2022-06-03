@@ -88,12 +88,12 @@ Type optFpattern(objective_function<Type>* obj) {
     predCB(m) = predCB_a.col(m).sum();
   }
 
-  vector<Type> CB(Type(12.0)); // Catch biomass
-  CB.setZero();
-  CB = predCB.segment(25,36);
+  // vector<Type> CB(Type(12.0)); // Catch biomass
+  // CB.setZero();
+  // CB = predCB.segment(25,36);
 
   Type nll=0;
-  Type CBtotal = CB.sum();
+  Type CBtotal = predCB.sum();
   if (opt_type==0) {
     // maximize yield
     nll = -1*CBtotal;
