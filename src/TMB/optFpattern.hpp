@@ -26,14 +26,14 @@ Type optFpattern(objective_function<Type>* obj) {
 
 
 
-  vector<Type> F_m(Type(12.0));
+  vector<Type> F_m(12);
   F_m.setZero();
   F_m = exp(logF_m); // monthly fishing mortality
 
   // F, M, and Z by month and age
-  matrix<Type> F_ma(n_ages, Type(12.0));
-  matrix<Type> M_ma(n_ages, Type(12.0));
-  matrix<Type> Z_ma(n_ages, Type(12.0));
+  matrix<Type> F_ma(n_ages, 12);
+  matrix<Type> M_ma(n_ages, 12);
+  matrix<Type> Z_ma(n_ages, 12);
   F_ma.setZero();
   M_ma.setZero();
   Z_ma.setZero();
@@ -47,7 +47,7 @@ Type optFpattern(objective_function<Type>* obj) {
   }
 
   // numbers
-  matrix<Type> N_m(n_ages, Type(36.0));  // run-out for 3 years to get rid of initial conditions
+  matrix<Type> N_m(n_ages, 36);  // run-out for 3 years to get rid of initial conditions
   N_m.setZero();
 
   for(int a=0;a<n_ages;a++){
