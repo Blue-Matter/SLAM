@@ -16,15 +16,12 @@ Type optFpattern(objective_function<Type>* obj) {
   DATA_VECTOR(utilpow); // power for utility function
 
   // At-Age Schedules
-  DATA_VECTOR(Len_Age);  // mean length at age
-  DATA_VECTOR(SD_Len_Age); // standard deviation of length at age
   DATA_VECTOR(Wght_Age);  // mean weight at age
   DATA_VECTOR(Mat_at_Age);  // maturity at age
   DATA_VECTOR(M_at_Age); // natural mortality at age
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
 
-  DATA_VECTOR(LenBins);
-  DATA_VECTOR(LenMids); // mid-points of the CAL bins
+  DATA_VECTOR(selA); // selectivity-at-age
 
   // Estimated
   PARAMETER_VECTOR(logF_m); // log monthly fishing mortality
@@ -35,30 +32,6 @@ Type optFpattern(objective_function<Type>* obj) {
   vector<Type> F_m(Type(12.0));
   F_m.setZero();
   F_m = exp(logF_m); // monthly fishing mortality
-
-  // Selectivity-at-Length
-  vector<Type> selL(n_bins);
-  selL.setZero();
-  for(int l=0;l<n_bins;l++){
-    selL(l) = 1 / (1 + exp(-log(Type(19.0))*(LenMids(l) - SL50)/SLdelta));
-  }
-
-  // Generate Age-Length Key
-  matrix<Type> ALK(n_ages, n_bins);
-  ALK.setZero();
-  ALK = generate_ALK(LenBins, Len_Age, SD_Len_Age, n_ages, n_bins);
-
-  // Selectivity-at-Age
-  vector<Type> selA(n_ages);
-  selA.setZero();
-  for(int a=0;a<n_ages;a++){
-    vector<Type> temp(n_bins);
-    temp.setZero();
-    temp = ALK.row(a);
-    for(int l=0;l<n_bins;l++){
-      selA(a) += temp(l)*selL(l);
-    }
-  }
 
   // F, M, and Z by month and age
   matrix<Type> F_ma(n_ages, Type(12.0));
