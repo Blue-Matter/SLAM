@@ -21,10 +21,10 @@ Type optFpattern(objective_function<Type>* obj) {
 
   DATA_VECTOR(selA); // selectivity-at-age
   DATA_INTEGER(n_ages);
+
+
   // Estimated
   PARAMETER_VECTOR(logF_m); // log monthly fishing mortality
-
-
 
   vector<Type> F_m(12);
   F_m.setZero();
@@ -93,12 +93,12 @@ Type optFpattern(objective_function<Type>* obj) {
   CB = predCB.segment(25,36);
 
   Type nll=0;
+  Type CBtotal = CB.sum();
   if (opt_type==0) {
     // maximize yield
-    nll = -1*CB.sum();
+    nll = -1*CBtotal;
   } else {
     // maximize HARA utility
-    Type CBtotal = CB.sum();
     Type power = utilpow(0);
     Type HARA = pow(CBtotal, power);
     nll = -1*HARA;
