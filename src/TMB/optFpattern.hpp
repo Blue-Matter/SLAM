@@ -93,7 +93,7 @@ Type optFpattern(objective_function<Type>* obj) {
   // CB = predCB.segment(25,36);
 
   Type nll=0;
-  Type CBtotal = predCB.sum();
+  Type CBtotal = CB.sum();
   if (opt_type==0) {
     // maximize yield
     nll = -1*CBtotal;
@@ -103,6 +103,8 @@ Type optFpattern(objective_function<Type>* obj) {
     Type HARA = pow(CBtotal, power);
     nll = -1*HARA;
   }
+
+  REPORT(F_m);
   return(nll);
 
 }
