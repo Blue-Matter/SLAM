@@ -76,13 +76,13 @@ Type optFpattern(objective_function<Type>* obj) {
   }
 
   // Calculate catch
-  matrix<Type> predC_a(n_ages, n_months);
-  matrix<Type> predCB_a(n_ages, n_months);
-  vector<Type> predCB(n_months);
+  matrix<Type> predC_a(n_ages, 12);
+  matrix<Type> predCB_a(n_ages, 12);
+  vector<Type> predCB(12);
   predC_a.setZero();
   predCB_a.setZero();
   predCB.setZero();
-  for (int m=0; m<n_months; m++) {
+  for (int m=0; m<12; m++) {
     for(int a=0;a<n_ages;a++){
       predC_a(a,m) = N_m(a,m)*((1-Mat_at_Age(a))*exp(-M_ma(a,m)/2)+Mat_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-F_ma(a,m)));
       predCB_a(a,m) = predC_a(a,m) * Wght_Age(a);
