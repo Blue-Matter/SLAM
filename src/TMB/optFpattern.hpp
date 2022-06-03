@@ -131,7 +131,7 @@ Type optFpattern(objective_function<Type>* obj) {
     Type CBtotal = CB.sum();
     Type power = utilpow(0);
     Type HARA = pow(CBtotal, power);
-    nll = -1*HARA
+    nll = -1*HARA;
   }
   return(nll);
 
