@@ -27,7 +27,6 @@ Type optFpattern(objective_function<Type>* obj) {
   PARAMETER_VECTOR(logF_m); // log monthly fishing mortality
 
   int n_ages = Len_Age.size();
-  int n_bins = LenMids.size();
 
   vector<Type> F_m(Type(12.0));
   F_m.setZero();
@@ -63,7 +62,7 @@ Type optFpattern(objective_function<Type>* obj) {
   }
 
   // loop over months
-  for (int m=1; m<n_months; m++) {
+  for (int m=1; m<12; m++) {
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         // month index
