@@ -22,11 +22,11 @@ Type optFpattern(objective_function<Type>* obj) {
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
 
   DATA_VECTOR(selA); // selectivity-at-age
-
+  DATA_INTEGER(n_ages);
   // Estimated
   PARAMETER_VECTOR(logF_m); // log monthly fishing mortality
 
-  int n_ages = Len_Age.size();
+
 
   vector<Type> F_m(Type(12.0));
   F_m.setZero();
