@@ -128,9 +128,9 @@ Type optFpattern(objective_function<Type>* obj) {
     nll = -1*CB.sum();
   } else {
     // maximize HARA utility
-    double CBtotal = CB.sum();
-    double power = utilpow(0);
-    double HARA = pow(CBtotal, power);
+    Type CBtotal = CB.sum();
+    Type power = utilpow(0);
+    Type HARA = pow(CBtotal, power);
     nll = -1*HARA
   }
   return(nll);
