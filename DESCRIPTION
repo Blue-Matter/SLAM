@@ -14,3 +14,6 @@ Imports:
     TMB (>= 1.8.1)
 LinkingTo: 
     TMB
+Depends: 
+    R (>= 2.10)
+LazyData: true
