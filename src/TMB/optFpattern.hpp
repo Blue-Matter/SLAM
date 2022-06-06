@@ -51,21 +51,20 @@ Type optFpattern(objective_function<Type>* obj) {
   N_m.setZero();
 
   // loop over months
-  for (int t=1; m<36; m++) { // run-out for 3 years to get rid of initial conditions
+  for (int t=1; t<36; t++) { // run-out for 3 years to get rid of initial conditions
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         // month index
         int m_ind = t % 12;
         N_m(a,m_ind) = rec_pattern(m_ind);
       }
+      if ((a>=1)) {
       if (t==1) {
-        if ((a>=1)) {
-          N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
-        }
+        N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
+      } else if (m_ind==0){
+        N_m(a,m_ind) = N_m(a-1,11) * exp(-Z_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
       } else {
-        if ((a>=1)) {
-          N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
-        }
+        N_m(a,m_ind) = N_m(a-1,m_ind-1) * exp(-Z_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
       }
     }
   }
