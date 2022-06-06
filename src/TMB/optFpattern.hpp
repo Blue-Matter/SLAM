@@ -89,7 +89,7 @@ Type optFpattern(objective_function<Type>* obj) {
   // CB = predCB.segment(25,36);
 
   vector<Type> util(12);
-  predC_a.util();
+  util.setZero();
   Type nll=0;
   Type CBtotal = predCB.sum();
   if (opt_type==0) {
