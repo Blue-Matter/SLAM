@@ -47,28 +47,25 @@ Type optFpattern(objective_function<Type>* obj) {
   }
 
   // numbers
-  matrix<Type> N_m(n_ages, 12);  // run-out for 3 years to get rid of initial conditions
+  matrix<Type> N_m(n_ages, 12);
   N_m.setZero();
 
-  for(int a=0;a<n_ages;a++){
-    if (a==0) {
-      N_m(a,0) = rec_pattern(0);
-    }
-    if ((a>=1)) {
-      N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
-    }
-  }
-
   // loop over months
-  for (int m=1; m<12; m++) {
+  for (int t=1; m<36; m++) { // run-out for 3 years to get rid of initial conditions
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         // month index
-        int m_ind = m % 12;
-        N_m(a,m) = rec_pattern(m_ind);
+        int m_ind = t % 12;
+        N_m(a,m_ind) = rec_pattern(m_ind);
       }
-      if ((a>=1)) {
-        N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
+      if (t==1) {
+        if ((a>=1)) {
+          N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
+        }
+      } else {
+        if ((a>=1)) {
+          N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
+        }
       }
     }
   }
@@ -105,8 +102,10 @@ Type optFpattern(objective_function<Type>* obj) {
   }
 
   REPORT(F_m);
-  REPORT(N_m);
   REPORT(predC_a);
+  REPORT(predCB);
+  REPORT(N_m);
+  REPORT(nll);
   return(nll);
 
 }
