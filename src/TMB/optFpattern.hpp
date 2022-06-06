@@ -88,6 +88,8 @@ Type optFpattern(objective_function<Type>* obj) {
   // CB.setZero();
   // CB = predCB.segment(25,36);
 
+  vector<Type> util(12);
+  predC_a.util();
   Type nll=0;
   Type CBtotal = predCB.sum();
   if (opt_type==0) {
@@ -95,11 +97,16 @@ Type optFpattern(objective_function<Type>* obj) {
     nll = -1*CBtotal;
   } else {
     // maximize HARA utility
+
     Type power = utilpow(0);
-    Type HARA = pow(CBtotal, power);
+    for (int m=0; m<12; m++) {
+      util(m) = pow(predCB(m), power);
+    }
+    Type HARA = util.sum();
     nll = -1*HARA;
   }
 
+  REPORT(util);
   REPORT(F_m);
   REPORT(predC_a);
   REPORT(predCB);
