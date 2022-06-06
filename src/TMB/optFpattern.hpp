@@ -9,7 +9,7 @@ template<class Type>
 Type optFpattern(objective_function<Type>* obj) {
 
   // Input information
-  DATA_VECTOR(rec_pattern); // fraction of total annual recruitment in each month
+  DATA_VECTOR(Pop$Rec_Pattern); // fraction of total annual recruitment in each month
   DATA_INTEGER(opt_type); // 0 to maximize yield, 1 to maximize HARA utility
   DATA_VECTOR(utilpow); // power for utility function
 
@@ -24,11 +24,14 @@ Type optFpattern(objective_function<Type>* obj) {
 
 
   // Estimated
-  PARAMETER_VECTOR(logF_m); // log monthly fishing mortality
+  PARAMETER(logFbar); // mean monthly F
+  PARAMETER_VECTOR(logF_m); // log monthly fishing mortality deviation
 
   vector<Type> F_m(12);
   F_m.setZero();
   F_m = exp(logF_m); // monthly fishing mortality
+  Type Fbar = 0;
+  Fbar = exp(logFbar);
 
   // F, M, and Z by month and age
   matrix<Type> F_ma(n_ages, 12);
@@ -40,7 +43,7 @@ Type optFpattern(objective_function<Type>* obj) {
 
   for (int m=0; m<12; m++) {
     for(int a=0;a<n_ages;a++){
-      F_ma(a,m) = F_m(m) * selA(a);
+      F_ma(a,m) = Fbar * F_m(m) * selA(a);
       M_ma(a,m) = M_at_Age(a);
       Z_ma(a,m) =  F_ma(a,m) +  M_ma(a,m);
     }
