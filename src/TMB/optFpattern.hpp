@@ -59,12 +59,13 @@ Type optFpattern(objective_function<Type>* obj) {
         N_m(a,m_ind) = rec_pattern(m_ind);
       }
       if ((a>=1)) {
-      if (t==1) {
-        N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
-      } else if (m_ind==0){
-        N_m(a,m_ind) = N_m(a-1,11) * exp(-Z_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
-      } else {
-        N_m(a,m_ind) = N_m(a-1,m_ind-1) * exp(-Z_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
+        if (t==1) {
+          N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
+        } else if (m_ind==0){
+          N_m(a,m_ind) = N_m(a-1,11) * exp(-Z_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
+        } else {
+          N_m(a,m_ind) = N_m(a-1,m_ind-1) * exp(-Z_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
+        }
       }
     }
   }
