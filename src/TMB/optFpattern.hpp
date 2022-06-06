@@ -52,10 +52,9 @@ Type optFpattern(objective_function<Type>* obj) {
 
   // loop over months
   for (int t=1; t<36; t++) { // run-out for 3 years to get rid of initial conditions
+    int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        // month index
-        int m_ind = t % 12;
         N_m(a,m_ind) = rec_pattern(m_ind);
       }
       if ((a>=1)) {
