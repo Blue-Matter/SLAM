@@ -9,7 +9,7 @@ template<class Type>
 Type optFpattern(objective_function<Type>* obj) {
 
   // Input information
-  DATA_VECTOR(Pop$Rec_Pattern); // fraction of total annual recruitment in each month
+  DATA_VECTOR(rec_pattern); // fraction of total annual recruitment in each month
   DATA_INTEGER(opt_type); // 0 to maximize yield, 1 to maximize HARA utility
   DATA_VECTOR(utilpow); // power for utility function
 
@@ -103,6 +103,7 @@ Type optFpattern(objective_function<Type>* obj) {
     nll = -1*HARA;
   }
 
+  REPORT(Fbar);
   REPORT(F_m);
   REPORT(predC_a);
   REPORT(predCB);
