@@ -109,6 +109,7 @@ Type optF(objective_function<Type>* obj) {
       }
       SB_a(a) = N_m(a,m_ind) * Wght_Age(a) * Mat_at_Age(a);
     }
+    SB(m_ind) = SB_a.sum();
     Rec(m_ind) = BHH_SRR(rec_pattern(m_ind), h, SB(m_ind), SBpR);
     N_m(0,m_ind) = Rec(m_ind);
   }
