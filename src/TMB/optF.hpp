@@ -100,7 +100,7 @@ Type optF(objective_function<Type>* obj) {
 
   // with F and SRR
   SB_a.setZero();
-  for (int t=0; t<36; t++) { //
+  for (int t=0; t<60; t++) { // run out to ensure equilibrium
     int m_ind = t % 12; // month index
     for(int a=1;a<n_ages;a++){
       if (m_ind==0) {
