@@ -9,7 +9,7 @@ template<class Type>
 Type objective_function<Type>::operator() () {
   DATA_STRING(model);
   if(model == "optF") {
-    return optFpattern(this);
+    return optF(this);
   } else if(model == "SLAM") {
     return SLAM(this);
   } else {
