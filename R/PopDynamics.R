@@ -178,6 +178,7 @@ Simulate <- function(Pars) {
   out$Effort <- Effort
   out$Rec_Pattern <- rec_pattern
   out$Sel_at_Age <- sA
+  out$Z_at_age <- Z_at_age
   out
 }
 
