@@ -156,6 +156,8 @@ Simulate <- function(Pars) {
   Effort <- Fvector/mean(Fvector)
 
   out <- list()
+  out$E0 <- E0
+  out$Ef <- Ef
   out$Number <- N
   out$Biomass <- B
   out$SB <- SB
