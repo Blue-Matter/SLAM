@@ -101,20 +101,16 @@ Type optF(objective_function<Type>* obj) {
   // with F and SRR
   for (int t=0; t<36; t++) { //
     int m_ind = t % 12; // month index
-    for(int a=0;a<n_ages;a++){
-      if (a==0) {
-        N_m(a,m_ind) = Rec(m_ind);
+    for(int a=1;a<n_ages;a++){
+      if (m_ind==0) {
+        N_m(a,m_ind) = N_m(a-1,11) * exp(-Z_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
       } else {
-        if (m_ind==0) {
-          N_m(a,m_ind) = N_m(a-1,11) * exp(-Z_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
-        } else {
-          N_m(a,m_ind) = N_m(a-1,m_ind-1) * exp(-Z_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
-        }
+        N_m(a,m_ind) = N_m(a-1,m_ind-1) * exp(-Z_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
       }
       SB_a(a) = N_m(a,m_ind) * Wght_Age(a) * Mat_at_Age(a);
     }
-    SB(m_ind) = SB_a.sum();
     Rec(m_ind) = BHH_SRR(rec_pattern(m_ind), h, SB(m_ind), SBpR);
+    N(0,m_ind) = Rec(m_ind);
   }
 
   // Calculate catch
