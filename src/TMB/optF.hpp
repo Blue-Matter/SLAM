@@ -67,11 +67,18 @@ Type optF(objective_function<Type>* obj) {
   vector<Type> surv0(n_ages);
   surv0.setZero();
   surv0(0) = 1;
+  vector<Type> egg0(n_ages);
+  egg0.setZero();
   for (int a=1; a<n_ages; a++) {
     surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
   }
-  Type SBpR = (surv0 * Wght_Age * Mat_at_Age).sum();
+  for (int a=0; a<n_ages; a++) {
+    egg0(a) = surv0(a) * Wght_Age(a) * Mat_at_Age(a);
+  }
+  Type SBpR = egg0.sum();
 
+  vector<Type> SB_a(n_ages);
+  SB_a.setZero();
   // unfished - initialize
   for (int t=0; t<36; t++) { // run-out for 3 years to get rid of initial conditions
     int m_ind = t % 12; // month index
@@ -85,8 +92,9 @@ Type optF(objective_function<Type>* obj) {
           N_m(a,m_ind) = N_m(a-1,m_ind-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
         }
       }
+      SB_a(a) = N_m(a,m_ind) * Wght_Age(a) * Mat_at_Age(a);
     }
-    SB(m_ind) = (N_m.col(m_ind) * Wght_Age * Mat_at_Age).sum();
+    SB(m_ind) = SB_a.sum();
     Rec(m_ind) = BHH_SRR(rec_pattern(m_ind), h, SB(m_ind), SBpR);
   }
 
