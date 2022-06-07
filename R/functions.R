@@ -34,6 +34,7 @@ calSelL <- function(L, LF5, LFS, Vmaxlen, Linf) {
 #'
 #' @examples
 Load_Scenario <- function(scen=1) {
+  Scenario_Parameters <- as.matrix(Scenario_Parameters)
   vars <- Scenario_Parameters[,1]
   vals <- Scenario_Parameters[,scen+1]
   List <- list()
