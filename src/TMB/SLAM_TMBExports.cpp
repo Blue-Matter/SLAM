@@ -2,13 +2,13 @@
 
 #define TMB_LIB_INIT R_init_SLAM_TMBExports
 #include <TMB.hpp>
-#include "optFpattern.hpp"
+#include "optF.hpp"
 #include "SLAM.hpp"
 
 template<class Type>
 Type objective_function<Type>::operator() () {
   DATA_STRING(model);
-  if(model == "optFpattern") {
+  if(model == "optF") {
     return optFpattern(this);
   } else if(model == "SLAM") {
     return SLAM(this);
