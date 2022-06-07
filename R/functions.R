@@ -42,3 +42,21 @@ Load_Scenario <- function(scen=1) {
   }
   List
 }
+
+
+h2CR <- function(h) {
+  (4*h)/(1-h)
+}
+
+CR2h <- function(CR) {
+  CR/(CR+4)
+}
+
+BH_SRR <- function(R0, h, SB, SBpR) {
+  (4*R0*h*SB)/(SBpR*R0*(1-h)+(5*h-1)*SB)
+}
+
+
+
+
+

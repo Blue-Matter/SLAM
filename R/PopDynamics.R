@@ -34,8 +34,8 @@ Simulate <- function(Pars) {
   ALK[,nbins] <- 1 - pnorm((Len_Bins[nbins] - LatAge)/LenSD, 0, 1)
 
   # Maturity
-  pL <- 1/(1+exp(-log(19)*((Len_Mids-Pars$L50)/(Pars$L95-Pars$L50))))
-  pA <- apply(ALK%*%pL, 1, sum)
+  pA <- 1/(1+exp(-log(19)*((Ages-Pars$A50)/(Pars$A95-Pars$A50))))
+  # pL <- 1/(1+exp(-log(19)*((Len_Mids-Pars$L50)/(Pars$L95-Pars$L50))))
 
   # Selectivity - double-normal
   sL <- calSelL(Len_Mids, Pars$SL5, Pars$SFS, Pars$Vmaxlen, Pars$Linf)
@@ -45,6 +45,7 @@ Simulate <- function(Pars) {
   nTS <- Pars$nyears * 12 # total number of time-steps
   N <- matrix(0, nrow=nAge, ncol=nTS)
   C <- N
+  SB <- rep(0, nTS)
 
   # Generate recruitment deviations
   rec_sd <- Pars$sigmaR
@@ -56,14 +57,6 @@ Simulate <- function(Pars) {
 
   M_at_age <- rep(Pars$M, nAge)
   phi_at_age <- pA # proportion that die after spawning - assumed to follow maturity curve
-
-  # Recruitment to all years
-  N[1,] <- rec_pattern * rec_devs * Rbar
-
-  # Initial time-step - unfished
-  for (a in 2:nAge) {
-    N[a,1] <- N[a-1,1]*exp(-M_at_age[a-1])*(1-phi_at_age[a-1])
-  }
 
   # Fishing mortality
   if (is.null(Pars$Fvector)) {
@@ -77,20 +70,65 @@ Simulate <- function(Pars) {
   F_at_age <-  t(replicate(nAge, Fvector)) * sA
   Z_at_age <- M_at_age + F_at_age
 
-  for (t in 2:nTS) {
+  # SPR
+  theta_0 <- rep(1, nAge)
+  theta_F <- matrix(0, nrow=nAge, ncol=nTS)
+  theta_F[1,] <- 1
+  for (a in 2:nAge) {
+    theta_0[a] <- theta_0[a-1]*exp(-M_at_age[a-1])*(1-phi_at_age[a-1])
+  }
+  for (t in 1:nTS) {
+    for (a in 2:nAge) {
+      theta_F[a,t] <- theta_F[a-1,t]*exp(-Z_at_age[a-1,t])*(1-phi_at_age[a-1])
+    }
+  }
+
+  E0 <- sum(theta_0*pA*WatAge)
+  Ef <- apply(theta_F*pA*WatAge, 2, sum)
+  SPR <- Ef/E0
+
+  # Recruitment
+  if (!is.null(Pars$h)) {
+    h <- Pars$h
+  } else {
+    h <- 0.999
+  }
+
+  # Initial time-step - unfished
+  for (t in 1:36) {
     month <- t%%12
     if (month==0) month <-12
     for (a in 0:Pars$maxage) {
       if (a ==0)
-        N[a+1,t] <- rec_pattern[month]*rec_devs[t] * Rbar
-      if (a>0)
-        N[a+1, t] <- N[a,t-1]*exp(-Z_at_age[a,t-1])*(1-phi_at_age[a])
+        N[a+1,month] <- rec_pattern[month]*Rbar* rec_devs[t]
+      if (a>0) {
+        if (month==1) {
+          N[a+1, month] <- N[a,12]*exp(-M_at_age[a])*(1-phi_at_age[a])
+        } else {
+          N[a+1, month] <- N[a,month-1]*exp(-M_at_age[a])*(1-phi_at_age[a])
+        }
+      }
     }
+    SB[month] <- sum(N[,month]*WatAge*pA)*exp(-Fvector[month]/2)
+  }
+
+  # Loop over time-steps
+  for (t in 13:nTS) {
+    month <- t%%12
+    if (month==0) month <-12
+    for (a in 1:Pars$maxage) {
+      N[a+1, t] <- N[a,t-1]*exp(-Z_at_age[a,t-1])*(1-phi_at_age[a])
+    }
+    #SB
+    SB[t] <- sum(N[,t]*WatAge*pA)*exp(-Fvector[t]/2)
+    # recruits
+    N[1,t] <- BH_SRR(R0=Pars$Rbar*rec_pattern[month], h, SB=SB[t], SBpR=E0) * rec_devs[t] # rec_pattern[month]*rec_devs[t] *  Rbar
     C[,t] <- N[,t]*((1-pA)*exp(-M_at_age/2)+pA*exp(-phi_at_age/2))*(1-exp(-F_at_age[,t]))
   }
 
   B <- apply(N * replicate(nTS,WatAge), 2, sum)
   CB <- apply(C * replicate(nTS,WatAge), 2, sum)
+
 
   # Index of Abundance
   I <- B * exp(rnorm(nTS, -0.5*Pars$sigmaI^2, Pars$sigmaI))
@@ -113,22 +151,7 @@ Simulate <- function(Pars) {
       CAL_samp[,t] <- Pars$CAL_nsamp * (rmultinom(1, size=Pars$CAL_ESS, prob=CAL_exp[,t]))/Pars$CAL_ESS
   }
 
-  # SPR
-  theta_0 <- rep(1, nAge)
-  theta_F <- matrix(0, nrow=nAge, ncol=nTS)
-  theta_F[1,] <- 1
-  for (a in 2:nAge) {
-    theta_0[a] <- theta_0[a-1]*exp(-M_at_age[a-1])*(1-phi_at_age[a-1])
-  }
-  for (t in 1:nTS) {
-    for (a in 2:nAge) {
-      theta_F[a,t] <- theta_F[a-1,t]*exp(-Z_at_age[a-1,t])*(1-phi_at_age[a-1])
-    }
-  }
 
-  E0 <- sum(theta_0*pA*WatAge)
-  Ef <- apply(theta_F*pA*WatAge, 2, sum)
-  SPR <- Ef/E0
 
   Effort <- Fvector/mean(Fvector)
 
