@@ -152,6 +152,7 @@ Type optF(objective_function<Type>* obj) {
     nll = -1*HARA;
   }
 
+  REPORT(SBpR);
   REPORT(SB);
   REPORT(Rec);
   REPORT(util);
