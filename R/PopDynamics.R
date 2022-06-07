@@ -158,6 +158,7 @@ Simulate <- function(Pars) {
   out <- list()
   out$Number <- N
   out$Biomass <- B
+  out$SB <- SB
   out$Catch <- C
   out$Catch_Biomass <- CB
   out$CAL_exp <- CAL_exp
