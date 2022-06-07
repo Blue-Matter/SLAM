@@ -67,7 +67,7 @@ Type optF(objective_function<Type>* obj) {
   vector<Type> surv0(n_ages);
   surv0.setZero();
   surv0(0) = 1;
-  for (int a=1; a<n_ages, a++) {
+  for (int a=1; a<n_ages; a++) {
     surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
   }
   Type SBpR = (surv0 * Wght_Age * Mat_at_Age).sum();
