@@ -153,7 +153,7 @@ Simulate <- function(Pars) {
 
 
 
-  Effort <- Fvector/mean(Fvector)
+  Effort <- Fvector/mean(Fvector) *  exp(rnorm(nTS, -0.5*Pars$sigmaE^2, Pars$sigmaE))
 
   out <- list()
   out$E0 <- E0
