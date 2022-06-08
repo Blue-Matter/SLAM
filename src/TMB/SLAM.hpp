@@ -344,6 +344,7 @@ Type SLAM(objective_function<Type>* obj) {
   for(int m=0;m<n_months;m++){
     nll_joint(2) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
   }
+
   //
   // Type sigmaRpen;
   // sigmaRpen = 0;
@@ -362,10 +363,10 @@ Type SLAM(objective_function<Type>* obj) {
   //   nll_joint(5) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
   // }
   //
-  // // penalty for mean F
-  // Type F_mean = 0;
-  // F_mean = F_m.sum()/F_m.size();
-  // nll_joint(6) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
+  // penalty for mean F
+  Type F_mean = 0;
+  F_mean = F_m.sum()/F_m.size();
+  nll_joint(6) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
 
   nll_joint(7) = CPUELike.sum();
 
