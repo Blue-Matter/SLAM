@@ -130,9 +130,31 @@ Type optF(objective_function<Type>* obj) {
     predCB(m) = predCB_a.col(m).sum();
   }
 
-  // vector<Type> CB(Type(12.0)); // Catch biomass
-  // CB.setZero();
-  // CB = predCB.segment(25,36);
+  // Calculate SPR
+  matrix<Type> survF(n_ages, 12);
+  survF.setZero();
+  vector<Type> eggFa(n_ages);
+  eggFa.setZero();
+  vector<Type> eggF(12);
+  eggF.setZero();
+  for (int m=0; m<12; m++) {
+    for(int a=0;a<n_ages;a++){
+      if (a==0) {
+        survF(a,m) = 1;
+      } else {
+        survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-PSM_at_Age(a-1));
+      }
+      eggFa(a) = survF(a,m) * Wght_Age(a) * Mat_at_Age(a);
+    }
+    eggF(m) = eggFa.sum();
+  }
+  vector<Type> SPR(12);
+  SPR.setZero();
+  for (int m=0; m<12; m++) {
+    SPR(m) = eggF(m)/SBpR;
+  }
+
+
 
   vector<Type> util(12);
   util.setZero();
@@ -143,7 +165,6 @@ Type optF(objective_function<Type>* obj) {
     nll = -1*CBtotal;
   } else {
     // maximize HARA utility
-
     Type power = utilpow(0);
     for (int m=0; m<12; m++) {
       util(m) = pow(predCB(m), power);
@@ -152,16 +173,9 @@ Type optF(objective_function<Type>* obj) {
     nll = -1*HARA;
   }
 
-  REPORT(SBpR);
-  REPORT(SB);
-  REPORT(Rec);
-  REPORT(util);
   REPORT(F_m);
-  REPORT(predC_a);
   REPORT(predCB);
-  REPORT(N_m);
-  REPORT(Z_ma);
-  REPORT(nll);
+  REPORT(SPR);
   return(nll);
 
 }
