@@ -81,7 +81,7 @@ Type SLAM(objective_function<Type>* obj) {
   R0_m.setZero();
   R0_m(0) = 1;
   for(int m=1;m<12;m++){
-    R0_m(m) = exp(logR0_m(m)); // monthly mean rec
+    R0_m(m) = exp(logR0_m(m-1)); // monthly mean rec
   }
   Type R0_mtotal = R0_m.sum();
   // standardize to sum to 1
