@@ -175,6 +175,7 @@ Simulate <- function(Pars) {
   out$Wt_at_Age <- WatAge
   out$Mat_at_Age <- pA
   out$phi_at_Age <- phi_at_age
+  out$F_m <- Fvector
   out$Effort <- Effort
   out$Rec_Pattern <- rec_pattern
   out$Sel_at_Age <- sA
