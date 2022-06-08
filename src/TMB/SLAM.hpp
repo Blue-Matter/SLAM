@@ -164,17 +164,24 @@ Type SLAM(objective_function<Type>* obj) {
   matrix<Type> N_m(n_ages, n_months);
   N_m.setZero();
 
-  for(int a=0;a<n_ages;a++){
-    if (a==0) {
-      N_m(a,0) = R0_m(0)* exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
-    }
-    if ((a>=1)) {
-      N_m(a,0) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
+  // initialize - unfished
+  for (int t=0; t<36; t++) { // run-out for 3 years to get rid of initial conditions
+    int m_ind = t % 12; // month index
+    for(int a=0;a<n_ages;a++){
+      if (a==0) {
+        N_m(a,m_ind) = R0_m(m_ind);
+      } else {
+        if (m_ind==0) {
+          N_m(a,m_ind) = N_m(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
+        } else {
+          N_m(a,m_ind) = N_m(a-1,m_ind-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
+        }
+      }
     }
   }
 
   // loop over months
-  for (int m=1; m<n_months; m++) {
+  for (int m=0; m<n_months; m++) {
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         // month index
@@ -182,7 +189,12 @@ Type SLAM(objective_function<Type>* obj) {
         N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
       }
       if ((a>=1)) {
-        N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
+        if (m==0) {
+          N_m(a,m) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
+        } else {
+          N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
+        }
+
       }
     }
   }
