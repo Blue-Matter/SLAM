@@ -3,7 +3,7 @@
 #define TMB_OBJECTIVE_PTR obj
 
 template<class Type>
-Type BHH_SRR(Type R0, Type h, Type SB, Type SBpR) {
+Type BH_SRR(Type R0, Type h, Type SB, Type SBpR) {
   Type Rec = 0;
   Rec = (4*R0*h*SB)/(SBpR*R0*(1-h)+(5*h-1)*SB);
   return(Rec);
@@ -95,12 +95,12 @@ Type optF(objective_function<Type>* obj) {
       SB_a(a) = N_m(a,m_ind) * Wght_Age(a) * Mat_at_Age(a);
     }
     SB(m_ind) = SB_a.sum()*exp(-F_m(m_ind)/2);
-    Rec(m_ind) = BHH_SRR(rec_pattern(m_ind), h, SB(m_ind), SBpR);
+    Rec(m_ind) = BH_SRR(rec_pattern(m_ind), h, SB(m_ind), SBpR);
   }
 
   // with F and SRR
   SB_a.setZero();
-  for (int t=0; t<60; t++) { // run out to ensure equilibrium
+  for (int t=0; t<120; t++) { // run out to ensure equilibrium
     int m_ind = t % 12; // month index
     for(int a=1;a<n_ages;a++){
       if (m_ind==0) {
