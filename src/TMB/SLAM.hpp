@@ -60,7 +60,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(log_sl50); // log length-at-50% selectivity
   PARAMETER(log_sldelta); // logSL95 - SL50
 
-  PARAMETER_VECTOR(logR0_m); // monthly R0 - fraction
+  PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
   PARAMETER(log_sigmaR0) // sd for random walk in monthly R0
   PARAMETER(logsigmaR); // monthly rec dev sd
 
@@ -77,12 +77,16 @@ Type SLAM(objective_function<Type>* obj) {
   int ts_per_yr = 12.0;
 
   // Transform Parameters
+  vector<Type> logR0_m(ts_per_yr);
+  logR0_m.setZero();
+
+  for(int m=1;m<12;m++){
+    logR0_m(m) = logR0_m_est(m-1); // monthly mean rec
+  }
   vector<Type> R0_m(ts_per_yr);
   R0_m.setZero();
-  R0_m(0) = 1;
-  for(int m=1;m<12;m++){
-    R0_m(m) = exp(logR0_m(m-1)); // monthly mean rec
-  }
+  R0_m = exp(logR0_m);
+
   Type R0_mtotal = R0_m.sum();
   // standardize to sum to 1
   for(int m=0;m<ts_per_yr;m++){
