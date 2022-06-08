@@ -2,7 +2,25 @@
 #undef TMB_OBJECTIVE_PTR
 #define TMB_OBJECTIVE_PTR obj
 
-#include "include/functions.hpp"
+template<class Type>
+matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> SD_LAA,
+                          int n_age, int nlbin) {
+  matrix<Type> ALK(n_age, nlbin);
+  ALK.setZero();
+
+  for(int a=0;a<n_age;a++) {
+    for(int j=0;j<nlbin;j++) {
+      if(j==nlbin-1) {
+        ALK(a,j) = Type(1.0) - pnorm(lbin(j), len_age(a), SD_LAA(a));
+      } else {
+        ALK(a,j) = pnorm(lbin(j+1), len_age(a), SD_LAA(a));
+        if(j>0) ALK(a,j) -= pnorm(lbin(j), len_age(a), SD_LAA(a));
+      }
+    }
+  }
+  return ALK;
+}
+
 
 template<class Type>
 Type SLAM(objective_function<Type>* obj) {
@@ -19,16 +37,13 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(LenBins);
   DATA_VECTOR(LenMids); // mid-points of the CAL bins
   DATA_MATRIX(CAL);    // CAL observations for each bin and month
-
-
-  DATA_VECTOR(CAL_ESS); // TODO !
+  DATA_VECTOR(CAL_ESS); // number of independent observation of length samples in each month
 
   // Monthly time-series data
   DATA_VECTOR(Effort); // monthly effort - mean 1 over time-series
   DATA_VECTOR(Effort_SD); // monthly effort SD (log-space)
   DATA_VECTOR(EffExists); // logical (0 and 1) if effort data exists for this month
   DATA_INTEGER(nEffMonths); // total number of months
-
 
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
@@ -45,7 +60,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(log_sl50); // log length-at-50% selectivity
   PARAMETER(log_sldelta); // logSL95 - SL50
 
-  PARAMETER_VECTOR(logR0_m); // monthly R0
+  PARAMETER_VECTOR(logR0_m); // monthly R0 - fraction
   PARAMETER(log_sigmaR0) // sd for random walk in monthly R0
   PARAMETER(logsigmaR); // monthly rec dev sd
 
@@ -64,12 +79,16 @@ Type SLAM(objective_function<Type>* obj) {
   // Transform Parameters
   vector<Type> R0_m(ts_per_yr);
   R0_m.setZero();
-  R0_m = exp(logR0_m); // monthly mean rec
+  R0_m(0) = 1;
+  for(int m=1;m<12;m++){
+    R0_m(m) = exp(logR0_m(m)); // monthly mean rec
+  }
   Type R0_mtotal = R0_m.sum();
   // standardize to sum to 1
   for(int m=0;m<ts_per_yr;m++){
     R0_m(m) = R0_m(m)/R0_mtotal;
   }
+
   vector<Type> F_m(n_months);
   F_m.setZero();
   F_m = exp(logF_m); // monthly fishing mortality
