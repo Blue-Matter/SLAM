@@ -338,7 +338,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // likelihoods
   nll_joint(0) =  EffLike.sum();
-  // nll_joint(1) =  CALnll.sum();
+  nll_joint(1) =  CALnll.sum();
   //
   // // rec devs
   // for(int m=0;m<n_months;m++){
