@@ -382,9 +382,9 @@ Type SLAM(objective_function<Type>* obj) {
   // penalty for random walk in R0m
   if (use_R0rwpen>0) {
     for(int m=1;m<ts_per_yr;m++){
-      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(7) -= dnorm(R0_m(m), R0_m(m-1), sigmaR0, true);
     }
-    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(7) -= dnorm(R0_m(11), R0_m(0), sigmaR0, true);
   }
 
   Type nll=0;
