@@ -418,6 +418,9 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(recdevnll);
   REPORT(nll_joint);
 
+  REPORT(N_unfished);
+  REPORT(N_m);
+
   return(nll);
 }
 
