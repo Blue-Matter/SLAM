@@ -72,7 +72,6 @@ Type SLAM(objective_function<Type>* obj) {
   int n_ages = Len_Age.size();
   int n_bins = LenMids.size();
   int n_months = CPUE.size();
-  int ts_per_yr = 12.0;
 
   Type sigmaR = exp(log_sigmaR); // monthly rec dev sd
 
@@ -194,7 +193,6 @@ Type SLAM(objective_function<Type>* obj) {
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         // month index
-        int m_ind = m % 12;
         N_m(a,m) = exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
       }
       if (a>=1) {
@@ -356,7 +354,6 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SLdelta);
   REPORT(F_minit);
   REPORT(F_m);
-  REPORT(R0_m);
   REPORT(logRec_Devs);
   REPORT(StEffort);
   REPORT(stpredCPUE);
