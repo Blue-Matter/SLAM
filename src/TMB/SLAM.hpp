@@ -42,8 +42,6 @@ Type SLAM(objective_function<Type>* obj) {
   // Monthly time-series data
   DATA_VECTOR(Effort); // monthly effort - mean 1 over time-series
   DATA_VECTOR(Effort_SD); // monthly effort SD (log-space)
-  DATA_VECTOR(EffExists); // logical (0 and 1) if effort data exists for this month
-  DATA_INTEGER(nEffMonths); // total number of months
 
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
@@ -55,16 +53,21 @@ Type SLAM(objective_function<Type>* obj) {
   // options
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
+  DATA_INTEGER(use_sigmaRprior);
+  DATA_INTEGER(use_Fmeanprior);
+  DATA_INTEGER(use_Frwpen);
+  DATA_INTEGER(use_R0rwpen);
 
   // Estimated Parameters (fixed)
   PARAMETER(log_sl50); // log length-at-50% selectivity
   PARAMETER(log_sldelta); // logSL95 - SL50
 
   PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
-  PARAMETER(log_sigmaR0) // sd for random walk in monthly R0
+  PARAMETER(log_sigmaR0); // sd for random walk in monthly R0
   PARAMETER(logsigmaR); // monthly rec dev sd
 
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
+  PARAMETER_SCALAR(logF_minit); // mean fishing mortality for first age-classes
   PARAMETER(log_sigmaF); // F standard deviation
 
   // Random Effects
@@ -76,31 +79,33 @@ Type SLAM(objective_function<Type>* obj) {
   int n_months = CPUE.size();
   int ts_per_yr = 12.0;
 
-  // Transform Parameters
+  // Monthly recruitment
   vector<Type> logR0_m(ts_per_yr);
   logR0_m.setZero();
-
   for(int m=1;m<12;m++){
     logR0_m(m) = logR0_m_est(m-1); // monthly mean rec
   }
   vector<Type> R0_m(ts_per_yr);
   R0_m.setZero();
   R0_m = exp(logR0_m);
-
   Type R0_mtotal = R0_m.sum();
   // standardize to sum to 1
   for(int m=0;m<ts_per_yr;m++){
     R0_m(m) = R0_m(m)/R0_mtotal;
   }
 
+  Type sigmaR = exp(logsigmaR); // monthly rec dev sd
+  Type sigmaR0 = exp(log_sigmaR0); // sd for monthly R0
+
+  // Fishing mortality
   vector<Type> F_m(n_months);
   F_m.setZero();
   F_m = exp(logF_m); // monthly fishing mortality
+  Type F_minit = exp(logF_minit); // mean fishing mortality in first time-step
 
   Type sigmaF = exp(log_sigmaF); // F standard deviation
-  Type sigmaR0 = exp(log_sigmaR0); // sd for monthly R0
-  Type sigmaR = exp(logsigmaR); // monthly rec dev sd
 
+  // Transform selectivity parameters
   Type SL50 = exp(log_sl50);
   Type SLdelta = exp(log_sldelta);
 
@@ -158,30 +163,55 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-
   // Population Dynamics - monthly time-step
   // first month
-  matrix<Type> N_m(n_ages, n_months);
-  N_m.setZero();
+  matrix<Type> N_unfished(n_ages, 12);
+  N_unfished.setZero();
 
-  // initialize - unfished
+  // initialize unfished population
   for (int t=0; t<36; t++) { // run-out for 3 years to get rid of initial conditions
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        N_m(a,m_ind) = R0_m(m_ind);
+        N_unfished(a,m_ind) = R0_m(m_ind);
       } else {
         if (m_ind==0) {
-          N_m(a,m_ind) = N_m(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
+          N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
         } else {
-          N_m(a,m_ind) = N_m(a-1,m_ind-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
+          N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
         }
       }
     }
   }
 
-  // loop over months
-  for (int m=0; m<n_months; m++) {
+  matrix<Type> N_m(n_ages, n_months);
+  N_m.setZero();
+
+  // first fished age-classes - month = 0
+  // F, M, and Z by month and age
+  matrix<Type> F_ainit(n_ages, n_ages-1);
+  matrix<Type> Z_ainit(n_ages, n_ages-1);
+  F_ainit.setZero();
+  Z_ainit.setZero();
+
+  for (int m=0; m<n_ages; m++) {
+    for(int a=0;a<n_ages;a++){
+      F_ainit(a,m) = F_minit * selA(a);
+      Z_ainit(a,m) =  F_ainit(a,m) +  M_at_Age(a);
+    }
+  }
+
+  for(int a=0;a<n_ages;a++){
+    int m_ind = 12 - a % 12;
+    if (a==0) {
+      N_m(a,0) = R0_m(0) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
+    } else {
+      N_m(a,0) = N_unfished(a-1,m_ind) * exp(-Z_ainit(a-1, a-1)) * (1-PSM_at_Age(a-1));
+    }
+  }
+
+  // loop over remaining months
+  for (int m=1; m<n_months; m++) {
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         // month index
@@ -194,7 +224,6 @@ Type SLAM(objective_function<Type>* obj) {
         } else {
           N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
         }
-
       }
     }
   }
@@ -214,7 +243,6 @@ Type SLAM(objective_function<Type>* obj) {
     predCB(m) = predCB_a.col(m).sum();
   }
 
-
   // Calculate catch-at-length
   matrix<Type> predCAL(n_bins, n_months);
   predCAL.setZero();
@@ -233,79 +261,9 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // Likelihood
-  Type nll=0;
-  vector<Type> nll_joint(8);
-  nll_joint.setZero();
+  // Likelihoods
 
-
-  // Effort
-  vector<Type> RelEffort(n_months);
-  RelEffort.setZero();
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      RelEffort(m) = F_m(m);
-    }
-  }
-
-  // mean 1
-  Type totEff = 0;
-  totEff = RelEffort.sum();
-  Type Effmean = 0;
-  Effmean = totEff/nEffMonths;
-  vector<Type> StEffort(n_months);
-  StEffort.setZero();
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      StEffort(m) = RelEffort(m)/Effmean;
-    }
-  }
-
-  vector<Type> EffLike(n_months);
-  EffLike.setZero();
-  if (Fit_Effort>0) {
-    for (int m=0; m<n_months; m++) {
-      if (!R_IsNA(asDouble(Effort(m)))) {
-        EffLike(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
-      }
-    }
-  }
-
-  // CPUE
-  vector<Type> predCPUE(n_months);
-  predCPUE.setZero();
-  if (Fit_CPUE>0) {
-    for (int m=0; m<n_months; m++) {
-      if (!R_IsNA(asDouble(Effort(m)))) {
-        predCPUE(m) = predCB(m)/StEffort(m);
-      }
-    }
-  }
-
-  vector<Type> stpredCPUE(n_months);
-  stpredCPUE.setZero();
-  Type totCPUE = 0;
-  totCPUE = predCPUE.sum();
-  Type CPUEmean = 0;
-  CPUEmean = totCPUE/nEffMonths;
-
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      stpredCPUE(m) = predCPUE(m)/CPUEmean;
-    }
-  }
-
-  vector<Type> CPUELike(n_months);
-  CPUELike.setZero();
-  if (Fit_CPUE>0) {
-    for (int m=0; m<n_months; m++) {
-      if (!R_IsNA(asDouble(Effort(m)))) {
-        CPUELike(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
-      }
-    }
-  }
-
-  // CAL
+  // Catch-at-Length
   vector<Type> CALns(n_months);
   CALns.setZero();
   for (int m=0; m<n_months; m++) {
@@ -320,83 +278,135 @@ Type SLAM(objective_function<Type>* obj) {
       vector<Type> CALm(n_bins);
       vector<Type> CALm_p(n_bins);
       vector<Type> CALm_pa(n_bins);
-
       prob.setZero();
       CALm.setZero();
       CALm_p.setZero();
       CALm_pa.setZero();
-
       prob = predCAL.col(m);
       CALm = CAL.col(m);
       CALm_p = CALm/CALm.sum();
       CALm_pa = CALm_p*CAL_ESS(m);
-
       CALnll(m) -= dmultinom(CALm_pa, prob, true);
     }
   }
 
-
-  // likelihoods
-  nll_joint(0) =  EffLike.sum();
-  nll_joint(1) =  CALnll.sum();
-
-  // rec devs
-  for(int m=0;m<n_months;m++){
-    nll_joint(2) -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
+  // Effort
+  vector<Type> RelEffort(n_months);
+  RelEffort.setZero();
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(Effort(m)))) {
+      RelEffort(m) = F_m(m);
+    }
   }
 
-  //
-  // Type sigmaRpen;
-  // sigmaRpen = 0;
-  // sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
-  // nll_joint(3) = sigmaRpen;
-  //
-  //
-  // // R0 pattern
-  // for(int m=1;m<ts_per_yr;m++){
-  //   nll_joint(4) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
-  // }
-  // nll_joint(4) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
-  //
-  // // penalty random walk in F after initial
-  // for (int m=1; m<n_months; m++) {
-  //   nll_joint(5) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
-  // }
-  //
+  // mean 1
+  Type totEff = 0;
+  Type Effmean = 0;
+  Effmean = RelEffort.sum()/nEffMonths;
+  vector<Type> StEffort(n_months);
+  StEffort.setZero();
+  vector<Type> Effnll(n_months);
+  Effnll.setZero();
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(Effort(m)))) {
+      StEffort(m) = RelEffort(m)/Effmean;
+      Effnll(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+    }
+  }
+
+  // CPUE
+  vector<Type> predCPUE(n_months);
+  predCPUE.setZero();
+  vector<Type> stpredCPUE(n_months);
+  stpredCPUE.setZero();
+  Type CPUEmean = 0;
+  CPUEmean = predCPUE.sum()/nEffMonths;
+  vector<Type> CPUEnll(n_months);
+  CPUEnll.setZero();
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(Effort(m)))) {
+      predCPUE(m) = predCB(m)/StEffort(m);
+      stpredCPUE(m) = predCPUE(m)/CPUEmean;
+      CPUEnll(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
+    }
+  }
+
+  // Recruitment deviations
+  Type recdevnll = 0;
+  for(int m=0;m<n_months;m++){
+    recdevnll -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
+  }
+
+  vector<Type> nll_joint(8);
+  nll_joint.setZero();
+
+  nll_joint(0) =  CALnll.sum();
+  if (Fit_Effort>0) {
+    nll_joint(1) =  Effnll.sum();
+  }
+  if (Fit_CPUE>0) {
+    nll_joint(2) =  CPUEnll.sum();
+  }
+  nll_joint(3) =  recdevnll;
+
+
+  // Priors and penalties
+  // prior for sigmaR
+  Type sigmaRpen;
+  sigmaRpen = 0;
+  sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
+  if (use_sigmaRprior>0) {
+    nll_joint(4) = sigmaRpen;
+  }
+
   // penalty for mean F
   Type F_mean = 0;
   F_mean = F_m.sum()/F_m.size();
-  nll_joint(6) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
+  if (use_Fmeanprior>0) {
+    nll_joint(5) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
+  }
 
-  nll_joint(7) = CPUELike.sum();
+  // penalty for random walk in F
+  if (use_Frwpen>0) {
+    for (int m=1; m<n_months; m++) {
+      nll_joint(6) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+    }
+  }
 
+  // penalty for random walk in R0m
+  if (use_R0rwpen>0) {
+    for(int m=1;m<ts_per_yr;m++){
+      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+    }
+    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+  }
+
+  Type nll=0;
   nll = nll_joint.sum();
 
   // Reports
   REPORT(SL50);
   REPORT(SLdelta);
+  REPORT(F_minit);
   REPORT(F_m);
-  REPORT(RelEffort);
-  REPORT(predCAL);
-  REPORT(sigmaF);
   REPORT(R0_m);
   REPORT(logRec_Devs);
-  REPORT(sigmaR);
-  REPORT(sigmaR0);
   REPORT(StEffort);
-  REPORT(nll_joint);
-  REPORT(N_m);
   REPORT(stpredCPUE);
-  REPORT(CALnll);
-  REPORT(Z_ma);
+  REPORT(predCAL);
   REPORT(predCB);
   REPORT(selL);
   REPORT(selA);
-  REPORT(ALK);
-  REPORT(ALK_C);
-  REPORT(predC_a);
-  REPORT(EffLike);
-  REPORT(CPUELike);
+
+  REPORT(sigmaF);
+  REPORT(sigmaR);
+  REPORT(sigmaR0);
+
+  REPORT(CALnll);
+  REPORT(Effnll);
+  REPORT(CPUEnll);
+  REPORT(recdevnll);
+  REPORT(nll_joint);
 
   return(nll);
 }
