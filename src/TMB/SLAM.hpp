@@ -53,7 +53,6 @@ Type SLAM(objective_function<Type>* obj) {
   // options
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
-  DATA_INTEGER(use_sigmaRprior);
   DATA_INTEGER(use_Fmeanprior);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
