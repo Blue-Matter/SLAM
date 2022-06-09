@@ -203,8 +203,6 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  vector<Type> tempvals(n_ages);
-  tempvals.setZero();
   for(int a=0;a<n_ages;a++){
     int m_ind = 12 - (a % 12)-1;
     if (a==0) {
@@ -357,13 +355,13 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // Priors and penalties
-  // prior for sigmaR
-  Type sigmaRpen;
-  sigmaRpen = 0;
-  sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
-  if (use_sigmaRprior>0) {
-    nll_joint(4) = sigmaRpen;
-  }
+  // // prior for sigmaR
+  // Type sigmaRpen;
+  // sigmaRpen = 0;
+  // sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
+  // if (use_sigmaRprior>0) {
+  //   nll_joint(4) = sigmaRpen;
+  // }
 
   // penalty for mean F
   Type F_mean = 0;
@@ -391,9 +389,6 @@ Type SLAM(objective_function<Type>* obj) {
   nll = nll_joint.sum();
 
   // Reports
-  REPORT(Z_ainit);
-  REPORT(tempvals);
-
   REPORT(SL50);
   REPORT(SLdelta);
   REPORT(F_minit);
