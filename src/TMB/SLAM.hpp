@@ -206,7 +206,7 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> tempvals(n_ages);
   tempvals.setZero();
   for(int a=0;a<n_ages;a++){
-    int m_ind = 12 - (a % 12);
+    int m_ind = 12 - (a % 12)-1;
     if (a==0) {
       N_m(a,0) = R0_m(0) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
     } else {
