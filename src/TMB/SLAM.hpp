@@ -213,22 +213,18 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // loop over remaining months
-  for (int m=1; m<n_months; m++) {
-    for(int a=0;a<n_ages;a++){
-      if (a==0) {
-        // month index
-        int m_ind = m % 12;
-        N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
-      }
-      if ((a>=1)) {
-        if (m==0) {
-          N_m(a,m) = N_m(a-1,0) * exp(-Z_ma(a-1, 0)) * (1-PSM_at_Age(a-1));
-        } else {
-          N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
-        }
-      }
-    }
-  }
+  // for (int m=1; m<n_months; m++) {
+  //   for(int a=0;a<n_ages;a++){
+  //     if (a==0) {
+  //       // month index
+  //       int m_ind = m % 12;
+  //       N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+  //     }
+  //     if (a>=1) {
+  //         N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
+  //     }
+  //   }
+  // }
 
   // Calculate catch
   matrix<Type> predC_a(n_ages, n_months);
@@ -237,71 +233,71 @@ Type SLAM(objective_function<Type>* obj) {
   predC_a.setZero();
   predCB_a.setZero();
   predCB.setZero();
-  for (int m=0; m<n_months; m++) {
-    for(int a=0;a<n_ages;a++){
-      predC_a(a,m) = N_m(a,m)*((1-Mat_at_Age(a))*exp(-M_ma(a,m)/2)+Mat_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-F_ma(a,m)));
-      predCB_a(a,m) = predC_a(a,m) * Wght_Age(a);
-    }
-    predCB(m) = predCB_a.col(m).sum();
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   for(int a=0;a<n_ages;a++){
+  //     predC_a(a,m) = N_m(a,m)*((1-Mat_at_Age(a))*exp(-M_ma(a,m)/2)+Mat_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-F_ma(a,m)));
+  //     predCB_a(a,m) = predC_a(a,m) * Wght_Age(a);
+  //   }
+  //   predCB(m) = predCB_a.col(m).sum();
+  // }
 
   // Calculate catch-at-length
   matrix<Type> predCAL(n_bins, n_months);
   predCAL.setZero();
-  for (int m=0; m<n_months; m++) {
-    for(int l=0;l<n_bins;l++){
-      for(int a=0;a<n_ages;a++){
-        predCAL(l,m) += predC_a(a,m)*ALK_C(a,l);
-      }
-    }
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   for(int l=0;l<n_bins;l++){
+  //     for(int a=0;a<n_ages;a++){
+  //       predCAL(l,m) += predC_a(a,m)*ALK_C(a,l);
+  //     }
+  //   }
+  // }
 
-  for (int m=0; m<n_months; m++) {
-    Type temp = predCAL.col(m).sum();
-    for(int l=0;l<n_bins;l++){
-      predCAL(l,m) = predCAL(l,m)/temp;
-    }
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   Type temp = predCAL.col(m).sum();
+  //   for(int l=0;l<n_bins;l++){
+  //     predCAL(l,m) = predCAL(l,m)/temp;
+  //   }
+  // }
 
   // Likelihoods
 
   // Catch-at-Length
   vector<Type> CALns(n_months);
   CALns.setZero();
-  for (int m=0; m<n_months; m++) {
-    CALns(m) = CAL.col(m).sum();
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   CALns(m) = CAL.col(m).sum();
+  // }
 
   vector<Type> CALnll(n_months);
   CALnll.setZero();
-  for (int m=0; m<n_months; m++) {
-    if (CALns(m)>0) {
-      vector<Type> prob(n_bins);
-      vector<Type> CALm(n_bins);
-      vector<Type> CALm_p(n_bins);
-      vector<Type> CALm_pa(n_bins);
-      prob.setZero();
-      CALm.setZero();
-      CALm_p.setZero();
-      CALm_pa.setZero();
-      prob = predCAL.col(m);
-      CALm = CAL.col(m);
-      CALm_p = CALm/CALm.sum();
-      CALm_pa = CALm_p*CAL_ESS(m);
-      CALnll(m) -= dmultinom(CALm_pa, prob, true);
-    }
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   if (CALns(m)>0) {
+  //     vector<Type> prob(n_bins);
+  //     vector<Type> CALm(n_bins);
+  //     vector<Type> CALm_p(n_bins);
+  //     vector<Type> CALm_pa(n_bins);
+  //     prob.setZero();
+  //     CALm.setZero();
+  //     CALm_p.setZero();
+  //     CALm_pa.setZero();
+  //     prob = predCAL.col(m);
+  //     CALm = CAL.col(m);
+  //     CALm_p = CALm/CALm.sum();
+  //     CALm_pa = CALm_p*CAL_ESS(m);
+  //     CALnll(m) -= dmultinom(CALm_pa, prob, true);
+  //   }
+  // }
 
   // Effort
   vector<Type> RelEffort(n_months);
   RelEffort.setZero();
   Type nEffMonths = 0;
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      RelEffort(m) = F_m(m);
-      nEffMonths += 1;
-    }
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   if (!R_IsNA(asDouble(Effort(m)))) {
+  //     RelEffort(m) = F_m(m);
+  //     nEffMonths += 1;
+  //   }
+  // }
 
   // mean 1
   Type Effmean = 0;
@@ -310,12 +306,12 @@ Type SLAM(objective_function<Type>* obj) {
   StEffort.setZero();
   vector<Type> Effnll(n_months);
   Effnll.setZero();
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      StEffort(m) = RelEffort(m)/Effmean;
-      Effnll(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
-    }
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   if (!R_IsNA(asDouble(Effort(m)))) {
+  //     StEffort(m) = RelEffort(m)/Effmean;
+  //     Effnll(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+  //   }
+  // }
 
   // CPUE
   vector<Type> predCPUE(n_months);
@@ -326,13 +322,13 @@ Type SLAM(objective_function<Type>* obj) {
   CPUEmean = predCPUE.sum()/nEffMonths;
   vector<Type> CPUEnll(n_months);
   CPUEnll.setZero();
-  for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
-      predCPUE(m) = predCB(m)/StEffort(m);
-      stpredCPUE(m) = predCPUE(m)/CPUEmean;
-      CPUEnll(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
-    }
-  }
+  // for (int m=0; m<n_months; m++) {
+  //   if (!R_IsNA(asDouble(Effort(m)))) {
+  //     predCPUE(m) = predCB(m)/StEffort(m);
+  //     stpredCPUE(m) = predCPUE(m)/CPUEmean;
+  //     CPUEnll(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
+  //   }
+  // }
 
   // Recruitment deviations
   Type recdevnll = 0;
@@ -355,34 +351,34 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Priors and penalties
   // prior for sigmaR
-  Type sigmaRpen;
-  sigmaRpen = 0;
-  sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
-  if (use_sigmaRprior>0) {
-    nll_joint(4) = sigmaRpen;
-  }
-
-  // penalty for mean F
-  Type F_mean = 0;
-  F_mean = F_m.sum()/F_m.size();
-  if (use_Fmeanprior>0) {
-    nll_joint(5) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
-  }
-
-  // penalty for random walk in F
-  if (use_Frwpen>0) {
-    for (int m=1; m<n_months; m++) {
-      nll_joint(6) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
-    }
-  }
-
-  // penalty for random walk in R0m
-  if (use_R0rwpen>0) {
-    for(int m=1;m<ts_per_yr;m++){
-      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
-    }
-    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
-  }
+  // Type sigmaRpen;
+  // sigmaRpen = 0;
+  // sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
+  // if (use_sigmaRprior>0) {
+  //   nll_joint(4) = sigmaRpen;
+  // }
+  //
+  // // penalty for mean F
+  // Type F_mean = 0;
+  // F_mean = F_m.sum()/F_m.size();
+  // if (use_Fmeanprior>0) {
+  //   nll_joint(5) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
+  // }
+  //
+  // // penalty for random walk in F
+  // if (use_Frwpen>0) {
+  //   for (int m=1; m<n_months; m++) {
+  //     nll_joint(6) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+  //   }
+  // }
+  //
+  // // penalty for random walk in R0m
+  // if (use_R0rwpen>0) {
+  //   for(int m=1;m<ts_per_yr;m++){
+  //     nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+  //   }
+  //   nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+  // }
 
   Type nll=0;
   nll = nll_joint.sum();
