@@ -203,8 +203,13 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // for(int a=0;a<n_ages;a++){
-  //   int m_ind = 12 - (a % 12);
+  vector<Type> tempvals(n_ages);
+  tempvals.setZero();
+  for(int a=0;a<n_ages;a++){
+    int m_ind = 12 - (a % 12);
+    tempvals(a) = m_ind;
+
+  }
   //   if (a==0) {
   //     N_m(a,0) = R0_m(0) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
   //   } else {
@@ -384,6 +389,9 @@ Type SLAM(objective_function<Type>* obj) {
   nll = nll_joint.sum();
 
   // Reports
+  REPORT(Z_ainit);
+  REPORT(tempvals);
+
   REPORT(SL50);
   REPORT(SLdelta);
   REPORT(F_minit);
