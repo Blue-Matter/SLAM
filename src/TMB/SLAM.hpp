@@ -189,8 +189,8 @@ Type SLAM(objective_function<Type>* obj) {
 
   // first fished age-classes - month = 0
   // F, M, and Z by month and age
-  matrix<Type> F_ainit(n_ages, n_ages-1);
-  matrix<Type> Z_ainit(n_ages, n_ages-1);
+  matrix<Type> F_ainit(n_ages, n_ages);
+  matrix<Type> Z_ainit(n_ages, n_ages);
   F_ainit.setZero();
   Z_ainit.setZero();
 
