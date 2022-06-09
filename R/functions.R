@@ -6,7 +6,8 @@ GenMonthlyRec <- function(mu=6, sigma=2) {
   rec_pattern <- rep(0, 12)
   n <- 12-mu
   rec_pattern[mu:(mu+n)] <- t2[18:(18+n)]
-  rec_pattern[1:(mu-1)] <- t2[(18-mu+1):17]
+  if (mu>1)
+    rec_pattern[1:(mu-1)] <- t2[(18-mu+1):17]
   rec_pattern
 }
 
