@@ -84,6 +84,7 @@ Type SLAM(objective_function<Type>* obj) {
   // Monthly recruitment
   vector<Type> logR0_m(ts_per_yr);
   logR0_m.setZero();
+  logR0_m(0) = -2.484907;
   for(int m=1;m<12;m++){
     logR0_m(m) = logR0_m_est(m-1); // monthly mean rec
   }
