@@ -54,18 +54,14 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_CPUE);
   DATA_INTEGER(use_Fmeanprior);
   DATA_INTEGER(use_Frwpen);
-  DATA_INTEGER(use_R0rwpen);
 
   // fixed variances
-  DATA_SCALAR(log_sigmaR0); // sd for random walk in monthly R0
   DATA_SCALAR(log_sigmaF); // F standard deviation
   DATA_SCALAR(log_sigmaR); // monthly rec dev sd
 
   // Estimated Parameters (fixed)
   PARAMETER(log_sl50); // log length-at-50% selectivity
   PARAMETER(log_sldelta); // logSL95 - SL50
-
-  PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
 
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
   PARAMETER(logF_minit); // mean fishing mortality for first age-classes
@@ -78,32 +74,7 @@ Type SLAM(objective_function<Type>* obj) {
   int n_months = CPUE.size();
   int ts_per_yr = 12.0;
 
-  // Monthly recruitment
-  // vector<Type> logR0_m(ts_per_yr);
-  // logR0_m.setZero();
-  // logR0_m(0) = log(0.05);
-  // for(int m=1;m<12;m++){
-  //   logR0_m(m) = logR0_m_est(m-1); // monthly mean rec
-  // }
-  vector<Type> R0_m(ts_per_yr);
-  R0_m.setZero();
-  // R0_m = exp(logR0_m);
-
-  R0_m = exp(logR0_m_est);
-
-  vector<Type> logR0_m(ts_per_yr);
-  logR0_m.setZero();
-  logR0_m = logR0_m_est;
-  // logR0_m(0) = log(0.05);
-
-  Type R0_mtotal = R0_m.sum();
-  // standardize to sum to 1
-  for(int m=0;m<ts_per_yr;m++){
-    R0_m(m) = R0_m(m)/R0_mtotal;
-  }
-
   Type sigmaR = exp(log_sigmaR); // monthly rec dev sd
-  Type sigmaR0 = exp(log_sigmaR0); // sd for monthly R0
 
   // Fishing mortality
   vector<Type> F_m(n_months);
@@ -181,7 +152,7 @@ Type SLAM(objective_function<Type>* obj) {
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        N_unfished(a,m_ind) = R0_m(m_ind);
+        N_unfished(a,m_ind) = exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
       } else {
         if (m_ind==0) {
           N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
@@ -212,7 +183,7 @@ Type SLAM(objective_function<Type>* obj) {
   for(int a=0;a<n_ages;a++){
     int m_ind = 12 - (a % 12)-1;
     if (a==0) {
-      N_m(a,0) = R0_m(0) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
+      N_m(a,0) = exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
     } else {
       N_m(a,0) = N_unfished(a-1,m_ind) * exp(-Z_ainit(a-1, a-1)) * (1-PSM_at_Age(a-1));
     }
@@ -224,7 +195,7 @@ Type SLAM(objective_function<Type>* obj) {
       if (a==0) {
         // month index
         int m_ind = m % 12;
-        N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+        N_m(a,m) = exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
       }
       if (a>=1) {
           N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
@@ -376,13 +347,6 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // penalty for random walk in logR0_m
-  if (use_R0rwpen>0) {
-    for(int m=1;m<ts_per_yr;m++){
-      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
-    }
-    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
-  }
 
   Type nll=0;
   nll = nll_joint.sum();
@@ -403,7 +367,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   REPORT(sigmaF);
   REPORT(sigmaR);
-  REPORT(sigmaR0);
 
   REPORT(CALnll);
   REPORT(Effnll);
