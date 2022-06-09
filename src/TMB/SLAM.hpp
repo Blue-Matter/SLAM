@@ -67,7 +67,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(logsigmaR); // monthly rec dev sd
 
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
-  PARAMETER_SCALAR(logF_minit); // mean fishing mortality for first age-classes
+  PARAMETER_SCALER(logF_minit); // mean fishing mortality for first age-classes
   PARAMETER(log_sigmaF); // F standard deviation
 
   // Random Effects
