@@ -61,7 +61,7 @@ Type SLAM(objective_function<Type>* obj) {
   // fixed variances
   DATA_SCALAR(log_sigmaR0); // sd for random walk in monthly R0
   DATA_SCALAR(log_sigmaF); // F standard deviation
-  DATA_SCALAR(logsigmaR); // monthly rec dev sd
+  DATA_SCALAR(log_sigmaR); // monthly rec dev sd
 
   // Estimated Parameters (fixed)
   PARAMETER(log_sl50); // log length-at-50% selectivity
@@ -96,7 +96,7 @@ Type SLAM(objective_function<Type>* obj) {
     R0_m(m) = R0_m(m)/R0_mtotal;
   }
 
-  Type sigmaR = exp(logsigmaR); // monthly rec dev sd
+  Type sigmaR = exp(log_sigmaR); // monthly rec dev sd
   Type sigmaR0 = exp(log_sigmaR0); // sd for monthly R0
 
   // Fishing mortality
