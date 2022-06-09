@@ -47,7 +47,6 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
 
   // priors and penalties
-  DATA_VECTOR(sigmaRprior); // prior on sigmaR
   DATA_VECTOR(F_meanprior); // prior on mean F
 
   // options
@@ -354,13 +353,6 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // Priors and penalties
-  // // prior for sigmaR
-  // Type sigmaRpen;
-  // sigmaRpen = 0;
-  // sigmaRpen = Type(-1) * dnorm(log(sigmaR), log(sigmaRprior(0)), sigmaRprior(1), true);
-  // if (use_sigmaRprior>0) {
-  //   nll_joint(4) = sigmaRpen;
-  // }
 
   // penalty for mean F
   Type F_mean = 0;
