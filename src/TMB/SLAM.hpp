@@ -21,20 +21,20 @@ matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> 
   return ALK;
 }
 
-vector<Type> calSelL(vector<Type> L, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
+vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
   Type sigma_asc = (LFS-LF5)/sqrt(-log(0.05,2));
   Type sigma_dec = (Linf-LFS)/sqrt(-log(Vmaxlen,2));
 
-  int Lsize = L.size();
+  int Lsize = Lens.size();
   vector<Type> sl(Lsize);
   sl.setZero();
   for (int i=0; i<Lsize; i++) {
-    if (L(i)<=LFS) {
-      Type temp = pow((L(i)-LFS)/sigma_asc,2.0);
-      sl(i) = pow(2, -temp);
+    if (Lens(i)<=LFS) {
+      Type temp = -pow((Lens(i)-LFS)/sigma_asc,2.0);
+      sl(i) = pow(2, temp);
     } else{
-      Type temp = pow((L(i)-LFS)/sigma_dec,2.0);
-      sl(i) = pow(2, -temp);
+      Type temp = -pow((Lens(i)-LFS)/sigma_dec,2.0);
+      sl(i) = pow(2, temp);
     }
   }
   return(sl);
