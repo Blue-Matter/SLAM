@@ -230,13 +230,12 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> F_init(n_ages);
   vector<Type> Z_init(n_ages);
   Z_init.setZero();
-  Z_init.setZero();
+  F_init.setZero();
 
   for(int a=0;a<n_ages;a++){
     F_init(a) = F_minit * selA(a);
-    Z_init(a) =  F_init(a) +  M_at_Age(a);
+    Z_init(a) =  F_init(a) + M_at_Age(a);
   }
-
 
   for(int a=0;a<n_ages;a++){
     if (a==0) {
