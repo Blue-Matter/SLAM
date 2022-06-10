@@ -54,6 +54,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_CPUE);
   DATA_INTEGER(use_Fmeanprior);
   DATA_INTEGER(use_Frwpen);
+  DATA_INTEGER(use_R0rwpen);
 
   // fixed variances
   DATA_SCALAR(log_sigmaF); // F standard deviation
@@ -63,8 +64,8 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(log_sl50); // log length-at-50% selectivity
   PARAMETER(log_sldelta); // logSL95 - SL50
 
-  // PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
-  // PARAMETER(log_sigmaR0); // sd for random walk in monthly R0
+  PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
+  PARAMETER(log_sigmaR0); // sd for random walk in monthly R0
 
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
   PARAMETER(logF_minit); // mean fishing mortality for first age-classes
@@ -79,19 +80,19 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaR = exp(log_sigmaR); // monthly rec dev sd
 
   // Seasonal Recruitment
-  // vector<Type> logR0_m(12.0); // R0 for each calendar month
-  // logR0_m.setZero();
-  // for(int m=1;m<12;m++){
-  //   logR0_m(m) = logR0_m_est(m-1); // map monthly mean rec
-  // }
-  // vector<Type> R0_m(12.0);
-  // R0_m.setZero();
-  // R0_m = exp(logR0_m);
-  // Type R0_mtotal = R0_m.sum();
-  // // standardize to sum to 1
-  // for(int m=0;m<ts_per_yr;m++){
-  //   R0_m(m) = R0_m(m)/R0_mtotal;
-  // }
+  vector<Type> logR0_m(12.0); // R0 for each calendar month
+  logR0_m.setZero();
+  for(int m=1;m<12;m++){
+    logR0_m(m) = logR0_m_est(m-1); // map monthly mean rec
+  }
+  vector<Type> R0_m(12.0);
+  R0_m.setZero();
+  R0_m = exp(logR0_m);
+  Type R0_mtotal = R0_m.sum();
+  // standardize to sum to 1
+  for(int m=0;m<ts_per_yr;m++){
+    R0_m(m) = R0_m(m)/R0_mtotal;
+  }
 
   // Fishing mortality
   vector<Type> F_m(n_months);
@@ -170,9 +171,9 @@ Type SLAM(objective_function<Type>* obj) {
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         if (t==0) {
-          N_unfished(a,m_ind) = Type(1.0);
+          N_unfished(a,m_ind) = R0_m(m_ind);
         } else {
-          N_unfished(a,m_ind) = exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
+          N_unfished(a,m_ind) = R0_m(m_ind) * exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
         }
       } else {
         if (m_ind==0) {
@@ -212,12 +213,12 @@ Type SLAM(objective_function<Type>* obj) {
 
   // loop over remaining months
   for (int m=1; m<n_months; m++) {
+    int m_ind = m % 12; // calendar month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         // month index
-        N_m(a,m) = exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
-      }
-      if (a>=1) {
+        N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+      } else {
           N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
       }
     }
@@ -367,6 +368,13 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // penalty for random walk in logR0_m
+  if (use_R0rwpen>0) {
+    for(int m=1;m<ts_per_yr;m++){
+      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+    }
+    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+  }
 
   Type nll=0;
   nll = nll_joint.sum();
