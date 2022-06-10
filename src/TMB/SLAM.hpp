@@ -21,6 +21,26 @@ matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> 
   return ALK;
 }
 
+vector<Type> calSelL(vector<Type>L, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
+  Type sigma_asc = (LFS-LF5)/sqrt(-log(0.05,2));
+  Type sigma_dec = (Linf-LFS)/sqrt(-log(Vmaxlen,2));
+
+  int Lsize = L.size();
+  vector<Type> sl(Lsize);
+  sl.setZero();
+  for (int i=0; i<Lsize; i++) {
+    if (L(i)<=LFS) {
+      Type temp = pow((L(i)-LFS)/sigma_asc,2.0);
+      sl(i) = pow(2, -temp);
+    } else{
+      Type temp = pow((L(i)-LFS)/sigma_dec,2.0);
+      sl(i) = pow(2, -temp);
+    }
+  }
+  return(sl);
+
+}
+
 
 template<class Type>
 Type SLAM(objective_function<Type>* obj) {
@@ -60,9 +80,11 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_SCALAR(log_sigmaF); // F standard deviation
   DATA_SCALAR(log_sigmaR); // monthly rec dev sd
 
+  DATA_SCALAR(Vmaxlen); // vulnerability at asymptotic length - fixed to 1 by default
+
   // Estimated Parameters
-  PARAMETER(log_sl50); // log length-at-50% selectivity
-  PARAMETER(log_sldelta); // logSL95 - SL50
+  PARAMETER(log_sl5); // log first length-at-5% selectivity
+  PARAMETER(log_slf); // log first length-at-100% selectivity
 
   PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
   PARAMETER(log_sigmaR0); // sd for random walk in monthly R0
@@ -105,15 +127,14 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaF = exp(log_sigmaF); // F standard deviation
 
   // Transform selectivity parameters
-  Type SL50 = exp(log_sl50);
-  Type SLdelta = exp(log_sldelta);
+  Type SL5 = exp(log_sl5);
+  Type SLFS = exp(log_slf);
+  Type Linf = Len_Age(n_ages);
 
   // Selectivity-at-Length
   vector<Type> selL(n_bins);
   selL.setZero();
-  for(int l=0;l<n_bins;l++){
-    selL(l) = 1 / (1 + exp(-log(Type(19))*(LenMids(l) - SL50)/SLdelta));
-  }
+  selL = calSelL(LenMids, SL5, SLFS, Vmaxlen, Type Linf);
 
   // Generate Age-Length Key
   matrix<Type> ALK(n_ages, n_bins);
@@ -382,8 +403,8 @@ Type SLAM(objective_function<Type>* obj) {
   nll = nll_joint.sum();
 
   // Reports
-  REPORT(SL50);
-  REPORT(SLdelta);
+  REPORT(SL5);
+  REPORT(SLFS);
   REPORT(F_minit);
   REPORT(F_m);
   REPORT(R0_m);
