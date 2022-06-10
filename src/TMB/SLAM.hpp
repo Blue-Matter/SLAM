@@ -92,8 +92,8 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_SCALAR(Vmaxlen); // vulnerability at asymptotic length - fixed to 1 by default
 
   // Estimated Parameters
-  PARAMETER(log_sl5); // log first length-at-5% selectivity
-  PARAMETER(log_slf); // log first length-at-100% selectivity
+  PARAMETER(t_sl5); // log first length-at-5% selectivity
+  PARAMETER(t_slfint); // log interval for first length-at-100% selectivity
 
   PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
   PARAMETER(log_sigmaR0); // sd for random walk in monthly R0
@@ -136,9 +136,10 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaF = exp(log_sigmaF); // F standard deviation
 
   // Transform selectivity parameters
-  Type SL5 = exp(log_sl5);
-  Type SLFS = exp(log_slf);
   Type Linf = Len_Age(n_ages);
+  Type SL5 = exp(t_sl5)/(1+exp(t_sl5)) * Linf;
+  Type SLFint = exp(t_slfint)/(1+exp(t_slfint)) * Linf;
+  Type SLFS = SL5 + SLFint;
 
   // Selectivity-at-Length
   vector<Type> selL(n_bins);
