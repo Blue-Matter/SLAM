@@ -201,6 +201,8 @@ Type SLAM(objective_function<Type>* obj) {
   // first month
   matrix<Type> N_unfished(n_ages, 36);
   N_unfished.setZero();
+  vector<Type> eqagest(n_ages);
+  eqagest.setZero();
 
   // initialize unfished population
   for (int t=0; t<36; t++) { // run-out for 3 years to get rid of initial conditions
@@ -217,13 +219,13 @@ Type SLAM(objective_function<Type>* obj) {
           N_unfished(a,t) = N_unfished(a-1,t-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
         }
       }
+      if (t==36) {
+        eqagest(a) = N_unfished(a,36);
+      }
     }
+
   }
 
-  vector<Type> eqagest(n_ages);
-  for(int a=0;a<n_ages;a++){
-    eqagest(a) = N_unfished(a,36);
-  }
 
   // first fished age-classes - month = 0
   // F, M, and Z by month and age
