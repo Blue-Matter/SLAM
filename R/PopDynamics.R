@@ -51,7 +51,12 @@ Simulate <- function(Pars) {
   rec_sd <- Pars$sigmaR
   rec_devs <- exp(rnorm(nTS, -0.5*rec_sd^2, rec_sd))
   # monthly pattern in recruitment
-  rec_pattern <- GenMonthlyRec(mu=Pars$rec_mu, sigma=Pars$rec_sd)
+  if (!is.null(Pars$rec_pattern)) {
+    rec_pattern <- rep(Pars$rec_pattern, nTS)
+  } else {
+    rec_pattern <- GenMonthlyRec(mu=Pars$rec_mu, sigma=Pars$rec_sd)
+  }
+
 
   Rbar <- Pars$Rbar # mean annual recruitment
 
@@ -179,14 +184,11 @@ Simulate <- function(Pars) {
   out$Effort <- Effort
   out$Rec_Pattern <- rec_pattern
   out$Sel_at_Age <- sA
+  out$Sel_at_Length <- sL
   out$Z_at_age <- Z_at_age
   out
 }
 
-
-Assess <- function() {
-
-}
 
 
 
