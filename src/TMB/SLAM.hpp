@@ -239,11 +239,12 @@ Type SLAM(objective_function<Type>* obj) {
 
   for(int a=0;a<n_ages;a++){
     if (a==0) {
-        N_m(a,0) = N_unfished(a, 0);
-      } else {
-        // N_m(a,0) = N_unfished(a-1,12) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
-        N_m(a,0) = N_unfished(a,12); // * exp(-M_at_Age(a-1)) * (1-PSM_at_Age(a-1));
-      }
+      N_m(a,0) = N_unfished(a, 0);
+    }
+    if (a>0) {
+      N_m(a,0) = N_unfished(a,12);
+      // N_m(a,0) = N_unfished(a-1,12) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
+    }
   }
 
 
