@@ -221,7 +221,6 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   vector<Type> eqagest(n_ages);
-  eqagest.setZero();
   for(int a=0;a<n_ages;a++){
     eqagest(a) = N_unfished(a,36);
   }
