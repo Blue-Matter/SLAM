@@ -216,7 +216,9 @@ Type SLAM(objective_function<Type>* obj) {
           N_unfished(a,t) = R0_m(m_ind) * exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
         }
       } else {
-        N_unfished(a,t) = N_unfished(a-1,t-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
+        if (t>0) {
+          N_unfished(a,t) = N_unfished(a-1,t-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
+        }
       }
     }
   }
