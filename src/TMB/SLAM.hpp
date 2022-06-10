@@ -22,7 +22,7 @@ matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> 
 }
 
 template<class Type>
-vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
+vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, double Vmaxlen, Type Linf) {
   Type sigma_asc = (LFS-LF5)/sqrt(-log2(0.05));
   Type sigma_dec = (Linf-LFS)/sqrt(-log2(Vmaxlen));
 
