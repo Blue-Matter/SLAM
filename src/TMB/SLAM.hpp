@@ -3,6 +3,13 @@
 #define TMB_OBJECTIVE_PTR obj
 
 template<class Type>
+Type calclog2(Type x) {
+  Type ans = 0;
+  ans = log(x)/log(2);
+  return(ans);
+}
+
+template<class Type>
 matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> SD_LAA,
                           int n_age, int nlbin) {
   matrix<Type> ALK(n_age, nlbin);
@@ -22,9 +29,10 @@ matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> 
 }
 
 template<class Type>
-vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, double Vmaxlen, Type Linf) {
-  Type sigma_asc = (LFS-LF5)/sqrt(-log2(0.05));
-  Type sigma_dec = (Linf-LFS)/sqrt(-log2(Vmaxlen));
+vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
+  Vmaxlen_a
+  Type sigma_asc = (LFS-LF5)/sqrt(-calclog2(0.05));
+  Type sigma_dec = (Linf-LFS)/sqrt(-calclog2(Vmaxlen_a));
 
   int Lsize = Lens.size();
   vector<Type> sl(Lsize);
