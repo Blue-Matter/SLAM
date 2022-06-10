@@ -182,7 +182,7 @@ Type SLAM(objective_function<Type>* obj) {
   for(int a=0;a<n_ages;a++){
     int m_ind = 12 - (a % 12)-1;
     if (a==0) {
-      N_m(a,0) = exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+      N_m(a,0) = exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
       } else {
       N_m(a,0) = N_unfished(a-1,m_ind) * exp(-Z_ainit(a-1, a-1)) * (1-PSM_at_Age(a-1));
     }
