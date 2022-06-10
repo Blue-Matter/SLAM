@@ -151,12 +151,7 @@ Type SLAM(objective_function<Type>* obj) {
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        if (t==0) {
-          N_unfished(a,m_ind) = Type(1.0);
-        } else {
-          N_unfished(a,m_ind) = exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
-        }
-
+        N_unfished(a,m_ind) = exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
       } else {
         if (m_ind==0) {
           N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
@@ -187,7 +182,7 @@ Type SLAM(objective_function<Type>* obj) {
   for(int a=0;a<n_ages;a++){
     int m_ind = 12 - (a % 12)-1;
     if (a==0) {
-      N_m(a,0) = Type(1.0);
+      N_m(a,0) = exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
       } else {
       N_m(a,0) = N_unfished(a-1,m_ind) * exp(-Z_ainit(a-1, a-1)) * (1-PSM_at_Age(a-1));
     }
