@@ -202,6 +202,9 @@ Type SLAM(objective_function<Type>* obj) {
   matrix<Type> N_unfished(n_ages, 12);
   N_unfished.setZero();
 
+  matrix<Type> N_m(n_ages, n_months);
+  N_m.setZero()
+
   // initialize unfished population
   for (int t=0; t<36; t++) { // run-out for 3 years to get rid of initial conditions
     int m_ind = t % 12; // month index
@@ -222,8 +225,7 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  matrix<Type> N_m(n_ages, n_months);
-  N_m.setZero();
+;
 
   // first fished age-classes - month = 0
   // F, M, and Z by month and age
