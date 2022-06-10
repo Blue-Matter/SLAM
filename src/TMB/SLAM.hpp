@@ -137,8 +137,10 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Transform selectivity parameters
   Type Linf = Len_Age(n_ages);
-  Type SL5 = exp(t_sl5)/(1+exp(t_sl5)) * Linf;
-  Type SLFint = exp(t_slfint)/(1+exp(t_slfint)) * Linf;
+  Type SL5 = 0;
+  SL5 = exp(t_sl5)/(1+exp(t_sl5)) * Linf;
+  Type SLFint = 0;
+  SLFint = exp(t_slfint)/(1+exp(t_slfint)) * Linf;
   Type SLFS = SL5 + SLFint;
 
   // Selectivity-at-Length
@@ -413,6 +415,7 @@ Type SLAM(objective_function<Type>* obj) {
   nll = nll_joint.sum();
 
   // Reports
+  REPORT(Linf);
   REPORT(SL5);
   REPORT(SLFS);
   REPORT(F_minit);
