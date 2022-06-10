@@ -137,7 +137,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Transform selectivity parameters
   Type Linf = 0;
-  Linf = Len_Age(n_ages);
+  Linf = 95.02; // Len_Age(n_ages);
   Type SL5 = 0;
   SL5 = exp(t_sl5)/(1+exp(t_sl5)) * Linf;
   Type SLFint = 0;
