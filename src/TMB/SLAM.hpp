@@ -138,10 +138,10 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaF = exp(log_sigmaF); // F standard deviation
 
   // Transform selectivity parameters
-  Type Linf = 0;
   Type SL5 = 0;
-  SL5 = exp(t_sl5)/(1+exp(t_sl5)) * maxL;
   Type SLFint = 0;
+  SL5 = exp(t_sl5)/(1+exp(t_sl5)) * maxL;
+
   SLFint = exp(t_slfint)/(1+exp(t_slfint)) * maxL;
   Type SLFS = SL5 + SLFint;
 
@@ -417,6 +417,8 @@ Type SLAM(objective_function<Type>* obj) {
   nll = nll_joint.sum();
 
   // Reports
+  REPORT(N_unfished);
+
   REPORT(SL5);
   REPORT(SLFS);
   REPORT(F_minit);
