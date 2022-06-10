@@ -227,23 +227,22 @@ Type SLAM(objective_function<Type>* obj) {
 
   // first fished age-classes - month = 0
   // F, M, and Z by month and age
-  matrix<Type> F_ainit(n_ages, n_ages);
-  matrix<Type> Z_ainit(n_ages, n_ages);
-  F_ainit.setZero();
-  Z_ainit.setZero();
+  vector<Type> F_init(n_ages);
+  vector<Type> Z_init(n_ages);
+  Z_init.setZero();
+  Z_init.setZero();
 
-  for (int m=0; m<n_ages; m++) {
-    for(int a=0;a<n_ages;a++){
-      F_ainit(a,m) = F_minit * selA(a);
-      Z_ainit(a,m) =  F_ainit(a,m) +  M_at_Age(a);
-    }
+  for(int a=0;a<n_ages;a++){
+    F_init(a) = F_minit * selA(a);
+    Z_init(a) =  F_init(a) +  M_at_Age(a);
   }
+
 
   for(int a=0;a<n_ages;a++){
     if (a==0) {
       N_m(a,0) = N_unfished(a, 0);
       } else {
-      N_m(a,0) = N_unfished(a-1,12) * exp(-Z_ainit(a-1, a-1)) * (1-PSM_at_Age(a-1));
+      N_m(a,0) = N_unfished(a-1,12) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
     }
   }
 
