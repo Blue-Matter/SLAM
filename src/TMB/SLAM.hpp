@@ -134,7 +134,7 @@ Type SLAM(objective_function<Type>* obj) {
   // Selectivity-at-Length
   vector<Type> selL(n_bins);
   selL.setZero();
-  selL = calSelL(LenMids, SL5, SLFS, Vmaxlen, Type Linf);
+  selL = calSelL(LenMids, SL5, SLFS, Vmaxlen, Linf);
 
   // Generate Age-Length Key
   matrix<Type> ALK(n_ages, n_bins);
