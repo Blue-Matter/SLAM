@@ -59,9 +59,12 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_SCALAR(log_sigmaF); // F standard deviation
   DATA_SCALAR(log_sigmaR); // monthly rec dev sd
 
-  // Estimated Parameters (fixed)
+  // Estimated Parameters
   PARAMETER(log_sl50); // log length-at-50% selectivity
   PARAMETER(log_sldelta); // logSL95 - SL50
+
+  // PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
+  // PARAMETER(log_sigmaR0); // sd for random walk in monthly R0
 
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
   PARAMETER(logF_minit); // mean fishing mortality for first age-classes
@@ -74,6 +77,21 @@ Type SLAM(objective_function<Type>* obj) {
   int n_months = CPUE.size();
 
   Type sigmaR = exp(log_sigmaR); // monthly rec dev sd
+
+  // Seasonal Recruitment
+  // vector<Type> logR0_m(12.0); // R0 for each calendar month
+  // logR0_m.setZero();
+  // for(int m=1;m<12;m++){
+  //   logR0_m(m) = logR0_m_est(m-1); // map monthly mean rec
+  // }
+  // vector<Type> R0_m(12.0);
+  // R0_m.setZero();
+  // R0_m = exp(logR0_m);
+  // Type R0_mtotal = R0_m.sum();
+  // // standardize to sum to 1
+  // for(int m=0;m<ts_per_yr;m++){
+  //   R0_m(m) = R0_m(m)/R0_mtotal;
+  // }
 
   // Fishing mortality
   vector<Type> F_m(n_months);
@@ -151,7 +169,11 @@ Type SLAM(objective_function<Type>* obj) {
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        N_unfished(a,m_ind) = Type(1.0);
+        if (t==0) {
+          N_unfished(a,m_ind) = Type(1.0);
+        } else {
+          N_unfished(a,m_ind) = exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
+        }
       } else {
         if (m_ind==0) {
           N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
@@ -182,7 +204,7 @@ Type SLAM(objective_function<Type>* obj) {
   for(int a=0;a<n_ages;a++){
     int m_ind = 12 - (a % 12)-1;
     if (a==0) {
-      N_m(a,0) = exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
+      N_m(a,0) = N_unfished(a, m_ind);
       } else {
       N_m(a,0) = N_unfished(a-1,m_ind) * exp(-Z_ainit(a-1, a-1)) * (1-PSM_at_Age(a-1));
     }
