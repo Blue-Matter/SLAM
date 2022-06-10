@@ -94,7 +94,7 @@ Type SLAM(objective_function<Type>* obj) {
     R0_m(m) = R0_m(m)/R0_mtotal;
   }
 
-  Type sigmaR = exp(log_sigmaR); // SD for random walk in R0_m
+  Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m
 
   // Fishing mortality
   vector<Type> F_m(n_months);
