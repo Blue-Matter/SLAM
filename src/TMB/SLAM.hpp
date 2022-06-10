@@ -386,6 +386,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SLdelta);
   REPORT(F_minit);
   REPORT(F_m);
+  REPORT(R0_m);
+  REPORT(sigmaR0);
   REPORT(logRec_Devs);
   REPORT(StEffort);
   REPORT(stpredCPUE);
