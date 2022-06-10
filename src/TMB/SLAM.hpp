@@ -418,8 +418,6 @@ Type SLAM(objective_function<Type>* obj) {
   nll = nll_joint.sum();
 
   // Reports
-  REPORT(N_unfished);
-
   REPORT(SL5);
   REPORT(SLFS);
   REPORT(F_minit);
