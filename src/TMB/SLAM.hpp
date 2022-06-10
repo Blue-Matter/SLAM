@@ -239,24 +239,26 @@ Type SLAM(objective_function<Type>* obj) {
 
   for(int a=0;a<n_ages;a++){
     if (a==0) {
-      N_m(a,0) = N_unfished(a, 0);
+        N_m(a,0) = N_unfished(a, 0);
       } else {
-      N_m(a,0) = N_unfished(a-1,12) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
-    }
+        // N_m(a,0) = N_unfished(a-1,12) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
+        N_m(a,0) = N_unfished(a-1,12) * exp(-M_at_Age(a-1)) * (1-PSM_at_Age(a-1));
+      }
   }
 
+
   // loop over remaining months
-  for (int m=1; m<n_months; m++) {
-    int m_ind = m % 12; // calendar month index
-    for(int a=0;a<n_ages;a++){
-      if (a==0) {
-        // month index
-        N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
-      } else {
-          N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
-      }
-    }
-  }
+  // for (int m=1; m<n_months; m++) {
+  //   int m_ind = m % 12; // calendar month index
+  //   for(int a=0;a<n_ages;a++){
+  //     if (a==0) {
+  //       // month index
+  //       N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+  //     } else {
+  //         N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
+  //     }
+  //   }
+  // }
 
   // Calculate catch
   matrix<Type> predC_a(n_ages, n_months);
