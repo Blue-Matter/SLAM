@@ -78,6 +78,7 @@ Type SLAM(objective_function<Type>* obj) {
   // priors and penalties
   DATA_VECTOR(F_meanprior); // prior on mean F
 
+
   // options
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
@@ -90,6 +91,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_SCALAR(log_sigmaR); // monthly rec dev sd
 
   DATA_SCALAR(Vmaxlen); // vulnerability at asymptotic length - fixed to 1 by default
+  DATA_SCALAR(maxL); // length corresponding to Vmaxlen
 
   // Estimated Parameters
   PARAMETER(t_sl5); // log first length-at-5% selectivity
@@ -137,17 +139,16 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Transform selectivity parameters
   Type Linf = 0;
-  Linf = 95.02; // Len_Age(n_ages);
   Type SL5 = 0;
-  SL5 = exp(t_sl5)/(1+exp(t_sl5)) * Linf;
+  SL5 = exp(t_sl5)/(1+exp(t_sl5)) * maxL;
   Type SLFint = 0;
-  SLFint = exp(t_slfint)/(1+exp(t_slfint)) * Linf;
+  SLFint = exp(t_slfint)/(1+exp(t_slfint)) * maxL;
   Type SLFS = SL5 + SLFint;
 
   // Selectivity-at-Length
   vector<Type> selL(n_bins);
   selL.setZero();
-  selL = calSelL(LenMids, SL5, SLFS, Vmaxlen, Linf);
+  selL = calSelL(LenMids, SL5, SLFS, Vmaxlen, maxL);
 
   // Generate Age-Length Key
   matrix<Type> ALK(n_ages, n_bins);
@@ -416,7 +417,6 @@ Type SLAM(objective_function<Type>* obj) {
   nll = nll_joint.sum();
 
   // Reports
-  REPORT(Linf);
   REPORT(SL5);
   REPORT(SLFS);
   REPORT(F_minit);
