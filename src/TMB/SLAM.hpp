@@ -199,7 +199,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Population Dynamics - monthly time-step
   // first month
-  matrix<Type> N_unfished(n_ages, 12);
+  matrix<Type> N_unfished(n_ages, 36);
   N_unfished.setZero();
 
   matrix<Type> N_m(n_ages, n_months);
@@ -211,16 +211,12 @@ Type SLAM(objective_function<Type>* obj) {
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         if (t==0) {
-          N_unfished(a,m_ind) = R0_m(m_ind);
+          N_unfished(a,t) = R0_m(m_ind);
         } else {
-          N_unfished(a,m_ind) = R0_m(m_ind) * exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
+          N_unfished(a,t) = R0_m(m_ind) * exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
         }
       } else {
-        if (m_ind==0) {
-          N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
-        } else {
-          N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
-        }
+        N_unfished(a,m) = N_unfished(a-1,m-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
       }
     }
   }
@@ -238,7 +234,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   for(int a=0;a<n_ages;a++){
-    N_m(a,0) = N_unfished(a, 0);
+    N_m(a,0) = N_unfished(a, 36);
     // if (a==0) {
     //   N_m(a,0) = N_unfished(a, 0);
     // }
