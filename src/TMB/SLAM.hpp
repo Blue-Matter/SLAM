@@ -90,7 +90,7 @@ Type SLAM(objective_function<Type>* obj) {
   R0_m = exp(logR0_m);
   Type R0_mtotal = R0_m.sum();
   // standardize to sum to 1
-  for(int m=0;m<ts_per_yr;m++){
+  for(int m=0;m<12.0;m++){
     R0_m(m) = R0_m(m)/R0_mtotal;
   }
 
@@ -372,7 +372,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // penalty for random walk in logR0_m
   if (use_R0rwpen>0) {
-    for(int m=1;m<ts_per_yr;m++){
+    for(int m=1;m<12.0;m++){
       nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
     nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
