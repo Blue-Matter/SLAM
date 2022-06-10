@@ -21,7 +21,7 @@ matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> 
   return ALK;
 }
 
-vector<Type> calSelL(vector<Type>L, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
+vector<Type> calSelL(vector<Type> L, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
   Type sigma_asc = (LFS-LF5)/sqrt(-log(0.05,2));
   Type sigma_dec = (Linf-LFS)/sqrt(-log(Vmaxlen,2));
 
