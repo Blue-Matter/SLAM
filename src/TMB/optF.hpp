@@ -29,8 +29,6 @@ Type optF(objective_function<Type>* obj) {
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
 
   DATA_VECTOR(selA); // selectivity-at-age
-  DATA_INTEGER(n_ages);
-
 
   // Estimated
   PARAMETER_VECTOR(logF_m); // log monthly fishing mortality
@@ -40,6 +38,7 @@ Type optF(objective_function<Type>* obj) {
   F_m = exp(logF_m); // monthly fishing mortality
 
   // F, M, and Z by month and age
+  int n_ages = selA.size();
   matrix<Type> F_ma(n_ages, 12);
   matrix<Type> M_ma(n_ages, 12);
   matrix<Type> Z_ma(n_ages, 12);
@@ -54,7 +53,6 @@ Type optF(objective_function<Type>* obj) {
       Z_ma(a,m) =  F_ma(a,m) +  M_ma(a,m);
     }
   }
-
 
   matrix<Type> N_m(n_ages, 12); // numbers
   N_m.setZero();
@@ -153,8 +151,6 @@ Type optF(objective_function<Type>* obj) {
   for (int m=0; m<12; m++) {
     SPR(m) = eggF(m)/SBpR;
   }
-
-
 
   vector<Type> util(12);
   util.setZero();
