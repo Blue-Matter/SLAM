@@ -298,6 +298,50 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // Calculate SPR
+
+
+  // Calculate spawning biomass per recruit
+  vector<Type> surv0(n_ages);
+  surv0.setZero();
+  surv0(0) = 1;
+  vector<Type> egg0(n_ages);
+  egg0.setZero();
+  for (int a=1; a<n_ages; a++) {
+    surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
+  }
+  for (int a=0; a<n_ages; a++) {
+    egg0(a) = surv0(a) * Wght_Age(a) * Mat_at_Age(a);
+  }
+  Type SBpR = egg0.sum();
+
+
+  matrix<Type> survF(n_ages, n_months);
+  survF.setZero();
+  vector<Type> eggFa(n_ages);
+  eggFa.setZero();
+  vector<Type> eggF(n_months);
+  eggF.setZero();
+
+  for (int m=0; m<n_months; m++) {
+    for(int a=0;a<n_ages;a++){
+      if (a==0) {
+        survF(a,m) = 1;
+      } else {
+        survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-PSM_at_Age(a-1));
+      }
+      eggFa(a) = survF(a,m) * Wght_Age(a) * Mat_at_Age(a);
+    }
+    eggF(m) = eggFa.sum();
+  }
+
+  vector<Type> SPR(n_months);
+  SPR.setZero();
+  for (int m=0; m<n_months; m++) {
+    SPR(m) = eggF(m)/SBpR;
+  }
+
+
   // Likelihoods
 
   // Catch-at-Length
@@ -423,10 +467,13 @@ Type SLAM(objective_function<Type>* obj) {
   nll = nll_joint.sum();
 
   // Reports
+
+  ADREPORT(SPR);
+
+
+  REPORT(SPR);
   REPORT(ALK);
   REPORT(ALK_C);
-
-
   REPORT(SL5);
   REPORT(SLFS);
   REPORT(F_minit);
