@@ -370,7 +370,9 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
       stpredCPUE(m) = predCPUE(m)/CPUEmean;
-      CPUEnll(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
+      if ( stpredCPUE(m)>0) {
+        CPUEnll(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
+      }
     }
   }
 
