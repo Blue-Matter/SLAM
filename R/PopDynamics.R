@@ -71,10 +71,9 @@ Simulate <- function(Pars, seed=101) {
   data$phi_at_Age <- phi_at_age
 
   optF <- Optimize(Data=data, Rec_Pattern=rec_pattern,
-                   selA=sA, opt_type=0, utilpow=0.3, assumed_h=Pars$h)
+                   selA=sA, opt_type=1, utilpow=0.9, assumed_h=Pars$h)
 
   relF <- optF$F_m/max(optF$F_m)
-
   if (Pars$effortPattern == 'flat') {
     Effort <- rep(Pars$currentE, length.out=nTS-12)
     Edevs <- exp(rnorm(nTS-12, -0.5*Pars$Ecv^2, Pars$Ecv))
