@@ -32,7 +32,13 @@ template<class Type>
 vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
 
   Type sigma_asc = (LFS-LF5)/sqrt(-calclog2(0.05));
-  Type sigma_dec = (Linf-LFS)/sqrt(-calclog2(Vmaxlen));
+  Type sigma_dec = 0;
+  if (Vmaxlen<1) {
+    sigma_dec= (Linf-LFS)/sqrt(-calclog2(Vmaxlen));
+  } else {
+    sigma_dec = 1E6;
+  }
+
 
   int Lsize = Lens.size();
   vector<Type> sl(Lsize);
