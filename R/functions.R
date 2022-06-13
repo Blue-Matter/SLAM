@@ -60,5 +60,7 @@ BH_SRR <- function(R0, h, SB, SBpR) {
 
 
 
+logit <- function(p) log(p/(1-p))
+inv.logit <- function(x) exp(x)/(1+exp(x))
 
 
