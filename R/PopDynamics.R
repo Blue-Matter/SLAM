@@ -186,6 +186,8 @@ Simulate <- function(Pars) {
   out$Sel_at_Age <- sA
   out$Sel_at_Length <- sL
   out$Z_at_age <- Z_at_age
+  out$ALK <- ALK
+  out$ALK_C <- ALK_C
   out
 }
 
