@@ -84,17 +84,12 @@ Type SLAM(objective_function<Type>* obj) {
   // priors and penalties
   DATA_VECTOR(F_meanprior); // prior on mean F
 
-
   // options
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
   DATA_INTEGER(use_Fmeanprior);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
-
-  // fixed variances
-  DATA_SCALAR(log_sigmaF); // F standard deviation
-  DATA_SCALAR(log_sigmaR); // monthly rec dev sd
 
   DATA_SCALAR(Vmaxlen); // vulnerability at asymptotic length - fixed to 1 by default
   DATA_SCALAR(maxL); // length corresponding to Vmaxlen
@@ -110,6 +105,10 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(logF_minit); // mean fishing mortality for first age-classes
 
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
+
+  //  variances
+  PARAMETER(log_sigmaF); // F standard deviation
+  PARAMETER(log_sigmaR); // monthly rec dev sd
 
   // Index variables
   int n_ages = Len_Age.size();
