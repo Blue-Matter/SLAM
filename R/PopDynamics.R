@@ -10,8 +10,8 @@
 #' @export
 #'
 #' @examples
-Simulate <- function(Pars) {
-
+Simulate <- function(Pars, seed=101) {
+  set.seed(seed)
   Ages <- 0:Pars$maxage
   nAge <- length(Ages)
   LatAge <- Pars$Linf*(1-exp(-Pars$K*(Ages-Pars$t0)))
@@ -63,14 +63,42 @@ Simulate <- function(Pars) {
   M_at_age <- rep(Pars$M, nAge)
   phi_at_age <- pA # proportion that die after spawning - assumed to follow maturity curve
 
-  # Fishing mortality
-  if (is.null(Pars$Fvector)) {
-    # generate F vector
-    Fvector <- Pars$F_mu * exp(rnorm(nTS, -0.5*Pars$F_sd^2, Pars$F_sd))
+  # Calculate seasonal effort that maximizes yield
+  data = list()
+  data$Wt_at_Age <- WatAge
+  data$Mat_at_Age <- pA
+  data$M_at_Age <- M_at_age
+  data$phi_at_Age <- phi_at_age
+
+  optF <- Optimize(Data=data, Rec_Pattern=rec_pattern,
+                   selA=sA, opt_type=0, utilpow=0.3, assumed_h=Pars$h)
+
+  relF <- optF$F_m/max(optF$F_m)
+
+  if (Pars$effortPattern == 'flat') {
+    Effort <- rep(Pars$currentE, length.out=nTS-12)
+    Edevs <- exp(rnorm(nTS-12, -0.5*Pars$Ecv^2, Pars$Ecv))
+    Effort <- Effort * relF*Edevs
+  } else if (Pars$effortPattern == 'inc') {
+    Effort <- seq(0, to=Pars$currentE, length.out=nTS-12)
+    Edevs <- exp(rnorm(nTS-12, -0.5*Pars$Ecv^2, Pars$Ecv))
+    Effort <- Effort * relF*Edevs
+
+  }else if (Pars$effortPattern == 'dec') {
+    Effort_inc <- seq(0, to=2*Pars$currentE, length.out=(nTS-12)/2)
+    Effort_dec <- seq(2*Pars$currentE, to=Pars$currentE, length.out=(nTS-12)/2)
+    Effort <- c(Effort_inc, Effort_dec)[1:(nTS-12)]
+    Edevs <- exp(rnorm(nTS-12, -0.5*Pars$Ecv^2, Pars$Ecv))
+    Effort <- Effort * relF*Edevs
   } else {
-    Fvector <- Pars$Fvector
+    stop('Pars$effortPattern not valid')
   }
-  Fvector[1] <- 0
+
+  Effort <-c(rep(0, 12), Effort) # unfished for first year
+  q <- Pars$currentF/mean(Effort[(nTS-11):nTS]) # catchability
+
+  Fvector <- q * Effort # fishing mortality by month
+
 
   F_at_age <-  t(replicate(nAge, Fvector)) * sA
   Z_at_age <- M_at_age + F_at_age
@@ -158,7 +186,7 @@ Simulate <- function(Pars) {
 
 
 
-  Effort <- Fvector/mean(Fvector) *  exp(rnorm(nTS, -0.5*Pars$sigmaE^2, Pars$sigmaE))
+  Effort_ind <- Effort *  exp(rnorm(nTS, -0.5*Pars$sigmaE^2, Pars$sigmaE))
 
   out <- list()
   out$E0 <- E0
@@ -182,6 +210,7 @@ Simulate <- function(Pars) {
   out$phi_at_Age <- phi_at_age
   out$F_m <- Fvector
   out$Effort <- Effort
+  out$Effort_ind <- Effort_ind
   out$Rec_Pattern <- rec_pattern
   out$Sel_at_Age <- sA
   out$Sel_at_Length <- sL
@@ -191,7 +220,9 @@ Simulate <- function(Pars) {
   out
 }
 
+Project <- function() {
 
+}
 
 
 Predict <- function() {
@@ -199,3 +230,25 @@ Predict <- function() {
 }
 
 
+# ---- Calculate Optimal Fishing Pattern ----
+Optimize <- function(Data, Rec_Pattern, selA, opt_type=1, utilpow=0.3, assumed_h=0.6) {
+
+  data <- list(model='optF',
+               rec_pattern=Rec_Pattern,
+               opt_type=opt_type,
+               utilpow=utilpow,
+               h=assumed_h,
+               Wght_Age=Data$Wt_at_Age,
+               Mat_at_Age=Data$Mat_at_Age,
+               M_at_Age=Data$M_at_Age,
+               PSM_at_Age=Data$phi_at_Age,
+               selA=selA)
+
+  parameters <- list(logF_m=rep(log(0.01),12))
+  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
+                        silent=TRUE, hessian=FALSE)
+  starts <- obj$par
+  opt <- suppressWarnings(nlminb(starts, obj$fn, obj$gr))
+  opt_rep <- obj$report()
+  opt_rep
+}
