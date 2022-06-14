@@ -70,10 +70,10 @@ inv.logit <- function(x) exp(x)/(1+exp(x))
 
 
 SimData <- function(Pars, CAL_ESS=200, Effort_SD=0.2, CPUE_SD=0.2,
-                    Fmeanprior=c(0.2, 0.4),
+                    Fmeanprior=NULL,
                     fitCPUE=1, fitEffort=1,
-                    use_Frwpen=1,
-                    use_R0rwpen=1,
+                    use_Frwpen=0,
+                    use_R0rwpen=0,
                     use_years=5) {
   # simulate fishery
   Pop <- Simulate(Pars)
