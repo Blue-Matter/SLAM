@@ -97,8 +97,8 @@ Type SLAM(objective_function<Type>* obj) {
   // Estimated Parameters
   // PARAMETER(t_sl5); // log first length-at-5% selectivity
   // PARAMETER(t_slfint); // log interval for first length-at-100% selectivity
-  PARAMETER(relSL50);
-  PARAMETER(relSL95);
+  PARAMETER(lrelSL50);
+  PARAMETER(lSLdelta);
 
 
   PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
@@ -154,8 +154,8 @@ Type SLAM(objective_function<Type>* obj) {
   // Type SLFS = SL5 + SLFint;
 
   // Selectivity-at-Length
-  Type SL50 = relSL50 * maxL;
-  Type SL95 = relSL95 * maxL;
+  Type SL50 = exp(lrelSL50) * maxL;
+  Type SL95 = SL50 * exp(lSLdelta);
   Type SLdelta = SL95-SL50;
 
   vector<Type> selL(n_bins);
