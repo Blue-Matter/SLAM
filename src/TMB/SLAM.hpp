@@ -95,8 +95,11 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_SCALAR(maxL); // length corresponding to Vmaxlen
 
   // Estimated Parameters
-  PARAMETER(t_sl5); // log first length-at-5% selectivity
-  PARAMETER(t_slfint); // log interval for first length-at-100% selectivity
+  // PARAMETER(t_sl5); // log first length-at-5% selectivity
+  // PARAMETER(t_slfint); // log interval for first length-at-100% selectivity
+  PARAMETER(relSL50);
+  PARAMETER(relSL95);
+
 
   PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
   PARAMETER(log_sigmaR0); // sd for random walk in monthly R0
@@ -143,17 +146,26 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaF = exp(log_sigmaF); // F standard deviation
 
   // Transform selectivity parameters
-  Type SL5 = 0;
-  Type SLFint = 0;
-  SL5 = exp(t_sl5)/(1+exp(t_sl5)) * maxL;
-
-  SLFint = exp(t_slfint)/(1+exp(t_slfint)) * maxL;
-  Type SLFS = SL5 + SLFint;
+  // Type SL5 = 0;
+  // Type SLFint = 0;
+  // SL5 = exp(t_sl5)/(1+exp(t_sl5)) * maxL;
+  //
+  // SLFint = exp(t_slfint)/(1+exp(t_slfint)) * maxL;
+  // Type SLFS = SL5 + SLFint;
 
   // Selectivity-at-Length
+  Type SL50 = relSL50 * maxL;
+  Type SL95 = relSL95 * maxL;
+  Type SLdelta = SL95-SL50;
+
   vector<Type> selL(n_bins);
   selL.setZero();
-  selL = calSelL(LenMids, SL5, SLFS, Vmaxlen, maxL);
+  // selL = calSelL(LenMids, SL5, SLFS, Vmaxlen, maxL);
+
+  for(int l=0;l<n_bins;l++){
+    selL(l) = 1 / (1 + exp(-log(Type(19))*(LenMids(l) - SL50)/SLdelta));
+  }
+
 
   // Generate Age-Length Key
   matrix<Type> ALK(n_ages, n_bins);
@@ -411,7 +423,7 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
       stpredCPUE(m) = predCPUE(m)/CPUEmean;
-      if ( stpredCPUE(m)>0) {
+      if (stpredCPUE(m)>0) {
         CPUEnll(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
       }
     }
