@@ -358,7 +358,11 @@ Type SLAM(objective_function<Type>* obj) {
       vector<Type> CALp_obs(n_bins);
       CALp_obs.setZero();
       CALp_obs = CAL.col(m)/CAL.col(m).sum();
+      vector<Type> N_obs(n_bins);
+      N_obs.setZero();
       N_obs = CAL_ESS(m) * CALp_obs;
+      vector<Type> pred(n_bins);
+      pred.setZero();
       pred = predCAL.col(m);
       CALnll(m) -= (N_obs*log(pred)).sum();
     }
