@@ -483,8 +483,11 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SPR);
   REPORT(ALK);
   REPORT(ALK_C);
-  REPORT(SL5);
-  REPORT(SLFS);
+  // REPORT(SL5);
+  // REPORT(SLFS);
+  REPORT(SL50);
+  REPORT(SL95);
+
   REPORT(F_minit);
   REPORT(F_m);
   REPORT(R0_m);
