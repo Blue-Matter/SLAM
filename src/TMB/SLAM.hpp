@@ -355,19 +355,10 @@ Type SLAM(objective_function<Type>* obj) {
   CALnll.setZero();
   for (int m=0; m<n_months; m++) {
     if (CALns(m)>0) {
-      vector<Type> prob(n_bins);
-      vector<Type> CALm(n_bins);
-      vector<Type> CALm_p(n_bins);
-      vector<Type> CALm_pa(n_bins);
-      prob.setZero();
-      CALm.setZero();
-      CALm_p.setZero();
-      CALm_pa.setZero();
-      prob = predCAL.col(m);
-      CALm = CAL.col(m);
-      CALm_p = CALm/CALm.sum();
-      CALm_pa = CALm_p*CAL_ESS(m);
-      CALnll(m) -= dmultinom(CALm_pa, prob, true);
+      vector<Type> CALp_obs(n_bins);
+      CALp_obs.setZero();
+      CALp_obs = CAL.col(m)/CAL.col(m).sum();
+      CALnll(m) -= CAL_ESS(m) * (CALp_obs * log(predCAL.col(m))).sum();
     }
   }
 
