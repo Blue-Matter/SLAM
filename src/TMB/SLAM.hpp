@@ -155,7 +155,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Selectivity-at-Length
   Type SL50 = exp(lrelSL50) * maxL;
-  Type SL95 = SL50 * exp(lSLdelta);
+  Type SL95 = SL50 * (1+exp(lSLdelta));
   Type SLdelta = SL95-SL50;
 
   vector<Type> selL(n_bins);
