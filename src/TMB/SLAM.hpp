@@ -29,6 +29,26 @@ matrix<Type> generate_ALK(vector<Type> lbin, vector<Type> len_age, vector<Type> 
 }
 
 template<class Type>
+matrix<Type> generate_AWK(vector<Type> WghtBins, vector<Type> Wght_Age,
+                          vector<Type> Wght_Age_SD,
+                          int n_age, int n_bins) {
+  matrix<Type> AWK(n_age, n_bins);
+  AWK.setZero();
+  for(int a=0;a<n_age;a++) {
+    for(int j=0;j<n_bins;j++) {
+      if(j==n_bins-1) {
+        AWK(a,j) = Type(1.0) - pnorm(log(WghtBins(j)),log(Wght_Age(a)), Wght_Age_SD(a));
+      } else {
+        AWK(a,j) = pnorm(log(WghtBins(j+1)), log(Wght_Age(a)), Wght_Age_SD(a));
+        if(j>0) AWK(a,j) -= pnorm(log(WghtBins(j)), log(Wght_Age(a)), Wght_Age_SD(a));
+      }
+    }
+  }
+  return AWK;
+}
+
+
+template<class Type>
 vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
 
   Type sigma_asc = (LFS-LF5)/sqrt(-calclog2(0.05));
@@ -61,18 +81,17 @@ template<class Type>
 Type SLAM(objective_function<Type>* obj) {
 
   // At-Age Schedules
-  DATA_VECTOR(Len_Age);  // mean length at age
-  DATA_VECTOR(SD_Len_Age); // standard deviation of length at age
   DATA_VECTOR(Wght_Age);  // mean weight at age
+  DATA_VECTOR(Wght_Age_SD);  // standard deviation of weight at age (log-normal)
   DATA_VECTOR(Mat_at_Age);  // maturity at age
   DATA_VECTOR(M_at_Age); // natural mortality at age
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
 
-  // Catch-at-length data
-  DATA_VECTOR(LenBins);
-  DATA_VECTOR(LenMids); // mid-points of the CAL bins
-  DATA_MATRIX(CAL);    // CAL observations for each bin and month
-  DATA_VECTOR(CAL_ESS); // number of independent observation of length samples in each month
+  // Weight composition data
+  DATA_VECTOR(WghtBins);
+  DATA_VECTOR(WghtMids); // mid-points of the CAW bins
+  DATA_MATRIX(CAW);    // CAL observations for each bin and month
+  DATA_VECTOR(CAW_ESS); // number of independent observation of weight samples in each month
 
   // Monthly time-series data
   DATA_VECTOR(Effort); // monthly effort - mean 1 over time-series
@@ -82,27 +101,19 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
 
   // priors and penalties
-  DATA_VECTOR(F_meanprior); // prior on mean F
 
   // options
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
-  DATA_INTEGER(use_Fmeanprior);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
 
-  DATA_SCALAR(Vmaxlen); // vulnerability at asymptotic length - fixed to 1 by default
-  DATA_SCALAR(maxL); // length corresponding to Vmaxlen
-
   // Estimated Parameters
-  // PARAMETER(t_sl5); // log first length-at-5% selectivity
-  // PARAMETER(t_slfint); // log interval for first length-at-100% selectivity
-  PARAMETER(lrelSL50);
-  PARAMETER(lSLdelta);
-
+  PARAMETER(lW50);  //
+  PARAMETER(lWdelta);
 
   PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
-  PARAMETER(log_sigmaR0); // sd for random walk in monthly R0
+  PARAMETER(log_sigmaR0); // sd for random walk penalty in monthly R0
 
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
   PARAMETER(logF_minit); // mean fishing mortality for first age-classes
@@ -110,15 +121,13 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
 
   //  variances
-  PARAMETER(log_sigmaF); // F standard deviation
+  PARAMETER(log_sigmaF); // standard deviation for random walk penalty for F
   PARAMETER(log_sigmaR); // monthly rec dev sd
 
   // Index variables
-  int n_ages = Len_Age.size();
-  int n_bins = LenMids.size();
+  int n_ages = Wght_Age.size();
+  int n_bins = WghtMids.size();
   int n_months = CPUE.size();
-
-  Type sigmaR = exp(log_sigmaR); // rec process error dev sd
 
   // Seasonal Recruitment
   vector<Type> logR0_m(12); // R0 for each calendar month
@@ -136,6 +145,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m
+  Type sigmaR = exp(log_sigmaR); // rec process error dev sd
 
   // Fishing mortality
   vector<Type> F_m(n_months);
@@ -146,44 +156,38 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaF = exp(log_sigmaF); // F standard deviation
 
   // Transform selectivity parameters
-  // Type SL5 = 0;
-  // Type SLFint = 0;
-  // SL5 = exp(t_sl5)/(1+exp(t_sl5)) * maxL;
-  //
-  // SLFint = exp(t_slfint)/(1+exp(t_slfint)) * maxL;
-  // Type SLFS = SL5 + SLFint;
 
-  // Selectivity-at-Length
-  Type SL50 = exp(lrelSL50) * maxL;
-  Type SL95 = SL50 * (1+exp(lSLdelta));
-  Type SLdelta = SL95-SL50;
+  // Selectivity-at-Weight
+  Type maxW = Wght_Age(n_ages-1);
+  Type SW50 = exp(lW50) * maxW;
+  Type SWdelta = exp(lWdelta);
+  Type SW95 = SW50 + SWdelta;
 
-  vector<Type> selL(n_bins);
-  selL.setZero();
-  // selL = calSelL(LenMids, SL5, SLFS, Vmaxlen, maxL);
+  vector<Type> selW(n_bins);
+  selW.setZero();
 
-  for(int l=0;l<n_bins;l++){
-    selL(l) = 1 / (1 + exp(-log(Type(19))*(LenMids(l) - SL50)/SLdelta));
+  for(int w=0;w<n_bins;w++){
+    selW(w) = 1 / (1 + exp(-log(Type(19))*(WghtMids(l) - SW50)/SWdelta));
   }
 
 
-  // Generate Age-Length Key
-  matrix<Type> ALK(n_ages, n_bins);
-  ALK.setZero();
-  ALK = generate_ALK(LenBins, Len_Age, SD_Len_Age, n_ages, n_bins);
+  // Generate Age-Weight Key
+  matrix<Type> AWK(n_ages, n_bins);
+  AWK.setZero();
+  AWK = generate_AWK(WghtBins, Wght_Age, Wght_Age_SD, n_ages, n_bins);
 
-  // ALK for the catch
-  matrix<Type> ALK_C(n_ages, n_bins);
-  ALK_C.setZero();
+  // AWK for the catch
+  matrix<Type> AWK_C(n_ages, n_bins);
+  AWK_C.setZero();
   for(int a=0;a<n_ages;a++){
-    for(int l=0;l<n_bins;l++){
-      ALK_C(a,l) = ALK(a,l)*selL(l);
+    for(int w=0;w<n_bins;w++){
+      AWK_C(a,l) = AWK(a,l)*selW(w);
     }
   }
 
   for(int a=0;a<n_ages;a++){
-    Type total = ALK_C.row(a).sum();
-    ALK_C.row(a) = ALK_C.row(a)/total;
+    Type total = AWK_C.row(a).sum();
+    AWK_C.row(a) = AWK_C.row(a)/total;
   }
 
   // Selectivity-at-Age
@@ -192,25 +196,9 @@ Type SLAM(objective_function<Type>* obj) {
   for(int a=0;a<n_ages;a++){
     vector<Type> temp(n_bins);
     temp.setZero();
-    temp = ALK.row(a);
-    for(int l=0;l<n_bins;l++){
-      selA(a) += temp(l)*selL(l);
-    }
-  }
-
-  // F, M, and Z by month and age
-  matrix<Type> F_ma(n_ages, n_months);
-  matrix<Type> M_ma(n_ages, n_months);
-  matrix<Type> Z_ma(n_ages, n_months);
-  F_ma.setZero();
-  M_ma.setZero();
-  Z_ma.setZero();
-
-  for (int m=0; m<n_months; m++) {
-    for(int a=0;a<n_ages;a++){
-      F_ma(a,m) = F_m(m) * selA(a);
-      M_ma(a,m) = M_at_Age(a);
-      Z_ma(a,m) =  F_ma(a,m) +  M_ma(a,m);
+    temp = AWK.row(a);
+    for(int w=0;w<n_bins;w++){
+      selA(a) += temp(w)*selW(w);
     }
   }
 
@@ -263,6 +251,21 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // F, M, and Z by month and age
+  matrix<Type> F_ma(n_ages, n_months);
+  matrix<Type> M_ma(n_ages, n_months);
+  matrix<Type> Z_ma(n_ages, n_months);
+  F_ma.setZero();
+  M_ma.setZero();
+  Z_ma.setZero();
+
+  for (int m=0; m<n_months; m++) {
+    for(int a=0;a<n_ages;a++){
+      F_ma(a,m) = F_m(m) * selA(a);
+      M_ma(a,m) = M_at_Age(a);
+      Z_ma(a,m) =  F_ma(a,m) +  M_ma(a,m);
+    }
+  }
 
   // loop over remaining months
   for (int m=1; m<n_months; m++) {
@@ -292,21 +295,21 @@ Type SLAM(objective_function<Type>* obj) {
     predCB(m) = predCB_a.col(m).sum();
   }
 
-  // Calculate catch-at-length
-  matrix<Type> predCAL(n_bins, n_months);
-  predCAL.setZero();
+  // Calculate catch-at-weight
+  matrix<Type> predCAW(n_bins, n_months);
+  predCAW.setZero();
   for (int m=0; m<n_months; m++) {
-    for(int l=0;l<n_bins;l++){
+    for(int w=0;w<n_bins;w++){
       for(int a=0;a<n_ages;a++){
-        predCAL(l,m) += predC_a(a,m)*ALK_C(a,l);
+        predCAW(w,m) += predC_a(a,m)*AWK_C(a,w);
       }
     }
   }
 
   for (int m=0; m<n_months; m++) {
-    Type temp = predCAL.col(m).sum();
-    for(int l=0;l<n_bins;l++){
-      predCAL(l,m) = predCAL(l,m)/temp;
+    Type temp = predCAW.col(m).sum();
+    for(int w=0;w<n_bins;w++){
+      predCAW(w,m) = predCAW(w,m)/temp;
     }
   }
 
@@ -356,27 +359,27 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Likelihoods
 
-  // Catch-at-Length
-  vector<Type> CALns(n_months);
-  CALns.setZero();
+  // Catch-at-Weight
+  vector<Type> CAWns(n_months);
+  CAWns.setZero();
   for (int m=0; m<n_months; m++) {
-    CALns(m) = CAL.col(m).sum();
+    CAWns(m) = CAW.col(m).sum();
   }
 
-  vector<Type> CALnll(n_months);
-  CALnll.setZero();
+  vector<Type> CAWnll(n_months);
+  CAWnll.setZero();
   for (int m=0; m<n_months; m++) {
-    if (CALns(m)>0) {
-      vector<Type> CALp_obs(n_bins);
-      CALp_obs.setZero();
-      CALp_obs = CAL.col(m)/CAL.col(m).sum();
+    if (CAWns(m)>0) {
+      vector<Type> CAWp_obs(n_bins);
+      CAWp_obs.setZero();
+      CAWp_obs = CAW.col(m)/CAW.col(m).sum();
       vector<Type> N_obs(n_bins);
       N_obs.setZero();
-      N_obs = CAL_ESS(m) * CALp_obs;
+      N_obs = CAW_ESS(m) * CAWp_obs;
       vector<Type> pred(n_bins);
       pred.setZero();
-      pred = predCAL.col(m);
-      CALnll(m) -= (N_obs*log(pred)).sum();
+      pred = predCAW.col(m);
+      CAWnll(m) -= (N_obs*log(pred)).sum();
     }
   }
 
@@ -438,7 +441,7 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> nll_joint(8);
   nll_joint.setZero();
 
-  nll_joint(0) =  CALnll.sum();
+  nll_joint(0) =  CAWnll.sum();
   if (Fit_Effort>0) {
     nll_joint(1) =  Effnll.sum();
   }
@@ -481,12 +484,10 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   REPORT(SPR);
-  REPORT(ALK);
-  REPORT(ALK_C);
-  // REPORT(SL5);
-  // REPORT(SLFS);
-  REPORT(SL50);
-  REPORT(SL95);
+  REPORT(AWK);
+  REPORT(AWK_C);
+  REPORT(SW50);
+  REPORT(SW95);
 
   REPORT(F_minit);
   REPORT(F_m);
@@ -495,15 +496,15 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(logRec_Devs);
   REPORT(StEffort);
   REPORT(stpredCPUE);
-  REPORT(predCAL);
+  REPORT(predCAW);
   REPORT(predCB);
-  REPORT(selL);
+  REPORT(selW);
   REPORT(selA);
 
   REPORT(sigmaF);
   REPORT(sigmaR);
 
-  REPORT(CALnll);
+  REPORT(CAWnll);
   REPORT(Effnll);
   REPORT(CPUEnll);
   REPORT(recdevnll);
