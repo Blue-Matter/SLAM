@@ -438,7 +438,7 @@ Type SLAM(objective_function<Type>* obj) {
     recdevnll -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
   }
 
-  vector<Type> nll_joint(8);
+  vector<Type> nll_joint(6);
   nll_joint.setZero();
 
   nll_joint(0) =  CAWnll.sum();
@@ -453,26 +453,19 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Priors and penalties
 
-  // penalty for mean F
-  Type F_mean = 0;
-  F_mean = F_m.sum()/F_m.size();
-  if (use_Fmeanprior>0) {
-    nll_joint(5) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
-  }
-
   // penalty for random walk in F
   if (use_Frwpen>0) {
     for (int m=1; m<n_months; m++) {
-      nll_joint(6) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+      nll_joint(4) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
     }
   }
 
   // penalty for random walk in logR0_m
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(5) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
   Type nll=0;
