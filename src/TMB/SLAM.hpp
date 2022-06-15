@@ -167,7 +167,7 @@ Type SLAM(objective_function<Type>* obj) {
   selW.setZero();
 
   for(int w=0;w<n_bins;w++){
-    selW(w) = 1 / (1 + exp(-log(Type(19))*(WghtMids(l) - SW50)/SWdelta));
+    selW(w) = 1 / (1 + exp(-log(Type(19))*(WghtMids(w) - SW50)/SWdelta));
   }
 
 
@@ -181,7 +181,7 @@ Type SLAM(objective_function<Type>* obj) {
   AWK_C.setZero();
   for(int a=0;a<n_ages;a++){
     for(int w=0;w<n_bins;w++){
-      AWK_C(a,l) = AWK(a,l)*selW(w);
+      AWK_C(a,w) = AWK(a,w)*selW(w);
     }
   }
 
