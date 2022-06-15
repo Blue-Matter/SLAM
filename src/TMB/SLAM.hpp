@@ -202,10 +202,30 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // F, M, and Z by month and age
+  matrix<Type> F_ma(n_ages, n_months);
+  matrix<Type> M_ma(n_ages, n_months);
+  matrix<Type> Z_ma(n_ages, n_months);
+  F_ma.setZero();
+  M_ma.setZero();
+  Z_ma.setZero();
+
+  for (int m=0; m<n_months; m++) {
+    for(int a=0;a<n_ages;a++){
+      F_ma(a,m) = F_m(m) * selA(a);
+      M_ma(a,m) = M_at_Age(a);
+      Z_ma(a,m) =  F_ma(a,m) +  M_ma(a,m);
+    }
+  }
+
+
+
+
   // Population Dynamics - monthly time-step
   // first month
   matrix<Type> N_unfished(n_ages, 12);
   N_unfished.setZero();
+
 
   // initialize unfished population
   for (int t=0; t<36; t++) { // run-out for 3 years to get rid of initial conditions
@@ -238,7 +258,6 @@ Type SLAM(objective_function<Type>* obj) {
     F_init(a) = F_minit * selA(a);
     Z_init(a) =  F_init(a) + M_at_Age(a);
   }
-
   matrix<Type> N_m(n_ages, n_months);
   N_m.setZero();
 
@@ -251,21 +270,6 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // F, M, and Z by month and age
-  matrix<Type> F_ma(n_ages, n_months);
-  matrix<Type> M_ma(n_ages, n_months);
-  matrix<Type> Z_ma(n_ages, n_months);
-  F_ma.setZero();
-  M_ma.setZero();
-  Z_ma.setZero();
-
-  for (int m=0; m<n_months; m++) {
-    for(int a=0;a<n_ages;a++){
-      F_ma(a,m) = F_m(m) * selA(a);
-      M_ma(a,m) = M_at_Age(a);
-      Z_ma(a,m) =  F_ma(a,m) +  M_ma(a,m);
-    }
-  }
 
   // loop over remaining months
   for (int m=1; m<n_months; m++) {
