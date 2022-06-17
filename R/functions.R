@@ -1,3 +1,35 @@
+assignGroups <- function(df, var="mean") {
+  group <- 1
+  df$groups <- NA
+  for (i in 1:nrow(df)) {
+    if (i == 1) {
+      if (!is.na(df[[var]][i])) {
+        df$groups[i] <- group + 1
+      }
+    } else {
+      if (!is.na(df[[var]][i])) {
+        df$groups[i] <- group
+      } else if (is.na(df[[var]][i]) & !is.na(df[[var]][i-1])) {
+        group <- group+1
+      }
+    }
+  }
+  df$x <- 1:nrow(df)
+  df
+}
+
+dropLastNAs <- function(df, var='mean') {
+  ind <- df[[var]] %>% is.na() %>% rev()
+  ind <- min(which(!ind))
+  head(df, -ind+1)
+}
+
+every_nth = function(n) {
+  return(function(x) {x[c(TRUE, rep(FALSE, n - 1))]})
+}
+
+
+
 # Generate monthly recruitment pattern
 GenMonthlyRec <- function(mu=6, sigma=2) {
   tt <- dnorm(-5:6, 0, sigma)
@@ -69,17 +101,16 @@ logit <- function(p) log(p/(1-p))
 inv.logit <- function(x) exp(x)/(1+exp(x))
 
 
-SimData <- function(Pars, CAL_ESS=200, Effort_SD=0.2, CPUE_SD=0.2,
+SimData <- function(Pop, CAL_ESS=200, Effort_SD=0.2, CPUE_SD=0.2,
                     Fmeanprior=NULL,
                     fitCPUE=1, fitEffort=1,
                     use_Frwpen=0,
                     use_R0rwpen=0,
                     use_years=5) {
-  # simulate fishery
-  Pop <- Simulate(Pars)
 
   # Populate data
-  sim.timesteps <- Pars$nyears*12
+  nyears <- dim(Pop$Number)[2]/12
+  sim.timesteps <- nyears*12
   data.timesteps <- (sim.timesteps-use_years*12+1):sim.timesteps
   nts <- length(data.timesteps)
   nages <- length(Pop$Len_at_Age)

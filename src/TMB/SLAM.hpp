@@ -100,6 +100,9 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
 
+  // Stock-recruit
+  DATA_SCALAR(h); // steepness of BH-SRR
+
   // priors and penalties
 
   // options
@@ -170,7 +173,6 @@ Type SLAM(objective_function<Type>* obj) {
     selW(w) = 1 / (1 + exp(-log(Type(19))*(WghtMids(w) - SW50)/SWdelta));
   }
 
-
   // Generate Age-Weight Key
   matrix<Type> AWK(n_ages, n_bins);
   AWK.setZero();
@@ -218,21 +220,17 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-
-
-
   // Population Dynamics - monthly time-step
   // first month
   matrix<Type> N_unfished(n_ages, 12);
   N_unfished.setZero();
-
 
   // initialize unfished population
   for (int t=0; t<36; t++) { // run-out for 3 years to get rid of initial conditions
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        if (t==0) {
+        if (m_ind==0) {
           N_unfished(a,m_ind) = R0_m(m_ind);
         } else {
           N_unfished(a,m_ind) = R0_m(m_ind) * exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
