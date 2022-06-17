@@ -47,6 +47,12 @@ matrix<Type> generate_AWK(vector<Type> WghtBins, vector<Type> Wght_Age,
   return AWK;
 }
 
+template<class Type>
+Type BH_SRR(Type R0, Type h, Type SB, Type SBpR) {
+  Type Rec = (4*R0*h*SB)/(SBpR*R0*(1-h)+(5*h-1)*SB);
+  return Rec;
+}
+
 
 template<class Type>
 vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
@@ -112,8 +118,8 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(use_R0rwpen);
 
   // Estimated Parameters
-  PARAMETER(lW50);  //
-  PARAMETER(lWdelta);
+  PARAMETER(ls50);  //
+  PARAMETER(lsdelta);
 
   PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
   PARAMETER(log_sigmaR0); // sd for random walk penalty in monthly R0
@@ -160,37 +166,21 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Transform selectivity parameters
 
-  // Selectivity-at-Weight
-  Type maxW = Wght_Age(n_ages-1);
-  Type SW50 = exp(lW50) * maxW;
-  Type SWdelta = exp(lWdelta);
-  Type SW95 = SW50 + SWdelta;
+  // Selectivity-at-Age
+  Type S50 = exp(ls50);
+  Type Sdelta = exp(lWdelta);
+  Type S95 = S50 + Sdelta;
 
-  vector<Type> selW(n_bins);
-  selW.setZero();
-
-  for(int w=0;w<n_bins;w++){
-    selW(w) = 1 / (1 + exp(-log(Type(19))*(WghtMids(w) - SW50)/SWdelta));
+  vector<Type> selA(n_ages);
+  selA.setZero();
+  for(int a=0;a<n_ages;a++){
+    selA(w) = 1 / (1 + exp(-log(Type(19))*(a - S50)/Sdelta));
   }
 
   // Generate Age-Weight Key
   matrix<Type> AWK(n_ages, n_bins);
   AWK.setZero();
   AWK = generate_AWK(WghtBins, Wght_Age, Wght_Age_SD, n_ages, n_bins);
-
-  // AWK for the catch
-  matrix<Type> AWK_C(n_ages, n_bins);
-  AWK_C.setZero();
-  for(int a=0;a<n_ages;a++){
-    for(int w=0;w<n_bins;w++){
-      AWK_C(a,w) = AWK(a,w)*selW(w);
-    }
-  }
-
-  for(int a=0;a<n_ages;a++){
-    Type total = AWK_C.row(a).sum();
-    AWK_C.row(a) = AWK_C.row(a)/total;
-  }
 
   // Selectivity-at-Age
   vector<Type> selA(n_ages);
@@ -203,6 +193,7 @@ Type SLAM(objective_function<Type>* obj) {
       selA(a) += temp(w)*selW(w);
     }
   }
+
 
   // F, M, and Z by month and age
   matrix<Type> F_ma(n_ages, n_months);
@@ -218,6 +209,47 @@ Type SLAM(objective_function<Type>* obj) {
       M_ma(a,m) = M_at_Age(a);
       Z_ma(a,m) =  F_ma(a,m) +  M_ma(a,m);
     }
+  }
+
+  // Calculate SPR
+  // Calculate spawning biomass per recruit
+  vector<Type> surv0(n_ages);
+  surv0.setZero();
+  surv0(0) = 1;
+  vector<Type> egg0(n_ages);
+  egg0.setZero();
+  for (int a=1; a<n_ages; a++) {
+    surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
+  }
+  for (int a=0; a<n_ages; a++) {
+    egg0(a) = surv0(a) * Wght_Age(a) * Mat_at_Age(a);
+  }
+  Type SBpR = egg0.sum();
+
+
+  matrix<Type> survF(n_ages, n_months);
+  survF.setZero();
+  vector<Type> eggFa(n_ages);
+  eggFa.setZero();
+  vector<Type> eggF(n_months);
+  eggF.setZero();
+
+  for (int m=0; m<n_months; m++) {
+    for(int a=0;a<n_ages;a++){
+      if (a==0) {
+        survF(a,m) = 1;
+      } else {
+        survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-PSM_at_Age(a-1));
+      }
+      eggFa(a) = survF(a,m) * Wght_Age(a) * Mat_at_Age(a);
+    }
+    eggF(m) = eggFa.sum();
+  }
+
+  vector<Type> SPR(n_months);
+  SPR.setZero();
+  for (int m=0; m<n_months; m++) {
+    SPR(m) = eggF(m)/SBpR;
   }
 
   // Population Dynamics - monthly time-step
@@ -259,27 +291,33 @@ Type SLAM(objective_function<Type>* obj) {
   matrix<Type> N_m(n_ages, n_months);
   N_m.setZero();
 
+  matrix<Type> SB_am(n_ages, n_months);
+  SB_am.setZero();
+
+  vector<Type> SB_m(n_months);
+  SB_m.setZero();
+
   for(int a=0;a<n_ages;a++){
     if (a==0) {
-      N_m(a,0) = N_unfished(a, 0);
+      N_m(a,0) = N_unfished(a, 0) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
     }
     if (a>0) {
       N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
+      SB_am(a,0) = N_m(a,0) * Wght_Age(a) * Mat_at_Age(a) * exp(-F_init(a)/2);
     }
   }
-
+  SB(0) = SB_am.col(0).sum();
 
   // loop over remaining months
   for (int m=1; m<n_months; m++) {
     int m_ind = m % 12; // calendar month index
-    for(int a=0;a<n_ages;a++){
-      if (a==0) {
-        // month index
-        N_m(a,m) = R0_m(m_ind) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
-      } else {
-          N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
-      }
+    for(int a=1;a<n_ages;a++){
+      N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
+      SB_am(a,m) = N_m(a,m) * Wght_Age(a) * Mat_at_Age(a) * exp(-F_ma(a,m)/2);
     }
+    SB(m) = SB_am.col(m).sum();
+    // recruitment
+    N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB(m), SBpR) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
   }
 
   // Calculate catch
@@ -303,7 +341,7 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=0; m<n_months; m++) {
     for(int w=0;w<n_bins;w++){
       for(int a=0;a<n_ages;a++){
-        predCAW(w,m) += predC_a(a,m)*AWK_C(a,w);
+        predCAW(w,m) += predC_a(a,m)*AWK(a,w);
       }
     }
   }
@@ -315,48 +353,6 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // Calculate SPR
-
-
-  // Calculate spawning biomass per recruit
-  vector<Type> surv0(n_ages);
-  surv0.setZero();
-  surv0(0) = 1;
-  vector<Type> egg0(n_ages);
-  egg0.setZero();
-  for (int a=1; a<n_ages; a++) {
-    surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
-  }
-  for (int a=0; a<n_ages; a++) {
-    egg0(a) = surv0(a) * Wght_Age(a) * Mat_at_Age(a);
-  }
-  Type SBpR = egg0.sum();
-
-
-  matrix<Type> survF(n_ages, n_months);
-  survF.setZero();
-  vector<Type> eggFa(n_ages);
-  eggFa.setZero();
-  vector<Type> eggF(n_months);
-  eggF.setZero();
-
-  for (int m=0; m<n_months; m++) {
-    for(int a=0;a<n_ages;a++){
-      if (a==0) {
-        survF(a,m) = 1;
-      } else {
-        survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-PSM_at_Age(a-1));
-      }
-      eggFa(a) = survF(a,m) * Wght_Age(a) * Mat_at_Age(a);
-    }
-    eggF(m) = eggFa.sum();
-  }
-
-  vector<Type> SPR(n_months);
-  SPR.setZero();
-  for (int m=0; m<n_months; m++) {
-    SPR(m) = eggF(m)/SBpR;
-  }
 
 
   // Likelihoods
@@ -476,14 +472,16 @@ Type SLAM(objective_function<Type>* obj) {
   // Reports
 
   ADREPORT(SPR);
-
+  ADREPORT(S50);
+  ADREPORT(S95);
 
   REPORT(SPR);
   REPORT(AWK);
-  REPORT(AWK_C);
-  REPORT(SW50);
-  REPORT(SW95);
 
+  REPORT(S50);
+  REPORT(S95);
+
+  REPORT(SB);
   REPORT(F_minit);
   REPORT(F_m);
   REPORT(R0_m);
@@ -493,7 +491,6 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(stpredCPUE);
   REPORT(predCAW);
   REPORT(predCB);
-  REPORT(selW);
   REPORT(selA);
 
   REPORT(sigmaF);
