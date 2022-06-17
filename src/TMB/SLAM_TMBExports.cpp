@@ -4,6 +4,7 @@
 #include <TMB.hpp>
 #include "optF.hpp"
 #include "SLAM.hpp"
+#include "include/functions.hpp"
 
 template<class Type>
 Type objective_function<Type>::operator() () {
