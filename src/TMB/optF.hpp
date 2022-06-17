@@ -2,7 +2,12 @@
 #undef TMB_OBJECTIVE_PTR
 #define TMB_OBJECTIVE_PTR obj
 
-
+template<class Type>
+Type BH_SRR2(Type R0, Type h, Type SB, Type SBpR) {
+  Type Rec = 0;
+  Rec = (4*R0*h*SB)/(SBpR*R0*(1-h)+(5*h-1)*SB);
+  return(Rec);
+}
 
 // Estimate optimal monthly fishing pattern given life-history,
 // selectivity pattern, and monthly recruitment pattern
@@ -87,7 +92,7 @@ Type optF(objective_function<Type>* obj) {
       SB_a(a) = N_m(a,m_ind) * Wght_Age(a) * Mat_at_Age(a);
     }
     SB(m_ind) = SB_a.sum()*exp(-F_m(m_ind)/2);
-    Rec(m_ind) = BH_SRR(rec_pattern(m_ind), h, SB(m_ind), SBpR);
+    Rec(m_ind) = BH_SRR2(rec_pattern(m_ind), h, SB(m_ind), SBpR);
   }
 
   // with F and SRR
