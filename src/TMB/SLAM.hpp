@@ -306,7 +306,7 @@ Type SLAM(objective_function<Type>* obj) {
       SB_am(a,0) = N_m(a,0) * Wght_Age(a) * Mat_at_Age(a) * exp(-F_init(a)/2);
     }
   }
-  SB(0) = SB_am.col(0).sum();
+  SB_m(0) = SB_am.col(0).sum();
 
   // loop over remaining months
   for (int m=1; m<n_months; m++) {
@@ -315,9 +315,9 @@ Type SLAM(objective_function<Type>* obj) {
       N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
       SB_am(a,m) = N_m(a,m) * Wght_Age(a) * Mat_at_Age(a) * exp(-F_ma(a,m)/2);
     }
-    SB(m) = SB_am.col(m).sum();
+    SB_m(m) = SB_am.col(m).sum();
     // recruitment
-    N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB(m), SBpR) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+    N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB_m(m), SBpR) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
   }
 
   // Calculate catch
@@ -481,7 +481,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(S50);
   REPORT(S95);
 
-  REPORT(SB);
+  REPORT(SB_m);
   REPORT(F_minit);
   REPORT(F_m);
   REPORT(R0_m);
