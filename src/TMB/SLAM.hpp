@@ -168,7 +168,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Selectivity-at-Age
   Type S50 = exp(ls50);
-  Type Sdelta = exp(lWdelta);
+  Type Sdelta = exp(lsdelta);
   Type S95 = S50 + Sdelta;
 
   vector<Type> selA(n_ages);
