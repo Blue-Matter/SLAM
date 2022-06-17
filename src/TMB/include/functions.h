@@ -51,7 +51,6 @@ Type BH_SRR(Type R0, Type h, Type SB, Type SBpR) {
 }
 
 
-
 template<class Type>
 vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, Type Vmaxlen, Type Linf) {
 

@@ -2,7 +2,7 @@
 #undef TMB_OBJECTIVE_PTR
 #define TMB_OBJECTIVE_PTR obj
 
-#include "include/functions.h"
+
 
 // Estimate optimal monthly fishing pattern given life-history,
 // selectivity pattern, and monthly recruitment pattern
