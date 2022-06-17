@@ -2,12 +2,6 @@
 #undef TMB_OBJECTIVE_PTR
 #define TMB_OBJECTIVE_PTR obj
 
-template<class Type>
-Type BH_SRR(Type R0, Type h, Type SB, Type SBpR) {
-  Type Rec = 0;
-  Rec = (4*R0*h*SB)/(SBpR*R0*(1-h)+(5*h-1)*SB);
-  return(Rec);
-}
 
 
 // Estimate optimal monthly fishing pattern given life-history,
