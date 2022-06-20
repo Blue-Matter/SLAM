@@ -294,10 +294,8 @@ Type SLAM(objective_function<Type>* obj) {
   RelEffort.setZero();
   Type nEffMonths = 0;
   for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
       RelEffort(m) = F_m(m);
       nEffMonths += 1;
-    }
   }
 
   // mean 1
