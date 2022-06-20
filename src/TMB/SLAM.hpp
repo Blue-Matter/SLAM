@@ -388,14 +388,14 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   vector<Type> F_month_NLL(12);
-  F_month_pen.setZero();
+  F_month_NLL.setZero();
   if (use_Fmeanprior>0) {
     for (int m=0; m<n_months; m++) {
       int m_ind = m % 12; // calendar month index
-      F_month_pen(m_ind) += Type(-1)* dnorm(log(F_m(m)),log(F_mean(m_ind)), Type(0.4), true);
+      F_month_NLL(m_ind) += Type(-1)* dnorm(log(F_m(m)),log(F_mean(m_ind)), Type(0.4), true);
     }
   }
-  nll_joint(6) =
+  nll_joint(6) = F_month_NLL.sum();
 
   Type nll=0;
   nll = nll_joint.sum();
