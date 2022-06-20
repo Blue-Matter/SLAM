@@ -384,7 +384,7 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> F_mean(12);
   F_mean.setZero();
   for (int m=0; m<12; m++) {
-    F_mean(m) = F_month(m)/F_count(m)
+    F_mean(m) = F_month(m)/F_count(m);
   }
 
   vector<Type> F_month_NLL(12);
@@ -408,6 +408,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   REPORT(F_month_NLL);
   REPORT(F_mean);
+  REPORT(F_count);
 
   REPORT(SPR);
   REPORT(AWK);
