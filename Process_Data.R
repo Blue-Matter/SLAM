@@ -4,6 +4,8 @@ library(dplyr)
 library(lubridate)
 library(ggthemes)
 
+source('R/functions.r')
+
 # ---- Indonesia Case Study Data ----
 Data <- read.csv('G:/My Drive/1_PROJECTS/Biospherics_Indo_Octopus/Data/Forkani_Darawa_Octopus_Master.xlsx - Raw Data.csv')
 
@@ -481,7 +483,7 @@ ggplot(df, aes(x=Age_month, y=meanW)) +
   theme(plot.background=element_blank())
 
 data$Weight_Age <- df$meanW
-data$Weight_SD <- rep(sd, length(Weight_Age))
+data$Weight_Age_SD <- rep(sd, length(data$Weight_Age))
 
 
 # ---- Length-at-Age ----
@@ -521,7 +523,7 @@ ggsave('Figures/LifeHistory/Prob_Spawning.png', width=4, height=4)
 
 
 # ---- Post-Spawning-Mortality-at-Age ----
-data$phi_at_Age <- Data$Mat_at_Age
+data$PSM_at_Age <- data$Mat_at_Age
 
 # ---- Steepness -----
 CR <- exp(0.2*log(2.4E5)) # Van Heukelem 1973 & Hilborn and Walters 2021
@@ -538,9 +540,9 @@ data$CPUE <- CPUE_DF$mean/mean(CPUE_DF$mean, na.rm=TRUE)
 data$CPUE_SD <- CPUE_DF$logSD
 
 # ---- Weight Composition ----
-data$W_bins <- Weight_Bins
-data$W_mids <- Weight_Mids
-nbins <- length(data$W_mids)
+data$WghtBins <- Weight_Bins
+data$WghtMids <- Weight_Mids
+nbins <- length(data$WghtMids)
 nmonths <- length(data$Effort)
 
 CAW <- matrix(0, nrow=nbins, ncol=nmonths)
