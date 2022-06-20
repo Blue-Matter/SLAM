@@ -55,7 +55,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(log_sigmaR); // monthly rec dev sd
 
   // Index variables
-  int n_ages = Wght_Age.size();
+  int n_ages = Weight_Age.size();
   int n_bins = WghtMids.size();
   int n_months = CPUE.size();
 
@@ -101,7 +101,7 @@ Type SLAM(objective_function<Type>* obj) {
   // Generate Age-Weight Key
   matrix<Type> AWK(n_ages, n_bins);
   AWK.setZero();
-  AWK = generate_AWK(WghtBins, Wght_Age, Wght_Age_SD, n_ages, n_bins);
+  AWK = generate_AWK(WghtBins, Weight_Age, Weight_Age_SD, n_ages, n_bins);
 
   // F, M, and Z by month and age
   matrix<Type> F_ma(n_ages, n_months);
@@ -130,7 +130,7 @@ Type SLAM(objective_function<Type>* obj) {
     surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
   }
   for (int a=0; a<n_ages; a++) {
-    egg0(a) = surv0(a) * Wght_Age(a) * Mat_at_Age(a);
+    egg0(a) = surv0(a) * Weight_Age(a) * Mat_at_Age(a);
   }
   Type SBpR = egg0.sum();
 
@@ -149,7 +149,7 @@ Type SLAM(objective_function<Type>* obj) {
       } else {
         survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-PSM_at_Age(a-1));
       }
-      eggFa(a) = survF(a,m) * Wght_Age(a) * Mat_at_Age(a);
+      eggFa(a) = survF(a,m) * Weight_Age(a) * Mat_at_Age(a);
     }
     eggF(m) = eggFa.sum();
   }
@@ -211,7 +211,7 @@ Type SLAM(objective_function<Type>* obj) {
     }
     if (a>0) {
       N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
-      SB_am(a,0) = N_m(a,0) * Wght_Age(a) * Mat_at_Age(a) * exp(-F_init(a)/2);
+      SB_am(a,0) = N_m(a,0) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_init(a)/2);
     }
   }
   SB_m(0) = SB_am.col(0).sum();
@@ -221,7 +221,7 @@ Type SLAM(objective_function<Type>* obj) {
     int m_ind = m % 12; // calendar month index
     for(int a=1;a<n_ages;a++){
       N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
-      SB_am(a,m) = N_m(a,m) * Wght_Age(a) * Mat_at_Age(a) * exp(-F_ma(a,m)/2);
+      SB_am(a,m) = N_m(a,m) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_ma(a,m)/2);
     }
     SB_m(m) = SB_am.col(m).sum();
     // recruitment
@@ -238,7 +238,7 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=0; m<n_months; m++) {
     for(int a=0;a<n_ages;a++){
       predC_a(a,m) = N_m(a,m)*((1-Mat_at_Age(a))*exp(-M_ma(a,m)/2)+Mat_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-F_ma(a,m)));
-      predCB_a(a,m) = predC_a(a,m) * Wght_Age(a);
+      predCB_a(a,m) = predC_a(a,m) * Weight_Age(a);
     }
     predCB(m) = predCB_a.col(m).sum();
   }
