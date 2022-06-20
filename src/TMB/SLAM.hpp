@@ -38,6 +38,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_CPUE);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
+  DATA_INTEGER(use_Fmeanprior);
 
   // Estimated Parameters
   PARAMETER(ls50);  // log age-at-50% selectivity
