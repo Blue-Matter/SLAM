@@ -32,12 +32,13 @@ matrix<Type> generate_AWK(vector<Type> WghtBins, vector<Type> Wght_Age,
   matrix<Type> AWK(n_age, n_bins);
   AWK.setZero();
   for(int a=0;a<n_age;a++) {
+    Type mu = log(Wght_Age(a) -0.5*pow(Wght_Age_SD(a),2);
     for(int j=0;j<n_bins;j++) {
       if(j==n_bins-1) {
-        AWK(a,j) = Type(1.0) - pnorm(log(WghtBins(j)),log(Wght_Age(a)), Wght_Age_SD(a));
+        AWK(a,j) = Type(1.0) - pnorm(log(WghtBins(j)),mu, Wght_Age_SD(a));
       } else {
-        AWK(a,j) = pnorm(log(WghtBins(j+1)), log(Wght_Age(a)), Wght_Age_SD(a));
-        if(j>0) AWK(a,j) -= pnorm(log(WghtBins(j)), log(Wght_Age(a)), Wght_Age_SD(a));
+        AWK(a,j) = pnorm(log(WghtBins(j+1)), mu, Wght_Age_SD(a));
+        if(j>0) AWK(a,j) -= pnorm(log(WghtBins(j)), mu, Wght_Age_SD(a));
       }
     }
   }
