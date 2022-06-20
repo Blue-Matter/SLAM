@@ -567,5 +567,12 @@ data$CAW_ESS <- CAW_ESS
 # no used
 
 # ---- Save Data Object ----
+data$model <- 'SLAM'
+
+data$Fit_Effort <- 1
+data$Fit_CPUE <- 1
+data$use_Frwpen <- 1
+data$use_R0rwpen <- 1
+
 saveRDS(data, 'data-raw/casestudydata.rds')
 
