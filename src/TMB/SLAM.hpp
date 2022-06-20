@@ -8,8 +8,8 @@ template<class Type>
 Type SLAM(objective_function<Type>* obj) {
 
   // At-Age Schedules
-  DATA_VECTOR(Wght_Age);  // mean weight at age
-  DATA_VECTOR(Wght_Age_SD);  // standard deviation of weight at age (log-normal)
+  DATA_VECTOR(Weight_Age);  // mean weight at age
+  DATA_VECTOR(Weight_Age_SD);  // standard deviation of weight at age (log-normal)
   DATA_VECTOR(Mat_at_Age);  // maturity at age
   DATA_VECTOR(M_at_Age); // natural mortality at age
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
@@ -39,8 +39,8 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(use_R0rwpen);
 
   // Estimated Parameters
-  PARAMETER(ls50);  //
-  PARAMETER(lsdelta);
+  PARAMETER(ls50);  // log age-at-50% selectivity
+  PARAMETER(lsdelta); // log interval age-50 - age-95% selectivity
 
   PARAMETER_VECTOR(logR0_m_est); // monthly R0 - fraction
   PARAMETER(log_sigmaR0); // sd for random walk penalty in monthly R0
