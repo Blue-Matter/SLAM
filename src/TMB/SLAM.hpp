@@ -31,7 +31,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_SCALAR(h); // steepness of BH-SRR
 
   // priors and penalties
-  DATA(F_meanprior); // mean and log-normal SD for monthly F
+  DATA_VECTOR(F_meanprior); // mean and log-normal SD for monthly F
 
   // options
   DATA_INTEGER(Fit_Effort);
