@@ -368,22 +368,46 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
-  // penalty for mean F
-  Type F_mean = 0;
-  F_mean = F_m.sum()/F_m.size();
-  if (use_Fmeanprior>0) {
-    nll_joint(6) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
+  // penalty for mean monthly F
+  vector<Type> F_month(12);
+  F_month.setZero();
+  vector<Type> F_count(12);
+  F_count.setZero();
+  // calculate mean F for months where CPUE data exists
+  for (int m=0; m<n_months; m++) {
+    int m_ind = m % 12; // calendar month index
+    if (!R_IsNA(asDouble(CPUE(m)))) {
+      F_month(m_ind) += F_m(m);
+      F_count(m_ind) += Type(1);
+    }
   }
+  vector<Type> F_mean(12);
+  F_mean.setZero();
+  for (int m=0; m<12; m++) {
+    F_mean(m) = F_month(m)/F_count(m)
+  }
+
+  vector<Type> F_month_NLL(12);
+  F_month_pen.setZero();
+  if (use_Fmeanprior>0) {
+    for (int m=0; m<n_months; m++) {
+      int m_ind = m % 12; // calendar month index
+      F_month_pen(m_ind) += Type(-1)* dnorm(log(F_m(m)),log(F_mean(m_ind)), Type(0.4), true);
+    }
+  }
+  nll_joint(6) =
 
   Type nll=0;
   nll = nll_joint.sum();
 
   // Reports
-
   ADREPORT(SPR);
   ADREPORT(S50);
   ADREPORT(S95);
   ADREPORT(F_m);
+
+  REPORT(F_month_pen);
+  REPORT(F_mean);
 
   REPORT(SPR);
   REPORT(AWK);
