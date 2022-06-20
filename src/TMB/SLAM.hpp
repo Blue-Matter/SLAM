@@ -31,6 +31,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_SCALAR(h); // steepness of BH-SRR
 
   // priors and penalties
+  DATA(F_meanprior); // mean and log-normal SD for monthly F
 
   // options
   DATA_INTEGER(Fit_Effort);
@@ -261,8 +262,6 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-
-
   // Likelihoods
 
   // Catch-at-Weight
@@ -338,7 +337,7 @@ Type SLAM(objective_function<Type>* obj) {
     recdevnll -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
   }
 
-  vector<Type> nll_joint(6);
+  vector<Type> nll_joint(7);
   nll_joint.setZero();
 
   nll_joint(0) =  CAWnll.sum();
@@ -368,6 +367,13 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
+  // penalty for mean F
+  Type F_mean = 0;
+  F_mean = F_m.sum()/F_m.size();
+  if (use_Fmeanprior>0) {
+    nll_joint(6) = Type(-1)* dnorm(log(F_mean),log(F_meanprior(0)), F_meanprior(1), true);
+  }
+
   Type nll=0;
   nll = nll_joint.sum();
 
@@ -376,6 +382,7 @@ Type SLAM(objective_function<Type>* obj) {
   ADREPORT(SPR);
   ADREPORT(S50);
   ADREPORT(S95);
+  ADREPORT(F_m);
 
   REPORT(SPR);
   REPORT(AWK);
