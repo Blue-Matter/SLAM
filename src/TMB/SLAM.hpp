@@ -406,7 +406,7 @@ Type SLAM(objective_function<Type>* obj) {
   ADREPORT(S95);
   ADREPORT(F_m);
 
-  REPORT(F_month_pen);
+  REPORT(F_month_NLL);
   REPORT(F_mean);
 
   REPORT(SPR);
