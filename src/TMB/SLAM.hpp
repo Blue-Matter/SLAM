@@ -361,7 +361,7 @@ Type SLAM(objective_function<Type>* obj) {
       Frwpen(m-1) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
     }
   }
-  nll_joint(4) =
+  nll_joint(4) =Frwpen.sum();
 
   // penalty for random walk in logR0_m
   if (use_R0rwpen>0) {
