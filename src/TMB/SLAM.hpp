@@ -412,6 +412,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(F_month_NLL);
   REPORT(F_mean);
   REPORT(F_count);
+  REPORT(Frwpen);
 
   REPORT(SPR);
   REPORT(AWK);
