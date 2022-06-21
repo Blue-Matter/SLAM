@@ -395,7 +395,10 @@ Type SLAM(objective_function<Type>* obj) {
   if (use_Fmeanprior>0) {
     for (int m=0; m<n_months; m++) {
       int m_ind = m % 12; // calendar month index
-      F_month_NLL(m_ind) += Type(-1)* dnorm(log(F_m(m)),log(F_mean(m_ind)), F_meanprior(0), true);
+      if (R_IsNA(asDouble(CPUE(m)))) {
+        F_month_NLL(m_ind) += Type(-1)* dnorm(log(F_m(m)),log(F_mean(m_ind)), F_meanprior(0), true);
+      }
+
     }
   }
   nll_joint(6) = F_month_NLL.sum();
