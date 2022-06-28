@@ -61,7 +61,7 @@ ggplot(Effort, aes(x=Date, y=Effort, group=groups)) +
   theme_clean() +
   theme(axis.text.x = element_text(angle = 60, hjust=1),
         plot.background=element_blank())
-ggsave('Figures/Data/Effort.png', width=6)
+ggsave('Figures/Data/Effort.png', width=6, height=4)
 
 Effort %>% arrange(Year, Month_Name) %>% filter(Year==2017)
 Effort %>% arrange(Year, Month_Name) %>% filter(Year==2018)
@@ -95,7 +95,7 @@ ggplot(Catch_Month, aes(x=Date, y=Catch, group=groups)) +
   theme(axis.text.x = element_text(angle = 60, hjust=1),
         plot.background=element_blank())
 
-ggsave('Figures/Data/TotalCatch.png', width=6)
+ggsave('Figures/Data/TotalCatch.png', width=6, height=4)
 
 # ---- CPUE -----
 
@@ -152,7 +152,7 @@ ggplot(DF2, aes(x=Date, y=mean, group=groups)) +
   theme_clean() +
   theme(axis.text.x=element_text(angle=60, hjust=1),
         plot.background=element_blank())
-ggsave('Figures/Data/CPUE.png', width=6)
+ggsave('Figures/Data/CPUE.png', width=6, height=4)
 
 
 
@@ -178,7 +178,7 @@ ggplot(SizeData, aes(x=Length, y=Weight)) +
   theme_clean() +
   theme(plot.background=element_blank())
 
-ggsave('Figures/Data/Length_Weight.png', width=6)
+ggsave('Figures/Data/Length_Weight.png', width=6, height=4)
 
 ggplot(SizeData, aes(x=Length, y=Weight, color=Data.collector)) +
   facet_grid(Year~Month_Name) +
@@ -186,7 +186,7 @@ ggplot(SizeData, aes(x=Length, y=Weight, color=Data.collector)) +
   labs(x='Length (cm)', y='Weight (kg)') +
   theme_clean() +
   theme(plot.background=element_blank())
-ggsave('Figures/Data/Length_Weight_month_year_collector.png', width=9, height=7)
+ggsave('Figures/Data/Length_Weight_month_year_collector.png', width=12, height=7)
 
 
 # apply correction to weight records
@@ -272,7 +272,7 @@ ggplot(SizeData_correct, aes(x=Length, y=Weight)) +
   theme_clean() +
   theme(plot.background=element_blank())
 
-ggsave('Figures/Data/Length_Weight_correct.png', width=6)
+ggsave('Figures/Data/Length_Weight_correct.png', width=6, height=4)
 
 
 
@@ -533,7 +533,8 @@ data$h <- round(h,2)
 
 # ---- Relative Effort Time-Series ----
 data$Effort <- Effort$Effort/mean(Effort$Effort, na.rm=TRUE)
-data$Effort_SD <- rep(0.2, length(data$Effort))
+effort_sd <- 0.2
+data$Effort_SD <- rep(effort_sd, length(data$Effort))
 
 # ---- CPUE Time-Series ----
 data$CPUE <- CPUE_DF$mean/mean(CPUE_DF$mean, na.rm=TRUE)
@@ -575,4 +576,30 @@ data$use_Frwpen <- 1
 data$use_R0rwpen <- 1
 
 saveRDS(data, 'data-raw/casestudydata.rds')
+
+
+# ---- Table of Data ----
+Years <- min(Data_mod$Year):max(Data_mod$Year)
+
+DF <- data.frame(Year=rep(Years, each=12), Month=1:12)
+
+DF$CAWn <- NA
+nts <- dim(data$CAW)[2]
+DF$CAWn[1:nts] <- apply(data$CAW, 2, sum)
+
+Effort$relEffort <- Effort$Effort/mean(Effort$Effort, na.rm=TRUE)
+
+DF <- left_join(DF, Effort %>% select(Effort=relEffort, Year, Month), by=c('Year', 'Month'))
+DF$Effort_SD <- effort_sd
+
+CPUE_DF$Index <- CPUE_DF$mean/mean(CPUE_DF$mean, na.rm=TRUE)
+DF <- left_join(DF, CPUE_DF %>% select(Index=Index, Index_SD=logSD, Year, Month), by=c('Year', 'Month'))
+
+DF <- DF %>% round(2)
+DF$Month <- month.abb[DF$Month]
+
+
+write.csv(DF, 'data-raw/DataTable.csv')
+
+
 
