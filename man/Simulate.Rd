@@ -2,16 +2,16 @@
 % Please edit documentation in R/PopDynamics.R
 \name{Simulate}
 \alias{Simulate}
-\title{Title}
+\title{Simulate the fishery}
 \usage{
-Simulate(Pars)
+Simulate(Pars, sim = 1)
 }
 \arguments{
-\item{Pars}{}
+\item{Pars}{A list of parameters}
 }
 \value{
-
+A dataframe with simulated fishery dynamics
 }
 \description{
-Title
+Simulate the fishery
 }

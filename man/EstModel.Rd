@@ -9,9 +9,6 @@ EstModel(data, parameters, random, starts, bounds = NULL)
 \arguments{
 \item{random}{}
 }
-\value{
-
-}
 \description{
 Title
 }

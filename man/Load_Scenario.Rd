@@ -9,9 +9,6 @@ Load_Scenario(scen = 1)
 \arguments{
 \item{scen}{}
 }
-\value{
-
-}
 \description{
 Title
 }
