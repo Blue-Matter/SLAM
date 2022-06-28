@@ -1,122 +1,81 @@
 
 
 
-
-#' Title
+#' Simulate the fishery
 #'
-#' @param Pars
+#' @param Pars A list of parameters
 #'
-#' @return
+#' @return A dataframe with simulated fishery dynamics
 #' @export
 #'
 #' @examples
-Simulate <- function(Pars, seed=101) {
-  set.seed(seed)
+Simulate <- function(Pars, sim=1) {
+
   Ages <- 0:Pars$maxage
   nAge <- length(Ages)
-  LatAge <- Pars$Linf*(1-exp(-Pars$K*(Ages-Pars$t0)))
-  LatAge[LatAge==0] <- 0.001
-  LenSD <- LatAge * Pars$LenCV
+  Weight_Age <- Pars$Weight_Age
+  Weight_Age_SD <- Pars$Weight_Age_SD
+  Weight_Bins <- Pars$WghtBins
+  Weight_Mids <- Pars$WghtMids
 
-  WatAge <- Pars$wa*LatAge^Pars$wb
-
-  # Probability of length-at-age
-  Len_Bins <- seq(0, to=Pars$BinMax, by=Pars$BinWidth)
-  nbins <- length(Len_Bins)-1
-  By <- Len_Bins[2]-Len_Bins[1]
-  Len_Mids <- seq(Len_Bins[1]+0.5*By, by=By, length.out=nbins)
-  ALK <- matrix(0, nrow=nAge, ncol=nbins)
-  ALK[,1] <- pnorm((Len_Bins[2] - LatAge)/LenSD, 0, 1) # probability of length-at-age
+  # Probability of weight-at-age
+  nbins <- length(Weight_Mids)
+  AWK <- matrix(0, nrow=nAge, ncol=nbins)
+  mu <- log(Weight_Age) -0.5*Weight_Age_SD^2
+  AWK[,1] <- plnorm(Weight_Bins[2], mu, Weight_Age_SD) # probability of weight-at-age
   for (i in 2:(nbins-1)) {
-    ALK[,i] <- pnorm((Len_Bins[i+1] - LatAge)/LenSD, 0, 1) -
-      pnorm((Len_Bins[i] - LatAge)/LenSD, 0, 1)
+    AWK[,i] <- plnorm(Weight_Bins[i+1], mu, Weight_Age_SD) -
+      plnorm(Weight_Bins[i], mu, Weight_Age_SD)
   }
-  ALK[,nbins] <- 1 - pnorm((Len_Bins[nbins] - LatAge)/LenSD, 0, 1)
+  AWK[,nbins] <- 1 - plnorm(Weight_Bins[nbins], mu, Weight_Age_SD)
+
+  # Natural mortality
+  M_at_Age <- rep(Pars$M, nAge)
+
+  # Post-spawning mortality
+  PSM_at_Age <- Pars$PSM_at_Age
 
   # Maturity
-  pA <- 1/(1+exp(-log(19)*((Ages-Pars$A50)/(Pars$A95-Pars$A50))))
-  # pL <- 1/(1+exp(-log(19)*((Len_Mids-Pars$L50)/(Pars$L95-Pars$L50))))
+  Mat_at_Age <- Pars$Mat_at_Age
 
   # Selectivity - double-normal
-  sL <- calSelL(Len_Mids, Pars$SL5, Pars$SFS, Pars$Vmaxlen, Pars$Linf)
-  sA <- apply(ALK%*%sL, 1, sum)
+  Sel_at_Age <-  1/(1+exp(-log(19)*((Ages-Pars$sA50)/(Pars$sA95-Pars$sA50))))
 
-  # Set up arrays
-  nTS <- Pars$nyears * 12 # total number of time-steps
-  N <- matrix(0, nrow=nAge, ncol=nTS)
-  C <- N
-  SB <- rep(0, nTS)
-
-  # Generate recruitment deviations
-  rec_sd <- Pars$sigmaR
-  rec_devs <- exp(rnorm(nTS, -0.5*rec_sd^2, rec_sd))
-  # monthly pattern in recruitment
-  if (!is.null(Pars$rec_pattern)) {
-    rec_pattern <- rep(Pars$rec_pattern, nTS)
-  } else {
-    rec_pattern <- GenMonthlyRec(mu=Pars$rec_mu, sigma=Pars$rec_sd)
-  }
-
-
+  # recruitment deviations
+  rec_devs <- Pars$rec_devs[,sim]
+  rec_pattern <- Pars$rec_mu
   Rbar <- Pars$Rbar # mean annual recruitment
 
-  M_at_age <- rep(Pars$M, nAge)
-  phi_at_age <- pA # proportion that die after spawning - assumed to follow maturity curve
+  # Fishing Effort and Mortality
+  Eff_DF <- Pars$Effort %>% dplyr::filter(Sim==sim)
+  nts <- nrow(Eff_DF)
+  Effort <- Eff_DF$Effort
 
-  # Calculate seasonal effort that maximizes yield
-  data = list()
-  data$Wt_at_Age <- WatAge
-  data$Mat_at_Age <- pA
-  data$M_at_Age <- M_at_age
-  data$phi_at_Age <- phi_at_age
-
-  optF <- Optimize(Data=data, Rec_Pattern=rec_pattern,
-                   selA=sA, opt_type=1, utilpow=0.9, assumed_h=Pars$h)
-
-  relF <- optF$F_m/max(optF$F_m)
-  if (Pars$effortPattern == 'flat') {
-    Effort <- rep(Pars$currentE, length.out=nTS-12)
-    Edevs <- exp(rnorm(nTS-12, -0.5*Pars$Ecv^2, Pars$Ecv))
-    Effort <- Effort * relF*Edevs
-  } else if (Pars$effortPattern == 'inc') {
-    Effort <- seq(0, to=Pars$currentE, length.out=nTS-12)
-    Edevs <- exp(rnorm(nTS-12, -0.5*Pars$Ecv^2, Pars$Ecv))
-    Effort <- Effort * relF*Edevs
-
-  }else if (Pars$effortPattern == 'dec') {
-    Effort_inc <- seq(0, to=2*Pars$currentE, length.out=(nTS-12)/2)
-    Effort_dec <- seq(2*Pars$currentE, to=Pars$currentE, length.out=(nTS-12)/2)
-    Effort <- c(Effort_inc, Effort_dec)[1:(nTS-12)]
-    Edevs <- exp(rnorm(nTS-12, -0.5*Pars$Ecv^2, Pars$Ecv))
-    Effort <- Effort * relF*Edevs
-  } else {
-    stop('Pars$effortPattern not valid')
-  }
-
-  Effort <-c(rep(0, 12), Effort) # unfished for first year
-  q <- Pars$currentF/mean(Effort[(nTS-11):nTS]) # catchability
-
-  Fvector <- q * Effort # fishing mortality by month
+  Fvector <- Pars$q * Effort # fishing mortality by month
 
 
-  F_at_age <-  t(replicate(nAge, Fvector)) * sA
-  Z_at_age <- M_at_age + F_at_age
+  # Set up arrays
+  N <- matrix(0, nrow=nAge, ncol=nts)
+  C <- N
+  SB <- rep(0, nts)
+  F_at_Age <-  t(replicate(nAge, Fvector)) * Sel_at_Age
+  Z_at_Age <- M_at_Age + F_at_Age
 
   # SPR
   theta_0 <- rep(1, nAge)
-  theta_F <- matrix(0, nrow=nAge, ncol=nTS)
+  theta_F <- matrix(0, nrow=nAge, ncol=nts)
   theta_F[1,] <- 1
   for (a in 2:nAge) {
-    theta_0[a] <- theta_0[a-1]*exp(-M_at_age[a-1])*(1-phi_at_age[a-1])
+    theta_0[a] <- theta_0[a-1]*exp(-M_at_Age[a-1])*(1-PSM_at_Age[a-1])
   }
-  for (t in 1:nTS) {
+  for (t in 1:nts) {
     for (a in 2:nAge) {
-      theta_F[a,t] <- theta_F[a-1,t]*exp(-Z_at_age[a-1,t])*(1-phi_at_age[a-1])
+      theta_F[a,t] <- theta_F[a-1,t]*exp(-Z_at_Age[a-1,t])*(1-PSM_at_Age[a-1])
     }
   }
 
-  E0 <- sum(theta_0*pA*WatAge)
-  Ef <- apply(theta_F*pA*WatAge, 2, sum)
+  E0 <- sum(theta_0*pA*Weight_Age)
+  Ef <- apply(theta_F*pA*Weight_Age, 2, sum)
   SPR <- Ef/E0
 
   # Recruitment
@@ -126,68 +85,76 @@ Simulate <- function(Pars, seed=101) {
     h <- 0.999
   }
 
+  # Unfished population
+  N_unfished <- matrix(0, nAge, 12)
+
   # Initial time-step - unfished
-  for (t in 1:36) {
+  for (t in 1:60) {
     month <- t%%12
     if (month==0) month <-12
     for (a in 0:Pars$maxage) {
       if (a ==0)
-        N[a+1,month] <- rec_pattern[month]*Rbar* rec_devs[t]
+        N_unfished[a+1,month] <- rec_pattern[month]*Rbar
       if (a>0) {
         if (month==1) {
-          N[a+1, month] <- N[a,12]*exp(-M_at_age[a])*(1-phi_at_age[a])
+          N_unfished[a+1, month] <- N_unfished[a,12]*exp(-M_at_Age[a])*(1-PSM_at_Age[a])
         } else {
-          N[a+1, month] <- N[a,month-1]*exp(-M_at_age[a])*(1-phi_at_age[a])
+          N_unfished[a+1, month] <- N_unfished[a,month-1]*exp(-M_at_Age[a])*(1-PSM_at_Age[a])
         }
       }
     }
-    SB[month] <- sum(N[,month]*WatAge*pA)*exp(-Fvector[month]/2)
   }
 
-  # Loop over time-steps
-  for (t in 13:nTS) {
+  SB0 <- apply(N_unfished * Weight_Age*Mat_at_Age, 2, sum)
+
+  # Fished population - Loop over time-steps
+  for (t in 1:nts) {
     month <- t%%12
+    # recruits
     if (month==0) month <-12
-    for (a in 1:Pars$maxage) {
-      N[a+1, t] <- N[a,t-1]*exp(-Z_at_age[a,t-1])*(1-phi_at_age[a])
+    if (t ==1) {
+      for (a in 1:Pars$maxage) {
+        N[a+1, t] <- N_unfished[a,12]*exp(-Z_at_Age[a,1])*(1-PSM_at_Age[a])
+      }
+    } else {
+      for (a in 1:Pars$maxage) {
+        N[a+1, t] <- N[a,t-1]*exp(-Z_at_Age[a,t-1])*(1-PSM_at_Age[a])
+      }
     }
     #SB
-    SB[t] <- sum(N[,t]*WatAge*pA)*exp(-Fvector[t]/2)
-    # recruits
+    SB[t] <- sum(N[,t]*Weight_Age*Mat_at_Age)*exp(-Fvector[t]/2)
+    C[,t] <- N[,t]*((1-Mat_at_Age)*exp(-M_at_Age/2)+Mat_at_Age*exp(-PSM_at_Age/2))*(1-exp(-F_at_Age[,t]))
     N[1,t] <- BH_SRR(R0=Pars$Rbar*rec_pattern[month], h, SB=SB[t], SBpR=E0) * rec_devs[t] # rec_pattern[month]*rec_devs[t] *  Rbar
-    C[,t] <- N[,t]*((1-pA)*exp(-M_at_age/2)+pA*exp(-phi_at_age/2))*(1-exp(-F_at_age[,t]))
   }
 
-  B <- apply(N * replicate(nTS,WatAge), 2, sum)
-  CB <- apply(C * replicate(nTS,WatAge), 2, sum)
+  B <- apply(N * replicate(nts,Weight_Age), 2, sum)
+  CB <- apply(C * replicate(nts,Weight_Age), 2, sum)
 
+  # Generate Data
+  data_nts <- Pars$nyears * 12
+  data_ts <- (nts-data_nts+1):nts # time-steps for generating data
 
   # Index of Abundance
-  I <- B * exp(rnorm(nTS, -0.5*Pars$sigmaI^2, Pars$sigmaI))
-  I <- I/mean(I)
+  cpue <- CB[data_ts]/Effort[data_ts] * exp(rnorm(data_nts, -0.5*Pars$sigmaI^2, Pars$sigmaI))
+  cpue <- cpue/mean(cpue)
 
-  # Size structure of catch
-  ALK_C <- array(0, dim=dim(ALK))
-  for (a in 1:nAge) {
-    ALK_C[a,] <- ALK[a,] * sL
+  # Index of Effort
+  Eff_ind <- Effort[data_ts] * exp(rnorm(data_nts, -0.5*Pars$sigmaE^2, Pars$sigmaE))
+  Eff_ind <- Eff_ind/mean(Eff_ind)
+
+  # Catch-at-Weight
+  CAW_exp <- matrix(0, nrow=nbins, ncol=nts)
+  for (t in 1:nts) {
+    CAW_exp[,t] <- apply(AWK * C[,t], 2, sum)
   }
-  ALK_C <- ALK_C/apply(ALK_C,1, sum)
-
-  CAL_exp <- matrix(0, nrow=nbins, ncol=nTS)
-  for (t in 1:nTS) {
-    CAL_exp[,t] <- apply(ALK_C * C[,t], 2, sum)
+  CAW_samp <- matrix(0, nrow=nbins, ncol=nts)
+  for (t in 1:nts) {
+    if (sum(CAW_exp[,t])>0)
+      CAW_samp[,t] <- Pars$CAW_nsamp * (rmultinom(1, size=Pars$CAW_ESS, prob=CAW_exp[,t]))/Pars$CAW_ESS
   }
-  CAL_samp <- matrix(0, nrow=nbins, ncol=nTS)
-  for (t in 1:nTS) {
-    if (sum(CAL_exp[,t])>0)
-      CAL_samp[,t] <- Pars$CAL_nsamp * (rmultinom(1, size=Pars$CAL_ESS, prob=CAL_exp[,t]))/Pars$CAL_ESS
-  }
-
-
-
-  Effort_ind <- Effort *  exp(rnorm(nTS, -0.5*Pars$sigmaE^2, Pars$sigmaE))
 
   out <- list()
+  out$time_steps <- Pars$Effort %>% select(t, Year, Month, Date)
   out$E0 <- E0
   out$Ef <- Ef
   out$Number <- N
@@ -195,9 +162,9 @@ Simulate <- function(Pars, seed=101) {
   out$SB <- SB
   out$Catch <- C
   out$Catch_Biomass <- CB
-  out$CAL_exp <- CAL_exp
-  out$CAL_samp <- CAL_samp
-  out$Index <- I
+  out$CAW_exp <- CAW_exp
+  out$CAW_samp <- CAW_samp
+  out$Index <- cpue
   out$SPR <- SPR
   out$Len_Bins <- Len_Bins
   out$Len_Mids <- Len_Mids
@@ -209,13 +176,10 @@ Simulate <- function(Pars, seed=101) {
   out$phi_at_Age <- phi_at_age
   out$F_m <- Fvector
   out$Effort <- Effort
-  out$Effort_ind <- Effort_ind
+  out$Eff_ind <- Eff_ind
   out$Rec_Pattern <- rec_pattern
-  out$Sel_at_Age <- sA
-  out$Sel_at_Length <- sL
-  out$Z_at_age <- Z_at_age
-  out$ALK <- ALK
-  out$ALK_C <- ALK_C
+  out$Sel_at_Age <- Sel_at_Age
+  out$Pars <- Pars
   out
 }
 
