@@ -328,8 +328,17 @@ Type SLAM(objective_function<Type>* obj) {
       predCPUE(m) = predCB(m)/StEffort(m);
   }
 
+  // mean 1 over time-steps where CPUE data exists
   Type CPUEmean = 0;
-  CPUEmean = predCPUE.sum()/Effn;
+  Type CPUEsum = 0;
+  Type CPUEn = 0;
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(CPUE(m)))) {
+      CPUEsum += stpredCPUE(m);
+      CPUEn += 1;
+    }
+    CPUEmean = CPUEsum/CPUEn;
+  }
   vector<Type> CPUEnll(n_months);
   CPUEnll.setZero();
   for (int m=0; m<n_months; m++) {
