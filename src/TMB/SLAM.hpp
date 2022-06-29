@@ -292,15 +292,22 @@ Type SLAM(objective_function<Type>* obj) {
   // Effort
   vector<Type> RelEffort(n_months);
   RelEffort.setZero();
-  Type nEffMonths = 0;
   for (int m=0; m<n_months; m++) {
       RelEffort(m) = F_m(m);
-      nEffMonths += 1;
   }
 
-  // mean 1
+  // mean 1 over time-steps where effort data exists
   Type Effmean = 0;
-  Effmean = RelEffort.sum()/nEffMonths;
+  Type Effsum = 0;
+  Type EffYears = 0;
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(Effort(m)))) {
+      Effsum += RelEffort(m);
+      EffYears += 1;
+    }
+    Effmean = Effsum/EffYears;
+  }
+
   vector<Type> StEffort(n_months);
   StEffort.setZero();
   vector<Type> Effnll(n_months);
