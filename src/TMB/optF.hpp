@@ -20,7 +20,6 @@ Type optF(objective_function<Type>* obj) {
   DATA_INTEGER(opt_type); // 0 to maximize yield, 1 to maximize HARA utility
   DATA_VECTOR(utilpow); // power for utility function
   DATA_SCALAR(h); // steepness
-  DATA_SCALAR(R0); // average unfished annual recruitment
 
   // At-Age Schedules
   DATA_VECTOR(Wght_Age);  // mean weight at age
@@ -82,7 +81,7 @@ Type optF(objective_function<Type>* obj) {
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        N_m(a,m_ind) = rec_pattern(m_ind) * R0;
+        N_m(a,m_ind) = rec_pattern(m_ind);
       } else {
         if (m_ind==0) {
           N_m(a,m_ind) = N_m(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
@@ -93,7 +92,7 @@ Type optF(objective_function<Type>* obj) {
       SB_a(a) = N_m(a,m_ind) * Wght_Age(a) * Mat_at_Age(a);
     }
     SB(m_ind) = SB_a.sum()*exp(-F_m(m_ind)/2);
-    Rec(m_ind) = BH_SRR2(rec_pattern(m_ind)*R0, h, SB(m_ind), SBpR);
+    Rec(m_ind) = BH_SRR2(rec_pattern(m_ind), h, SB(m_ind), SBpR);
   }
 
   // with F and SRR
@@ -109,7 +108,7 @@ Type optF(objective_function<Type>* obj) {
       SB_a(a) = N_m(a,m_ind) * Wght_Age(a) * Mat_at_Age(a);
     }
     SB(m_ind) = SB_a.sum()*exp(-F_m(m_ind)/2);
-    Rec(m_ind) = BH_SRR2(rec_pattern(m_ind)*R0, h, SB(m_ind), SBpR);
+    Rec(m_ind) = BH_SRR2(rec_pattern(m_ind), h, SB(m_ind), SBpR);
     N_m(0,m_ind) = Rec(m_ind);
   }
 
