@@ -299,13 +299,13 @@ Type SLAM(objective_function<Type>* obj) {
   // mean 1 over time-steps where effort data exists
   Type Effmean = 0;
   Type Effsum = 0;
-  Type EffYears = 0;
+  Type Effn = 0;
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
       Effsum += RelEffort(m);
-      EffYears += 1;
+      Effn += 1;
     }
-    Effmean = Effsum/EffYears;
+    Effmean = Effsum/Effn;
   }
 
   vector<Type> StEffort(n_months);
@@ -329,7 +329,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   Type CPUEmean = 0;
-  CPUEmean = predCPUE.sum()/nEffMonths;
+  CPUEmean = predCPUE.sum()/Effn;
   vector<Type> CPUEnll(n_months);
   CPUEnll.setZero();
   for (int m=0; m<n_months; m++) {
