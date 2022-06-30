@@ -202,12 +202,19 @@ Assess <- function(data, options=list(),
                    Fit_CPUE=1,
                    log_sigmaF=log(0.5),
                    log_sigmaR=log(0.9),
-                   log_sigmaR0=log(0.6)) {
+                   log_sigmaR0=log(0.6),
+                   rerun=F) {
 
   # Starting parameters
   ls50 <- log(3)
   lsdelta <- log(1)
   logR0_m_est <- rep(log(1), 11)
+
+  if (rerun) {
+    ls50 <- ls50 * rnorm(1, 1, 0.1)
+    lsdelta <- log(2) * rnorm(1, 1, 0.1)
+    logR0_m_est <- rep(log(1), 11) + rnorm(11, 0, 0.1)
+  }
 
   nts <- length(data$Effort)
   logF_m <- rep(log(0.1), nts)
