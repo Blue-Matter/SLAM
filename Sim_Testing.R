@@ -39,10 +39,10 @@ ggsave('Figures/SimTest/Rec_Scenarios.png', width=4, height=4)
 
 
 ## Recruitment Process Error Scenarios ----
-recsd_scen_names <- c('Medium','High')
+recsd_scen_names <- 'High'
 
 ## Natural Mortality Scenarios ----
-M_scen_names <- c('0.1','0.2')
+M_scen_names <- 0.15 # c('0.1','0.2')
 
 ## Build Scenario Grid ----
 grid <- expand.grid(rec_scen_names=rec_scen_names,
@@ -55,6 +55,11 @@ nyears <- 10
 nts <- nyears * 12
 nsim <- 100
 set.seed(1001)
+
+# re-do this - last 5 years matching data
+# assumptions for earlier years
+# - another run with missing data to match
+
 
 calcMonthlyMean <- function(dat, offset=0) {
 
