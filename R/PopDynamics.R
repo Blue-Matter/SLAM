@@ -74,8 +74,8 @@ Simulate <- function(Pars, sim=1) {
     }
   }
 
-  E0 <- sum(theta_0*pA*Weight_Age)
-  Ef <- apply(theta_F*pA*Weight_Age, 2, sum)
+  E0 <- sum(theta_0*Mat_at_Age*Weight_Age)
+  Ef <- apply(theta_F*Mat_at_Age*Weight_Age, 2, sum)
   SPR <- Ef/E0
 
   # Recruitment
@@ -155,6 +155,7 @@ Simulate <- function(Pars, sim=1) {
 
   out <- list()
   out$time_steps <- Pars$Effort %>% select(t, Year, Month, Date)
+  out$SB0 <- SB0
   out$E0 <- E0
   out$Ef <- Ef
   out$Number <- N
@@ -164,16 +165,9 @@ Simulate <- function(Pars, sim=1) {
   out$Catch_Biomass <- CB
   out$CAW_exp <- CAW_exp
   out$CAW_samp <- CAW_samp
+  out$M_at_Age <- M_at_Age
   out$Index <- cpue
   out$SPR <- SPR
-  out$Len_Bins <- Len_Bins
-  out$Len_Mids <- Len_Mids
-  out$M_at_Age <- M_at_age
-  out$Len_at_Age <- LatAge
-  out$SD_Len_at_Age <- LenSD
-  out$Wt_at_Age <- WatAge
-  out$Mat_at_Age <- pA
-  out$phi_at_Age <- phi_at_age
   out$F_m <- Fvector
   out$Effort <- Effort
   out$Eff_ind <- Eff_ind
@@ -183,9 +177,114 @@ Simulate <- function(Pars, sim=1) {
   out
 }
 
-Project <- function() {
+#' Title
+#'
+#' @param data
+#' @param options
+#' @param control
+#' @param map
+#' @param Fit_Effort
+#' @param Fit_CPUE
+#' @param log_sigmaF
+#' @param log_sigmaR
+#' @param log_sigmaR0
+#'
+#' @return
+#' @export
+#'
+#' @examples
+Assess <- function(data, options=list(),
+                   control=list(eval.max=2E4, iter.max=2E4, abs.tol=1e-20),
+                   map=list(log_sigmaF=factor(NA),
+                            log_sigmaR=factor(NA),
+                            log_sigmaR0=factor(NA)),
+                   Fit_Effort=1,
+                   Fit_CPUE=1,
+                   log_sigmaF=log(0.5),
+                   log_sigmaR=log(0.6),
+                   log_sigmaR0=log(0.6)) {
 
+  # Starting parameters
+  ls50 <- log(3)
+  lsdelta <- log(1)
+  logR0_m_est <- rep(log(1), 11)
+
+  nts <- length(data$Effort)
+  logF_m <- rep(log(0.1), nts)
+  logF_minit <- log(0.1)
+  logRec_Devs <- rep(0, nts-1)
+  parameters <- list(ls50=ls50,
+                     lsdelta=lsdelta,
+                     logR0_m_est=logR0_m_est,
+                     log_sigmaR0=log_sigmaR0,
+                     logF_m=logF_m,
+                     logF_minit=logF_minit,
+                     logRec_Devs=logRec_Devs,
+                     log_sigmaF=log_sigmaF,
+                     log_sigmaR=log_sigmaR)
+
+  if (!is.null(map$log_sigmaR)) {
+    Random <- NULL
+  } else {
+    Random <- 'logRec_Devs'
+  }
+
+  data$use_Fmeanprior <- 0
+  data$F_meanprior <- 1
+
+  if (!Fit_Effort) data$Fit_Effort <- 0
+  if (!Fit_CPUE) data$Fit_CPUE <- 0
+
+  # Group estimates from sequential time-steps with no data
+
+  # Find time-steps with no data
+  df <- data.frame(t=1:nts, CAW=apply(data$CAW, 2, sum)==0,
+                   Effort=is.na(data$Effort),
+                   CPUE=is.na(data$CPUE)) %>%
+    filter(CAW==TRUE, Effort==TRUE, CPUE==TRUE)
+
+  if (is.null(map[["logF_m"]])) {
+    map$logF_m <- 1:nts
+    for (i in 2:nts) {
+      if(i %in% df$t) {
+        map$logF_m[i] <- map$logF_m[i-1]
+      }
+    }
+    map$logF_m <- factor(map$logF_m)
+  }
+
+  if (is.null(map[["logRec_Devs"]])) {
+    map$logRec_Devs <- 1:(nts-1)
+    for (i in 2:nts) {
+      if(i %in% df$t) {
+        map$logF_m[i] <- map$logF_m[i-1]
+        map$logRec_Devs[i] <- map$logRec_Devs[i-1]
+      }
+    }
+    map$logRec_Devs <- factor(map$logRec_Devs)
+  }
+
+  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
+                        silent=TRUE, hessian=FALSE, map=map, random=Random)
+
+  starts <- obj$par
+  opt <- suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control))
+
+  rep <- obj$report(obj$env$last.par.best)
+  df <- data.frame(t=1:nts, F=rep$F_m, SPR=rep$SPR)
+  df$M <- df$t %% 12
+  df$M[df$M ==0] <- 12
+  df$Month <- month.abb[df$M]
+  df$Month <- factor(df$Month, ordered = TRUE, levels=month.abb)
+
+  df2 <- df %>% group_by(Month) %>% summarize(meanF=mean(F), meanSPR=mean(SPR))
+  rep$meanF <- df2$meanF
+  rep$meanSPR <- df2$meanSPR
+
+  list(opt=opt, obj=obj, rep=rep, sdreport=TMB::sdreport(obj, obj$env$last.par.best))
 }
+
+
 
 
 Predict <- function() {
@@ -201,10 +300,10 @@ Optimize <- function(Data, Rec_Pattern, selA, opt_type=1, utilpow=0.3, assumed_h
                opt_type=opt_type,
                utilpow=utilpow,
                h=assumed_h,
-               Wght_Age=Data$Wt_at_Age,
+               Wght_Age=Data$Weight_Age,
                Mat_at_Age=Data$Mat_at_Age,
                M_at_Age=Data$M_at_Age,
-               PSM_at_Age=Data$phi_at_Age,
+               PSM_at_Age=Data$PSM_at_Age,
                selA=selA)
 
   parameters <- list(logF_m=rep(log(0.01),12))
