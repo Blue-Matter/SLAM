@@ -201,7 +201,7 @@ Assess <- function(data, options=list(),
                    Fit_Effort=1,
                    Fit_CPUE=1,
                    log_sigmaF=log(0.5),
-                   log_sigmaR=log(0.6),
+                   log_sigmaR=log(0.9),
                    log_sigmaR0=log(0.6)) {
 
   # Starting parameters
@@ -287,12 +287,22 @@ Assess <- function(data, options=list(),
 
 
 
-Predict <- function() {
-
-}
 
 
 # ---- Calculate Optimal Fishing Pattern ----
+#' Title
+#'
+#' @param Data
+#' @param Rec_Pattern
+#' @param selA
+#' @param opt_type
+#' @param utilpow
+#' @param assumed_h
+#'
+#' @return
+#' @export
+#'
+#' @examples
 Optimize <- function(Data, Rec_Pattern, selA, opt_type=1, utilpow=0.3, assumed_h=0.6) {
 
   data <- list(model='optF',
