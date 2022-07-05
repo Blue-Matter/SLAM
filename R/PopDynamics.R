@@ -194,7 +194,7 @@ Simulate <- function(Pars, sim=1) {
 #'
 #' @examples
 Assess <- function(data, options=list(),
-                   control=list(eval.max=2E4, iter.max=2E4, abs.tol=1e-20),
+                   control=list(eval.max=2E4, iter.max=2E4, abs.tol=0),
                    map=list(log_sigmaF=factor(NA),
                             log_sigmaR=factor(NA),
                             log_sigmaR0=factor(NA)),
@@ -206,7 +206,7 @@ Assess <- function(data, options=list(),
                    rerun=F) {
 
   # Starting parameters
-  ls50 <- log(3)
+  ls50 <- log(6)
   lsdelta <- log(1)
   logR0_m_est <- rep(log(1), 11)
 
@@ -275,7 +275,10 @@ Assess <- function(data, options=list(),
                         silent=TRUE, hessian=FALSE, map=map, random=Random)
 
   starts <- obj$par
-  opt <- suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control))
+  lower <- c(log(1), log(0.1), rep(-Inf, length(obj$par)-2))
+  upper <- c(log(12), log(2), rep(Inf, length(obj$par)-2))
+  opt <- suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control,
+                                 lower=lower, upper=upper))
 
   rep <- obj$report(obj$env$last.par.best)
   df <- data.frame(t=1:nts, F=rep$F_m, SPR=rep$SPR)
