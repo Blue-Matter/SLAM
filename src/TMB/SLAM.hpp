@@ -89,21 +89,29 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Transform selectivity parameters
 
-  // Selectivity-at-Age
+  // Selectivity-at-Weight
   Type S50 = exp(ls50);
   Type Sdelta = exp(lsdelta);
   Type S95 = S50 + Sdelta;
 
-  vector<Type> selA(n_ages);
-  selA.setZero();
-  for(int a=0;a<n_ages;a++){
-    selA(a) = 1 / (1 + exp(-log(Type(19))*(a - S50)/Sdelta));
+  vector<Type> selW(n_bins);
+  selW.setZero();
+  for(int a=0;a<n_bins;a++){
+    selW(a) = 1 / (1 + exp(-log(Type(19))*(WghtMids - S50)/Sdelta));
   }
 
   // Generate Age-Weight Key
   matrix<Type> AWK(n_ages, n_bins);
   AWK.setZero();
   AWK = generate_AWK(WghtBins, Weight_Age, Weight_Age_SD, n_ages, n_bins);
+
+  // Selectivity-at-Age
+  vector<Type> selA(n_ages);
+  selA.setZero();
+  for(int a=0;a<n_ages;a++){
+    selA(a) += (selW * AWK.col(a)).sum();
+  }
+
 
   // F, M, and Z by month and age
   matrix<Type> F_ma(n_ages, n_months);
