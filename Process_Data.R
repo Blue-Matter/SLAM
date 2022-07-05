@@ -506,7 +506,7 @@ pred <- pwr2(data$Weight_Age)
 
 # ---- Mortality-at-Age ----
 
-data$M_at_Age <- rep(0.1, n_ages)
+data$M_at_Age <- rep(0.15, n_ages)
 
 # ---- Maturity-at-Age ----
 
