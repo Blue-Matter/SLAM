@@ -96,8 +96,8 @@ Type SLAM(objective_function<Type>* obj) {
 
   vector<Type> selW(n_bins);
   selW.setZero();
-  for(int a=0;a<n_bins;a++){
-    selW(a) = 1 / (1 + exp(-log(Type(19))*(WghtMids - S50)/Sdelta));
+  for(int w=0;w<n_bins;w++){
+    selW(w) = 1 / (1 + exp(-log(Type(19))*(WghtMids(w) - S50)/Sdelta));
   }
 
   // Generate Age-Weight Key
