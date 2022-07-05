@@ -109,7 +109,12 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> selA(n_ages);
   selA.setZero();
   for(int a=0;a<n_ages;a++){
-    selA(a) += (selW * AWK.col(a)).sum();
+    vector<Type> temp(n_bins);
+    temp.setZero();
+    temp = AWK.row(a);
+    for(int w=0;w<n_bins;w++){
+      selA(a) += temp(w)*selW(w);
+    }
   }
 
 
