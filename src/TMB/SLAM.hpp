@@ -440,6 +440,7 @@ Type SLAM(objective_function<Type>* obj) {
   ADREPORT(SPR);
   ADREPORT(S50);
   ADREPORT(S95);
+  ADREPORT(selA);
   ADREPORT(F_m);
   ADREPORT(R0_m);
 
