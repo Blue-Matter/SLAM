@@ -117,7 +117,6 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-
   // F, M, and Z by month and age
   matrix<Type> F_ma(n_ages, n_months);
   matrix<Type> M_ma(n_ages, n_months);
@@ -185,11 +184,12 @@ Type SLAM(objective_function<Type>* obj) {
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        if (m_ind==0) {
-          N_unfished(a,m_ind) = R0_m(m_ind);
-        } else {
-          N_unfished(a,m_ind) = R0_m(m_ind) * exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
-        }
+        N_unfished(a,m_ind) = R0_m(m_ind);
+        // if (m_ind==0) {
+        //   N_unfished(a,m_ind) = R0_m(m_ind);
+        // } else {
+        //   N_unfished(a,m_ind) = R0_m(m_ind) * exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
+        // }
       } else {
         if (m_ind==0) {
           N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));

@@ -38,7 +38,7 @@ Simulate <- function(Pars, sim=1) {
   # Maturity
   Mat_at_Age <- Pars$Mat_at_Age
 
-  # Selectivity - double-normal
+  # Selectivity
   Sel_at_Age <-  1/(1+exp(-log(19)*((Ages-Pars$sA50)/(Pars$sA95-Pars$sA50))))
 
   # recruitment deviations
@@ -295,6 +295,13 @@ Assess <- function(data, options=list(),
 
 opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
 
+  parameters$log_sigmaR <- log(0.01)
+  data$CPUE_SD <- rep(0.01, length(data$CPUE_SD))
+  data$Effort_SD <- rep(0.01, length(data$Effort_SD))
+
+  map$lsdelta <- factor(NA)
+  map$logR0_m_est <- factor(rep(NA,11))
+
   obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
                         silent=TRUE, hessian=FALSE, map=map, random=Random)
 
@@ -305,18 +312,47 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
   opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control,
                                  lower=lower, upper=upper)),silent=TRUE)
 
+
+  sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
+  which.max(abs(sdreport$gradient.fixed))
+  sdreport$gradient.fixed[1:3]
+
+  rep <- obj$report(obj$env$last.par.best)
+
+  rep$F_minit
+
+  plot(data$Weight_Age, rep$selA)
+  lines(data$Weight_Age, SimPop$Sel_at_Age)
+
+  plot(SimPop$Rec_Pattern, ylim=c(0,0.5))
+  lines(rep$R0_m)
+  plot(SimPop$F_m[61:120], pch=16, type='l')
+  lines(rep$F_m, col='blue')
+
+  plot(SimPop$Eff_ind, type='l', ylim=c(0,1.5))
+  lines(rep$StEffort, col='blue')
+
+  plot(SimPop$Index, type='l', ylim=c(0,1.5))
+  lines(rep$stpredCPUE, col='blue')
+
+  plot(SimPop$Catch_Biomass[61:120]/mean(SimPop$Catch_Biomass[61:120]), type='l', ylim=c(0,1))
+  lines(rep$predCB/mean(rep$predCB), col='blue')
+
+  t <- 6
+  plot(data$WghtMids, data$CAW[,t+60]/sum(data$CAW[,t+60]), type="l")
+  lines(data$WghtMids, rep$predCAW[,t])
+
   rerun <- FALSE
   if (inherits(opt, 'list')) {
     rep <- obj$report(obj$env$last.par.best)
     sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
 
     # check convergence, gradient and positive definite
-    chk <- data.frame(run=11-restarts,
-                      pdHess=sdreport$pdHess,
+    chk <- data.frame(pdHess=sdreport$pdHess,
                       conv=opt$convergence ==0,
                       grad=max(abs(sdreport$gradient.fixed)) < 0.01)
 
-    if (any(!chk[1,2:4])) rerun <- TRUE
+    if (any(!chk)) rerun <- TRUE
   } else {
     chk <- opt
     rerun <- TRUE
