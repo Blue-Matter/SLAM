@@ -210,8 +210,8 @@ Assess <- function(data, options=list(),
   logR0_m_est <- rep(log(1), 11)
 
   nts <- length(data$Effort)
-  logF_m <- rep(log(0.1), nts)
-  logF_minit <- log(0.1)
+  logF_m <- rep(log(0.01), nts)
+  logF_minit <- log(0.01)
   logRec_Devs <- rep(0, nts-1)
   parameters <- list(ls50=ls50,
                      lsdelta=lsdelta,
@@ -243,6 +243,13 @@ Assess <- function(data, options=list(),
                    CPUE=is.na(data$CPUE)) %>%
     filter(CAW==TRUE, Effort==TRUE, CPUE==TRUE)
 
+  # if no data in first time-step, don't estimate F_minit
+  df1 <- df %>% dplyr::filter(t==1)
+  if (nrow(df1)>0) {
+    if (all(df1[1,]))
+      map$logF_minit <- factor(NA)
+  }
+
   if (is.null(map[["logF_m"]])) {
     map$logF_m <- 1:nts
     for (i in 2:nts) {
@@ -250,6 +257,12 @@ Assess <- function(data, options=list(),
         map$logF_m[i] <- map$logF_m[i-1]
       }
     }
+    # don't estimate F for time-steps before data
+    if (sum(map$logF_m ==1)>1) {
+      ind <- which(map$logF_m==1)
+      map$logF_m[ind[1:(length(ind)-1)]] <- NA
+    }
+
     map$logF_m <- factor(map$logF_m)
   }
 
@@ -257,7 +270,6 @@ Assess <- function(data, options=list(),
     map$logRec_Devs <- 1:(nts-1)
     for (i in 2:nts) {
       if(i %in% df$t) {
-        map$logF_m[i] <- map$logF_m[i-1]
         map$logRec_Devs[i] <- map$logRec_Devs[i-1]
       }
     }
@@ -266,7 +278,6 @@ Assess <- function(data, options=list(),
 
   do_opt <- opt_TMB_model(data, parameters, map, Random, control, restarts=10)
   rep <- do_opt$rep
-
 
   df <- data.frame(t=1:nts, F=rep$F_m, SPR=rep$SPR)
   df$M <- df$t %% 12
@@ -278,7 +289,7 @@ Assess <- function(data, options=list(),
   rep$meanF <- df2$meanF
   rep$meanSPR <- df2$meanSPR
 
-  list(opt=do_opt$opt, obj=do_opt$obj, rep=rep, sdreport=do_opt$sdreport)
+  list(opt=do_opt$opt, obj=do_opt$obj, rep=rep, sdreport=do_opt$sdreport, chk=do_opt$chk)
 }
 
 
@@ -291,28 +302,33 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
   lower <- c(log(0.1), log(0.01), rep(-Inf, length(obj$par)-2))
   upper <- c(log(0.8*max(data$Weight_Age)),
              log(2), rep(Inf, length(obj$par)-2))
-  opt <- suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control,
-                                 lower=lower, upper=upper))
+  opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control,
+                                 lower=lower, upper=upper)),silent=TRUE)
 
-
-  rep <- obj$report(obj$env$last.par.best)
-  sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
-
-  # check convergence, gradient and positive definite
   rerun <- FALSE
-  if (!sdreport$pdHess | opt$convergence !=0 |  max(abs(sdreport$gradient.fixed)) > 0.01)
+  if (inherits(opt, 'list')) {
+    rep <- obj$report(obj$env$last.par.best)
+    sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
+
+    # check convergence, gradient and positive definite
+    chk <- data.frame(run=11-restarts,
+                      pdHess=sdreport$pdHess,
+                      conv=opt$convergence ==0,
+                      grad=max(abs(sdreport$gradient.fixed)) < 0.01)
+
+    if (any(!chk[1,2:4])) rerun <- TRUE
+  } else {
+    chk <- opt
     rerun <- TRUE
+  }
 
   if (rerun & restarts>0) {
-    # chk <- data.frame(run=10-restarts, pdHess=sdreport$pdHess, conv=opt$convergence ==0,
-    # grad=max(sdreport$gradient.fixed) < 0.01)
-    # print(chk)
     parameters$ls50 <- parameters$ls50 * rnorm(1, 1, 0.1)
     parameters$lsdelta <- parameters$lsdelta  * rnorm(1, 1, 0.4)
     parameters$logR0_m_est <- rep(log(1), 11) + rnorm(11, 0, 0.4)
     Recall(data, parameters,  map, Random, control, restarts-1)
   }
-  list(opt=opt, obj=obj, rep=rep, sdreport=sdreport)
+  list(opt=opt, obj=obj, rep=rep, sdreport=sdreport, chk=chk)
 }
 
 
