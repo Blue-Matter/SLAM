@@ -1,4 +1,14 @@
 
+# To do:
+
+# - F_minit has massive SD -
+# check selectivy parameters gradients
+# update Methods for selectity-at-weight (if this is fixed above)
+
+# -
+BaseCase$sdreport
+
+
 
 library(SLAM)
 library(dplyr)
@@ -31,11 +41,11 @@ data_highh$h <- 0.8
 
 ## Smaller size
 data_smaller <- data
-data_smaller$Weight_Age <- data_smaller$Weight_Age * 0.9
+data_smaller$Weight_Age <- data$Weight_Age * 0.9
 
 ## Larger size
 data_larger <- data
-data_larger$Weight_Age <- data_smaller$Weight_Age * 1.1
+data_larger$Weight_Age <- data$Weight_Age * 1.1
 
 BaseCase <- Assess(data)
 LowerM <- Assess(data_lowM)
@@ -44,6 +54,10 @@ Lowerh <- Assess(data_lowh)
 Higherh <- Assess(data_highh)
 SmallerW <- Assess(data_smaller)
 LargerW <- Assess(data_larger)
+
+
+
+
 
 Process_Assess <- function(assess, Name='Base Case', firstyr=2017) {
   nts <- length(assess$rep$SPR)
@@ -134,6 +148,18 @@ Process_Assess <- function(assess, Name='Base Case', firstyr=2017) {
   df_predSatA <- data.frame(Age=ages, selA=selA)
   df_predSatA$Name <- Name
 
+  # Optimize for F
+  utilpow <- 0.4
+  opt <- Optimize(assess$obj$env$data, assess$rep$R0_m,
+                  assess$rep$selA, assumed_h=assess$obj$env$data$h,
+                  utilpow = utilpow)
+
+  opt_df <- data.frame(Month=month.abb[1:12],
+                       F=opt$F_m,
+                       C=opt$predCB,
+                       SPR=opt$SPR,
+                       utilpow=utilpow,
+                       Name=Name)
   out <- list()
   out$Effort <- DF_eff
   out$CPUE <- DF_cpue
@@ -142,6 +168,7 @@ Process_Assess <- function(assess, Name='Base Case', firstyr=2017) {
   out$predF <- df_predF
   out$predSPR <- df_predSPR
   out$predSatA <- df_predSatA
+  out$opt <- opt_df
   out
 }
 
@@ -267,7 +294,7 @@ plot_predSPR <- function(assessList) {
 
 plot_predSelect <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
-
+  res$predSatA$Name <- factor(res$predSatA$Name, levels=unique(res$predSatA$Name), ordered = TRUE)
   ggplot(res$predSatA, aes(x=Age, y=selA, linetype=Name, color=Name, group=Name)) +
     geom_line() +
     labs(y="Estimated Selectivity", x='Age (month)',
@@ -279,7 +306,19 @@ plot_predSelect <- function(assessList) {
 
 }
 
-plot_predOpt
+plot_predOpt <- function(assessList) {
+  res <- purrr::pmap(assessList, bind_rows)
+  res$opt$Name <- factor(res$opt$Name, levels=unique(res$opt$Name), ordered = TRUE)
+  res$opt <- res$opt %>% tidyr::pivot_longer(cols=2:4)
+  res$opt$Month <- factor(res$opt$Month, levels=month.abb, ordered=TRUE)
+
+  ggplot(res$opt, aes(x=Month, y=value, color=Name, linetype=Name,
+                      group=Name)) +
+    facet_wrap(~name, scales='free_y') +
+    expand_limits(y=0) +
+    geom_line()
+
+}
 
 
 
