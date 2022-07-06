@@ -194,7 +194,7 @@ Simulate <- function(Pars, sim=1) {
 #'
 #' @examples
 Assess <- function(data, options=list(),
-                   control=list(eval.max=2E4, iter.max=2E4, abs.tol=0),
+                   control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    map=list(log_sigmaF=factor(NA),
                             log_sigmaR=factor(NA),
                             log_sigmaR0=factor(NA)),
@@ -202,19 +202,12 @@ Assess <- function(data, options=list(),
                    Fit_CPUE=1,
                    log_sigmaF=log(0.5),
                    log_sigmaR=log(0.9),
-                   log_sigmaR0=log(0.6),
-                   rerun=F) {
+                   log_sigmaR0=log(0.6)) {
 
   # Starting parameters
-  ls50 <- log(6)
-  lsdelta <- log(1)
+  ls50 <- log(0.5)
+  lsdelta <- log(0.5)
   logR0_m_est <- rep(log(1), 11)
-
-  if (rerun) {
-    ls50 <- ls50 * rnorm(1, 1, 0.1)
-    lsdelta <- log(2) * rnorm(1, 1, 0.1)
-    logR0_m_est <- rep(log(1), 11) + rnorm(11, 0, 0.1)
-  }
 
   nts <- length(data$Effort)
   logF_m <- rep(log(0.1), nts)
@@ -271,16 +264,10 @@ Assess <- function(data, options=list(),
     map$logRec_Devs <- factor(map$logRec_Devs)
   }
 
-  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
-                        silent=TRUE, hessian=FALSE, map=map, random=Random)
+  do_opt <- opt_TMB_model(data, parameters, map, Random, control, restarts=10)
+  rep <- do_opt$rep
 
-  starts <- obj$par
-  lower <- c(log(1), log(0.1), rep(-Inf, length(obj$par)-2))
-  upper <- c(log(12), log(2), rep(Inf, length(obj$par)-2))
-  opt <- suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control,
-                                 lower=lower, upper=upper))
 
-  rep <- obj$report(obj$env$last.par.best)
   df <- data.frame(t=1:nts, F=rep$F_m, SPR=rep$SPR)
   df$M <- df$t %% 12
   df$M[df$M ==0] <- 12
@@ -291,12 +278,42 @@ Assess <- function(data, options=list(),
   rep$meanF <- df2$meanF
   rep$meanSPR <- df2$meanSPR
 
-  list(opt=opt, obj=obj, rep=rep, sdreport=TMB::sdreport(obj, obj$env$last.par.best))
+  list(opt=do_opt$opt, obj=do_opt$obj, rep=rep, sdreport=do_opt$sdreport)
 }
 
 
+opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
+
+  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
+                        silent=TRUE, hessian=FALSE, map=map, random=Random)
+
+  starts <- obj$par
+  lower <- c(log(0.1), log(0.01), rep(-Inf, length(obj$par)-2))
+  upper <- c(log(0.8*max(data$Weight_Age)),
+             log(2), rep(Inf, length(obj$par)-2))
+  opt <- suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control,
+                                 lower=lower, upper=upper))
 
 
+  rep <- obj$report(obj$env$last.par.best)
+  sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
+
+  # check convergence, gradient and positive definite
+  rerun <- FALSE
+  if (!sdreport$pdHess | opt$convergence !=0 |  max(abs(sdreport$gradient.fixed)) > 0.01)
+    rerun <- TRUE
+
+  if (rerun & restarts>0) {
+    # chk <- data.frame(run=10-restarts, pdHess=sdreport$pdHess, conv=opt$convergence ==0,
+    # grad=max(sdreport$gradient.fixed) < 0.01)
+    # print(chk)
+    parameters$ls50 <- parameters$ls50 * rnorm(1, 1, 0.1)
+    parameters$lsdelta <- parameters$lsdelta  * rnorm(1, 1, 0.4)
+    parameters$logR0_m_est <- rep(log(1), 11) + rnorm(11, 0, 0.4)
+    Recall(data, parameters,  map, Random, control, restarts-1)
+  }
+  list(opt=opt, obj=obj, rep=rep, sdreport=sdreport)
+}
 
 
 # ---- Calculate Optimal Fishing Pattern ----
