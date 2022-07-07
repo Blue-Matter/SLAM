@@ -1,15 +1,4 @@
 
-# To do:
-
-# - F_minit has massive SD -
-# check selectivy parameters gradients
-# update Methods for selectity-at-weight (if this is fixed above)
-
-# -
-BaseCase$sdreport
-
-
-
 library(SLAM)
 library(dplyr)
 library(ggplot2)
@@ -54,10 +43,6 @@ Lowerh <- Assess(data_lowh)
 Higherh <- Assess(data_highh)
 SmallerW <- Assess(data_smaller)
 LargerW <- Assess(data_larger)
-
-
-
-
 
 Process_Assess <- function(assess, Name='Base Case', firstyr=2017) {
   nts <- length(assess$rep$SPR)
@@ -134,12 +119,14 @@ Process_Assess <- function(assess, Name='Base Case', firstyr=2017) {
   df_predF <- Dates_DF
   df_predF$predF <-assess$rep$F_m
   df_predF$Name <- Name
+  df_predF$Month <- factor(df_predF$Month, levels=month.abb, ordered=TRUE)
   df_predF <- left_join(df_predF, data_na_df, by='t')
 
   # Predicted SPR
   df_predSPR <- Dates_DF
   df_predSPR$SPR <-assess$rep$SPR
   df_predSPR$Name <- Name
+  df_predSPR$Month <- factor(df_predSPR$Month, levels=month.abb, ordered=TRUE)
   df_predSPR <- left_join(df_predSPR, data_na_df, by='t')
 
   # Predicted selectivity-at-age
@@ -160,6 +147,7 @@ Process_Assess <- function(assess, Name='Base Case', firstyr=2017) {
                        SPR=opt$SPR,
                        utilpow=utilpow,
                        Name=Name)
+  opt_df$Month <- factor(opt_df$Month, levels=month.abb, ordered=TRUE)
   out <- list()
   out$Effort <- DF_eff
   out$CPUE <- DF_cpue
@@ -194,11 +182,13 @@ plot_CPUE <- function(assessList) {
   res$CPUE$Name <- factor(res$CPUE$Name, levels=unique(res$CPUE$Name), ordered = TRUE)
 
   ggplot(res$CPUE) +
-    geom_line(aes(x=Year_Month, y=Observed, group=1), size=1.1) +
-    geom_point(aes(x=Year_Month, y=Observed, group=1), size=2) +
-    geom_line(aes(x=Year_Month, y=Estimated, group=Name, linetype=Name,
+    geom_line(aes(x=Date, y=Observed, group=1), size=1.1) +
+    geom_point(aes(x=Date, y=Observed, group=1), size=2) +
+    geom_line(aes(x=Date, y=Estimated, group=Name, linetype=Name,
                   color=Name)) +
-    labs(x='Date', y='CPUE', color='Run Name', linetype='Run Name') +
+    labs(x='', y='CPUE', color='Run Name', linetype='Run Name') +
+    scale_x_date(date_breaks = "4 month", date_labels =  "%b-%Y",
+                 expand=c(0,0)) +
     expand_limits(y=0) +
     theme_clean() +
     theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
@@ -211,12 +201,14 @@ plot_Effort <- function(assessList) {
   res$Effort$Name <- factor(res$Effort$Name, levels=unique(res$Effort$Name), ordered = TRUE)
 
   ggplot(res$Effort) +
-    geom_line(aes(x=Year_Month, y=Observed, group=1), size=1.1) +
-    geom_point(aes(x=Year_Month, y=Observed, group=1), size=2) +
-    geom_line(aes(x=Year_Month, y=Estimated, group=Name, linetype=Name,
+    geom_line(aes(x=Date, y=Observed, group=1), size=1.1) +
+    geom_point(aes(x=Date, y=Observed, group=1), size=2) +
+    geom_line(aes(x=Date, y=Estimated, group=Name, linetype=Name,
                   color=Name)) +
     expand_limits(y=0) +
-    labs(x='Date', y='Relative Effort', color='Run Name', linetype='Run Name') +
+    labs(x='', y='Relative Effort', color='Run Name', linetype='Run Name') +
+    scale_x_date(date_breaks = "4 month", date_labels =  "%b-%Y",
+                 expand=c(0,0)) +
     theme_clean() +
     theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
           plot.background=element_rect(color='white'),
@@ -247,7 +239,8 @@ plot_predR0m <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
   res$predR0m$Name <- factor(res$predR0m$Name, levels=unique(res$predR0m$Name), ordered = TRUE)
 
-  ggplot(res$predR0m, aes(x=Month, y=Rec, linetype=Name, color=Name, group=Name)) +
+  ggplot(res$predR0m, aes(x=Month, y=Rec, group=Name)) +
+    facet_wrap(~Name) +
     geom_line() +
     labs(y="Estimated Relative Recruitment", x='Month', color='Run Name', linetype='Run Name') +
     theme_clean() +
@@ -264,10 +257,13 @@ plot_predF <- function(assessList) {
   # remove estimates when no data
   res$predF$predF[res$predF$no_data] <- NA
 
-  ggplot(res$predF, aes(x=Year_Month, y=predF, linetype=Name, color=Name, group=Name)) +
+  ggplot(res$predF, aes(x=Date, y=predF, linetype=Name, color=Name, group=Name)) +
     geom_line() +
+
     labs(y="Estimated Fishing Mortality", x='Date',
          color='Run Name', linetype='Run Name') +
+    scale_x_date(date_breaks = "4 month", date_labels =  "%b-%Y",
+                 expand=c(0,0)) +
     theme_clean() +
     theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
           plot.background=element_rect(color='white'),
@@ -281,11 +277,13 @@ plot_predSPR <- function(assessList) {
   # remove estimates when no data
   res$predSPR$SPR[res$predSPR$no_data] <- NA
 
-  ggplot(res$predSPR, aes(x=Year_Month, y=SPR, linetype=Name, color=Name, group=Name)) +
+  ggplot(res$predSPR, aes(x=Date, y=SPR, linetype=Name, color=Name, group=Name)) +
     geom_line() +
     labs(y="Estimated SPR", x='Date',
          color='Run Name', linetype='Run Name') +
     expand_limits(y=c(0,1)) +
+    scale_x_date(date_breaks = "4 month", date_labels =  "%b-%Y",
+                 expand=c(0,0)) +
     theme_clean() +
     theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
           plot.background=element_rect(color='white'),
@@ -306,102 +304,55 @@ plot_predSelect <- function(assessList) {
 
 }
 
-plot_predOpt <- function(assessList) {
+plot_optF <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
   res$opt$Name <- factor(res$opt$Name, levels=unique(res$opt$Name), ordered = TRUE)
-  res$opt <- res$opt %>% tidyr::pivot_longer(cols=2:4)
-  res$opt$Month <- factor(res$opt$Month, levels=month.abb, ordered=TRUE)
 
-  ggplot(res$opt, aes(x=Month, y=value, color=Name, linetype=Name,
-                      group=Name)) +
-    facet_wrap(~name, scales='free_y') +
+  res$predF$predF[res$predF$no_data] <- NA
+  meanF <- res$predF %>% group_by(Month, Name) %>% summarize(mean=mean(predF, na.rm=TRUE))
+  res$opt <- left_join(res$opt, meanF, by = c("Month", "Name"))
+
+  res$opt <- res$opt %>% tidyr::pivot_longer(cols=c(2,7), names_to = 'name')
+  res$opt$name[res$opt$name=='F'] <- 'Optimal'
+  res$opt$name[res$opt$name=='mean'] <- 'Estimated mean'
+
+  ggplot(res$opt, aes(x=Month, y=value, color=name, linetype=name, group=name)) +
+    facet_wrap(~Name) +
     expand_limits(y=0) +
-    geom_line()
+    geom_line() +
+    theme_clean() +
+    labs(x='', y='Fishing mortality', color='', linetype='') +
+    theme(plot.background=element_rect(color='white'),
+          legend.background = element_rect(color='white'),
+          axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
 
 }
 
 
 
-out$predF <- df_predF
-out$predSPR <- df_predSPR
-out$predSatA <- df_predSatA
+plot_optSPR <- function(assessList) {
+  res <- purrr::pmap(assessList, bind_rows)
+  res$opt$Name <- factor(res$opt$Name, levels=unique(res$opt$Name), ordered = TRUE)
 
+  res$predSPR$SPR[res$predSPR$no_data] <- NA
+  meanSPR <- res$predSPR %>% group_by(Month, Name) %>% summarize(mean=mean(SPR, na.rm=TRUE))
+  res$opt <- left_join(res$opt, meanSPR, by = c("Month", "Name"))
 
+  res$opt <- res$opt %>% tidyr::pivot_longer(cols=c(4,7), names_to = 'name')
+  res$opt$name[res$opt$name=='SPR'] <- 'Optimal'
+  res$opt$name[res$opt$name=='mean'] <- 'Estimated mean'
 
-df_Sel <- data.frame(Age=0:14, Selectivity=BaseCase$rep$selA)
-ggplot(df_Sel, aes(x=Age, y=Selectivity)) +
-  geom_line(size=1.2) +
-  expand_limits(y=0) +
-  theme_clean()+
-  theme(plot.background=element_rect(color='white')) +
-  labs(y="Estimated Selectivity")
+  ggplot(res$opt, aes(x=Month, y=value, color=name, linetype=name, group=name)) +
+    facet_wrap(~Name) +
+    expand_limits(y=0) +
+    geom_line() +
+    theme_clean() +
+    labs(x='', y='SPR', color='', linetype='') +
+    theme(plot.background=element_rect(color='white'),
+          legend.background = element_rect(color='white'),
+          axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
 
-
-estsDF <- Dates_DF
-estsDF$SPR <- BaseCase$rep$SPR
-estsDF$F <- BaseCase$rep$F_m
-ind <- which(is.na(BaseCase$obj$env$data$Effort))
-estsDF$SPR[ind] <- NA
-estsDF$F[ind] <- NA
-
-estsDF <- estsDF %>% tidyr::pivot_longer(cols=6:7)
-ggplot(estsDF, aes(x=Date, y=value, color=name, linetype=name)) +
-  geom_line(size=1.2) +
-  labs(x="", y='Estimated Value',
-       color='', linetype='') +
-  scale_x_date(date_breaks = "2 month", date_labels =  "%b-%Y",
-               expand=c(0,0)) +
-  expand_limits(y=c(0,1)) +
-  theme_clean() +
-  theme(axis.text.x = element_text(angle = 60, hjust=1),
-        plot.background=element_rect(color='white'),
-        legend.background = element_rect(color='white'))
-
-
-
-# Calculate mean monthly Fishing mortality
-ind <- which(is.na(BaseCase$obj$env$data$CPUE))
-estF <- BaseCase$rep$F_m
-estF[ind] <- NA
-estSPR <- BaseCase$rep$SPR
-estSPR[ind] <- NA
-estCB <- BaseCase$rep$predCB
-estCB[ind] <- NA
-
-
-df <- data.frame(estF=estF, estSPR=estSPR, estCB=estCB)
-df$t <- 1:nrow(df)
-df$M <- df$t %%12
-df$M[df$M==0] <- 12
-df$Month <- month.abb[df$M]
-df$Month <- factor(df$Month, levels=month.abb, ordered=TRUE)
-df2 <- df %>% group_by(Month) %>% summarize(F=mean(estF, na.rm=TRUE),
-                                            SPR=mean(estSPR, na.rm=TRUE),
-                                            CB=mean(estCB, na.rm=TRUE))
-
-# optimizing for utility
-opt <- Optimize(data, BaseCase$rep$R0_m, BaseCase$rep$selA, assumed_h=data$h,
-                utilpow = 0.4)
-
-df2a<- df2 %>% tidyr::pivot_longer(cols=2:4, values_to='Estimated')
-
-df2b <- df2
-df2b$F <- opt$F_m
-df2b$SPR <- opt$SPR
-df2b$CB <- opt$predCB
-df2b<- df2b %>% tidyr::pivot_longer(cols=2:4, values_to='Predicted Optimal')
-
-df3 <- left_join(df2a, df2b, by=c("Month", "name"))
-df4 <- df3 %>% tidyr::pivot_longer(cols=3:4, names_to='Name')
-
-ggplot(df4, aes(x=Month, group=Name, color=Name)) +
-  facet_wrap(~name, scales='free') +
-  expand_limits(y=0) +
-  geom_line(aes(y=value), size=1.2) +
-  theme_clean()+
-  theme(axis.text.x = element_text(angle = 60, hjust=1),
-        plot.background=element_rect(color='white'),
-        legend.background = element_rect(color='white'))
+}
 
 
 
