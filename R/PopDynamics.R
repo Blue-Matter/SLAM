@@ -312,36 +312,6 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
   opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control,
                                  lower=lower, upper=upper)),silent=TRUE)
 
-
-  sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
-  which.max(abs(sdreport$gradient.fixed))
-  sdreport$gradient.fixed[1:3]
-
-  rep <- obj$report(obj$env$last.par.best)
-
-  rep$F_minit
-
-  plot(data$Weight_Age, rep$selA)
-  lines(data$Weight_Age, SimPop$Sel_at_Age)
-
-  plot(SimPop$Rec_Pattern, ylim=c(0,0.5))
-  lines(rep$R0_m)
-  plot(SimPop$F_m[61:120], pch=16, type='l')
-  lines(rep$F_m, col='blue')
-
-  plot(SimPop$Eff_ind, type='l', ylim=c(0,1.5))
-  lines(rep$StEffort, col='blue')
-
-  plot(SimPop$Index, type='l', ylim=c(0,1.5))
-  lines(rep$stpredCPUE, col='blue')
-
-  plot(SimPop$Catch_Biomass[61:120]/mean(SimPop$Catch_Biomass[61:120]), type='l', ylim=c(0,1))
-  lines(rep$predCB/mean(rep$predCB), col='blue')
-
-  t <- 6
-  plot(data$WghtMids, data$CAW[,t+60]/sum(data$CAW[,t+60]), type="l")
-  lines(data$WghtMids, rep$predCAW[,t])
-
   rerun <- FALSE
   if (inherits(opt, 'list')) {
     rep <- obj$report(obj$env$last.par.best)
@@ -356,6 +326,8 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
   } else {
     chk <- opt
     rerun <- TRUE
+    sdreport <- NA
+    rep <- NA
   }
 
   if (rerun & restarts>0) {
