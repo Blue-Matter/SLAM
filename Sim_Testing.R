@@ -114,8 +114,8 @@ for (s in 1:length(rec_scen_names)) {
   Pars$rec_devs <- matrix(rec_devs, nrow=nts, ncol=nsim)
 
   # selectivity
-  Pars$sA50 <- 5.5
-  Pars$sA95 <- 6.0
+  Pars$sA50 <- 5
+  Pars$sA95 <- 6
 
   # effort & fishing mortality
   Pars$Effort <- Effort_DF
@@ -178,19 +178,7 @@ for (s in 1:length(Scens)) {
     sim_data$use_Fmeanprior <- 0
     sim_data$F_meanprior <- 1
 
-    nonconv <- FALSE
     do_assess <- try(Assess(sim_data), silent=TRUE)
-    if (!inherits(do_assess, 'try-error') && do_assess$opt$convergence!=0) nonconv <- TRUE
-    if (inherits(do_assess, 'try-error') | nonconv) {
-      # re-run up to 10 times
-      x <- 0
-      while ((inherits(do_assess, 'try-error')) | nonconv && x < 11) {
-        x <- x+1
-        message(x)
-        do_assess <- try(Assess(sim_data, rerun=TRUE), silent=TRUE)
-        if (!inherits(do_assess, 'try-error') && do_assess$opt$convergence==0) nonconv <- FALSE
-      }
-    }
 
     scen_list[[i]] <- list(Sim=SimPop, Assess=do_assess, sim_data=sim_data)
   }
@@ -340,7 +328,7 @@ ggplot(scen_df, aes(x=Month, group=1)) +
   geom_line(aes(y=Fishing.Mortality)) +
   geom_line(data=rec_pattern_df2, aes(y=Rec, group=1), linetype=2) +
   theme_clean() +
-  theme(axis.text.x = element_text(angle = 60, hjust=1),
+  theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
         plot.background=element_rect(color='white'),
         legend.background = element_blank(),
         legend.position = 'bottom') +
@@ -361,7 +349,7 @@ ggplot(scen_df2, aes(x=Month, y=relCatch, group=1)) +
             aes(x=1, y=Inf, label=relC), vjust="inward",hjust="inward") +
   geom_line(data=rec_pattern_df2, aes(y=Rec, group=1), linetype=2) +
   theme_clean() +
-  theme(axis.text.x = element_text(angle = 60, hjust=1),
+  theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
         plot.background=element_rect(color='white'),
         legend.background = element_blank(),
         legend.position = 'bottom') +
