@@ -299,9 +299,6 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
                         silent=TRUE, hessian=FALSE, map=map, random=Random)
 
   starts <- obj$par
-  # lower <- c(log(0.1), log(0.01), rep(-Inf, length(obj$par)-2))
-  # upper <- c(log(0.8*max(data$Weight_Age)),
-  #            log(2), rep(Inf, length(obj$par)-2))
   opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control)),silent=TRUE)
 
   rerun <- FALSE
