@@ -94,11 +94,11 @@ Type SLAM(objective_function<Type>* obj) {
   Type Sdelta = exp(lsdelta);
   Type S95 = S50 + Sdelta;
 
-  vector<Type> selW(n_bins);
-  selW.setZero();
-  for(int w=0;w<n_bins;w++){
-    selW(w) = 1 / (1 + exp(-log(Type(19))*(WghtMids(w) - S50)/Sdelta));
-  }
+  // vector<Type> selW(n_bins);
+  // selW.setZero();
+  // for(int w=0;w<n_bins;w++){
+  //   selW(w) = 1 / (1 + exp(-log(Type(19))*(WghtMids(w) - S50)/Sdelta));
+  // }
 
   // Generate Age-Weight Key
   matrix<Type> AWK(n_ages, n_bins);
@@ -109,13 +109,16 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> selA(n_ages);
   selA.setZero();
   for(int a=0;a<n_ages;a++){
-    vector<Type> temp(n_bins);
-    temp.setZero();
-    temp = AWK.row(a);
-    for(int w=0;w<n_bins;w++){
-      selA(a) += temp(w)*selW(w);
-    }
+    selA(a) = 1 / (1 + exp(-log(Type(19))*(a) - S50)/Sdelta));
   }
+  // for(int a=0;a<n_ages;a++){
+  //   vector<Type> temp(n_bins);
+  //   temp.setZero();
+  //   temp = AWK.row(a);
+  //   for(int w=0;w<n_bins;w++){
+  //     selA(a) += temp(w)*selW(w);
+  //   }
+  // }
 
   // F, M, and Z by month and age
   matrix<Type> F_ma(n_ages, n_months);
