@@ -295,22 +295,14 @@ Assess <- function(data, options=list(),
 
 opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
 
-  parameters$log_sigmaR <- log(0.01)
-  data$CPUE_SD <- rep(0.01, length(data$CPUE_SD))
-  data$Effort_SD <- rep(0.01, length(data$Effort_SD))
-
-  map$lsdelta <- factor(NA)
-  map$logR0_m_est <- factor(rep(NA,11))
-
   obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
                         silent=TRUE, hessian=FALSE, map=map, random=Random)
 
   starts <- obj$par
-  lower <- c(log(0.1), log(0.01), rep(-Inf, length(obj$par)-2))
-  upper <- c(log(0.8*max(data$Weight_Age)),
-             log(2), rep(Inf, length(obj$par)-2))
-  opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control,
-                                 lower=lower, upper=upper)),silent=TRUE)
+  # lower <- c(log(0.1), log(0.01), rep(-Inf, length(obj$par)-2))
+  # upper <- c(log(0.8*max(data$Weight_Age)),
+  #            log(2), rep(Inf, length(obj$par)-2))
+  opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control)),silent=TRUE)
 
   rerun <- FALSE
   if (inherits(opt, 'list')) {
