@@ -221,11 +221,27 @@ for (scen in 1:length(rec_scen_names)) {
   scenlist[[scen]] <- do.call('rbind', dflist)
 }
 
+
 DF <- do.call('rbind', scenlist)
 DF$m <- 1:12
 DF$Month <- month.abb[DF$m]
 DF$Month <- factor(DF$Month, levels=month.abb, ordered=TRUE)
 DF$Rec_scen <- factor(DF$Rec_scen, levels=unique(rec_scen_names), ordered = TRUE)
+
+# Drop Sims where all SPR estimates >0.95 # failed to converge - would be detected in real applications
+# look at fix with SPR or F prior/penalty
+
+tt <- DF %>% group_by(Rec_scen, Sim) %>%
+  mutate(highSPR=SPR_pred>0.95) %>%
+  group_by(Rec_scen, Sim) %>%
+  summarise(highSPR=prod(highSPR)) %>%
+  filter(highSPR==TRUE)
+
+tt$Rec_scen_Sim <- paste0(tt$Rec_scen, tt$Sim)
+DF$Rec_scen_Sim <- paste0(DF$Rec_scen, DF$Sim)
+
+DF <- DF %>% filter(!Rec_scen_Sim %in%tt$Rec_scen_Sim)
+
 DF_true <- DF %>% filter(Sim==1)
 
 ggplot(DF, aes(x=Month, y=R0_pred, group=Sim)) +
@@ -248,13 +264,21 @@ DF <- DF %>% group_by(Rec_scen, Sim) %>%
   mutate(SPR_RE=(SPR_pred-SPR_act)/SPR_act,
          F_RE=(F_pred-F_act)/F_act)
 
+
+DF %>% group_by(Rec_scen) %>% summarise(F=median(F_RE),
+                                        SPR=median(SPR_RE))
+
+
 DF_SPR <- DF %>% group_by(Rec_scen, Sim) %>%
   summarize(SPR_MRE=median(SPR_RE))
 
 
+DF_SPR %>% group_by(Rec_scen) %>% summarise(median(SPR_MRE))
+
+
 ggplot(DF_SPR, aes(x=Rec_scen, y=SPR_MRE)) +
   geom_hline(yintercept = 0, linetype=2) +
-  expand_limits(y=c(-1,2)) +
+  expand_limits(y=c(-1,1.5)) +
   geom_boxplot(fill='lightgray') +
   theme_clean() +
   labs(x='Recruitment Scenario', y='Median Relative Error SPR') +
@@ -264,14 +288,12 @@ ggplot(DF_SPR, aes(x=Rec_scen, y=SPR_MRE)) +
 ggsave('Figures/SimTest/SPR_MRE.png', width=6, height=4)
 
 
-
-
 DF_F <- DF %>% group_by(Rec_scen, Sim) %>%
   summarize(F_MRE=median((F_pred-F_act)/F_act))
 
 ggplot(DF_F, aes(x=Rec_scen, y=F_MRE)) +
   geom_hline(yintercept = 0, linetype=2) +
-  expand_limits(y=c(-1,2)) +
+  expand_limits(y=c(-1,1)) +
   geom_boxplot(fill='lightgray') +
   theme_clean() +
   labs(x='Recruitment Scenario', y='Median Relative Error Fishing Mortality (F)') +
