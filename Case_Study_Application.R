@@ -26,7 +26,7 @@ data_lowh$h <- 0.6
 
 ## Higher h
 data_highh <- data
-data_highh$h <- 0.8
+data_highh$h <- 0.85
 
 ## Smaller size
 data_smaller <- data
@@ -196,6 +196,9 @@ plot_CPUE <- function(assessList) {
           legend.background = element_rect(color='white'))
 }
 
+plot_CPUE(assessList)
+ggsave('Figures/CaseStudy/CPUE_fit.png', width=8, height=6)
+
 plot_Effort <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
   res$Effort$Name <- factor(res$Effort$Name, levels=unique(res$Effort$Name), ordered = TRUE)
@@ -215,6 +218,8 @@ plot_Effort <- function(assessList) {
           legend.background = element_rect(color='white'))
 
 }
+plot_Effort(assessList)
+ggsave('Figures/CaseStudy/Effort_fit.png', width=8, height=6)
 
 plot_CAW <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
@@ -233,8 +238,11 @@ plot_CAW <- function(assessList) {
           legend.background = element_rect(color='white'))
 
 }
+plot_CAW(assessList)
+ggsave('Figures/CaseStudy/CAW_fit.png', width=12, height=9)
 
 # --- Plot Estimates ----
+
 plot_predR0m <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
   res$predR0m$Name <- factor(res$predR0m$Name, levels=unique(res$predR0m$Name), ordered = TRUE)
@@ -242,13 +250,31 @@ plot_predR0m <- function(assessList) {
   ggplot(res$predR0m, aes(x=Month, y=Rec, group=Name)) +
     facet_wrap(~Name) +
     geom_line() +
+    expand_limits(y=0) +
     labs(y="Estimated Relative Recruitment", x='Month', color='Run Name', linetype='Run Name') +
     theme_clean() +
     theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
           plot.background=element_rect(color='white'),
           legend.background = element_rect(color='white'))
 }
+plot_predR0m(assessList)
+ggsave('Figures/CaseStudy/pred_R0m.png', width=6, height=6)
 
+plot_predSelect <- function(assessList) {
+  res <- purrr::pmap(assessList, bind_rows)
+  res$predSatA$Name <- factor(res$predSatA$Name, levels=unique(res$predSatA$Name), ordered = TRUE)
+  ggplot(res$predSatA, aes(x=Age, y=selA, linetype=Name, color=Name, group=Name)) +
+    geom_line() +
+    labs(y="Estimated Selectivity", x='Age (month)',
+         color='Run Name', linetype='Run Name') +
+    expand_limits(y=c(0,1)) +
+    theme_clean() +
+    theme(plot.background=element_rect(color='white'),
+          legend.background = element_rect(color='white'))
+
+}
+plot_predSelect(assessList)
+ggsave('Figures/CaseStudy/pred_selA.png', width=4, height=3)
 
 plot_predF <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
@@ -270,6 +296,9 @@ plot_predF <- function(assessList) {
           legend.background = element_rect(color='white'))
 }
 
+plot_predF(assessList)
+ggsave('Figures/CaseStudy/pred_F.png', width=8, height=6)
+
 plot_predSPR <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
   res$predSPR$Name <- factor(res$predSPR$Name, levels=unique(res$predSPR$Name), ordered = TRUE)
@@ -289,20 +318,8 @@ plot_predSPR <- function(assessList) {
           plot.background=element_rect(color='white'),
           legend.background = element_rect(color='white'))
 }
-
-plot_predSelect <- function(assessList) {
-  res <- purrr::pmap(assessList, bind_rows)
-  res$predSatA$Name <- factor(res$predSatA$Name, levels=unique(res$predSatA$Name), ordered = TRUE)
-  ggplot(res$predSatA, aes(x=Age, y=selA, linetype=Name, color=Name, group=Name)) +
-    geom_line() +
-    labs(y="Estimated Selectivity", x='Age (month)',
-         color='Run Name', linetype='Run Name') +
-    expand_limits(y=c(0,1)) +
-    theme_clean() +
-    theme(plot.background=element_rect(color='white'),
-          legend.background = element_rect(color='white'))
-
-}
+plot_predSPR(assessList)
+ggsave('Figures/CaseStudy/pred_SPR.png', width=8, height=6)
 
 plot_optF <- function(assessList) {
   res <- purrr::pmap(assessList, bind_rows)
@@ -327,7 +344,13 @@ plot_optF <- function(assessList) {
           axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
 
 }
+plot_optF(assessList)
+ggsave('Figures/CaseStudy/pred_optF.png', width=8, height=6)
 
+tt = res$opt %>% group_by(Name) %>% filter(name=='Optimal') %>% summarize(mean(value))
+tt
+t1 = res$opt %>% group_by(Name) %>% filter(name=='Estimated mean') %>% summarize(mean(value))
+t1$`mean(value)` %>% range()
 
 
 plot_optSPR <- function(assessList) {
@@ -353,6 +376,6 @@ plot_optSPR <- function(assessList) {
           axis.text.x = element_text(angle=90, hjust=1, vjust=0.5))
 
 }
-
-
+plot_optSPR(assessList)
+ggsave('Figures/CaseStudy/pred_optSPR.png', width=8, height=6)
 
