@@ -223,16 +223,14 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> SB_m(n_months);
   SB_m.setZero();
 
-  for(int a=0;a<n_ages;a++){
-    if (a==0) {
-      N_m(a,0) = N_unfished(a, 0) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
-    }
-    if (a>0) {
-      N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
-      SB_am(a,0) = N_m(a,0) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_init(a)/2);
-    }
+  for(int a=1;a<n_ages;a++){
+    N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
+    SB_am(a,0) = N_m(a,0) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_init(a)/2);
   }
+
   SB_m(0) = SB_am.col(0).sum();
+
+  N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
 
   // loop over remaining months
   for (int m=1; m<n_months; m++) {
