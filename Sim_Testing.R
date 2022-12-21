@@ -272,10 +272,6 @@ DF %>% group_by(Rec_scen) %>% summarise(F=median(F_RE),
 DF_SPR <- DF %>% group_by(Rec_scen, Sim) %>%
   summarize(SPR_MRE=median(SPR_RE))
 
-
-DF_SPR %>% group_by(Rec_scen) %>% summarise(median(SPR_MRE))
-
-
 ggplot(DF_SPR, aes(x=Rec_scen, y=SPR_MRE)) +
   geom_hline(yintercept = 0, linetype=2) +
   expand_limits(y=c(-1,1.5)) +
@@ -291,6 +287,14 @@ ggsave('Figures/SimTest/SPR_MRE.png', width=6, height=4)
 DF_F <- DF %>% group_by(Rec_scen, Sim) %>%
   summarize(F_MRE=median((F_pred-F_act)/F_act))
 
+tt <- DF %>% filter(Sim==1)
+
+plot(tt$t, tt$F_act, type='l')
+lines(tt$t, tt$F_pred, col='blue')
+
+median((tt$F_pred-tt$F_act)/tt$F_act)
+
+
 ggplot(DF_F, aes(x=Rec_scen, y=F_MRE)) +
   geom_hline(yintercept = 0, linetype=2) +
   expand_limits(y=c(-1,1)) +
@@ -302,6 +306,8 @@ ggplot(DF_F, aes(x=Rec_scen, y=F_MRE)) +
 
 ggsave('Figures/SimTest/F_MRE.png', width=6, height=4)
 
+DF_F %>% group_by(Rec_scen) %>% summarise(median(F_MRE))
+DF_SPR %>% group_by(Rec_scen) %>% summarise(median(SPR_MRE))
 
 ggplot(DF, aes(x=SPR_act, y=SPR_pred)) +
   facet_wrap(~Rec_scen, ncol=2) +

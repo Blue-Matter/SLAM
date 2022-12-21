@@ -158,6 +158,7 @@ Simulate <- function(Pars, sim=1) {
   out$SB0 <- SB0
   out$E0 <- E0
   out$Ef <- Ef
+  out$N_unfished <- N_unfished
   out$Number <- N
   out$Biomass <- B
   out$SB <- SB
