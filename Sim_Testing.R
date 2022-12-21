@@ -221,11 +221,27 @@ for (scen in 1:length(rec_scen_names)) {
   scenlist[[scen]] <- do.call('rbind', dflist)
 }
 
+
 DF <- do.call('rbind', scenlist)
 DF$m <- 1:12
 DF$Month <- month.abb[DF$m]
 DF$Month <- factor(DF$Month, levels=month.abb, ordered=TRUE)
 DF$Rec_scen <- factor(DF$Rec_scen, levels=unique(rec_scen_names), ordered = TRUE)
+
+# Drop Sims where all SPR estimates >0.95 # failed to converge - would be detected in real applications
+# look at fix with SPR or F prior/penalty
+
+tt <- DF %>% group_by(Rec_scen, Sim) %>%
+  mutate(highSPR=SPR_pred>0.95) %>%
+  group_by(Rec_scen, Sim) %>%
+  summarise(highSPR=prod(highSPR)) %>%
+  filter(highSPR==TRUE)
+
+tt$Rec_scen_Sim <- paste0(tt$Rec_scen, tt$Sim)
+DF$Rec_scen_Sim <- paste0(DF$Rec_scen, DF$Sim)
+
+DF <- DF %>% filter(!Rec_scen_Sim %in%tt$Rec_scen_Sim)
+
 DF_true <- DF %>% filter(Sim==1)
 
 ggplot(DF, aes(x=Month, y=R0_pred, group=Sim)) +
@@ -237,19 +253,28 @@ ggplot(DF, aes(x=Month, y=R0_pred, group=Sim)) +
   labs(y="Relative Monthly Recruitment") +
   expand_limits(y=0) +
   theme_clean() +
-  theme(axis.text.x = element_text(angle = 60, hjust=1),
+  theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
         plot.background=element_rect(color='white'))
 
 ggsave(paste0('Figures/SimTest/R0_ests.png'), width=6, height=4)
 
 
 
+DF <- DF %>% group_by(Rec_scen, Sim) %>%
+  mutate(SPR_RE=(SPR_pred-SPR_act)/SPR_act,
+         F_RE=(F_pred-F_act)/F_act)
+
+
+DF %>% group_by(Rec_scen) %>% summarise(F=median(F_RE),
+                                        SPR=median(SPR_RE))
+
+
 DF_SPR <- DF %>% group_by(Rec_scen, Sim) %>%
-  summarize(SPR_MRE=median((SPR_pred-SPR_act)/SPR_act))
+  summarize(SPR_MRE=median(SPR_RE))
 
 ggplot(DF_SPR, aes(x=Rec_scen, y=SPR_MRE)) +
   geom_hline(yintercept = 0, linetype=2) +
-  expand_limits(y=c(-1,2)) +
+  expand_limits(y=c(-1,1.5)) +
   geom_boxplot(fill='lightgray') +
   theme_clean() +
   labs(x='Recruitment Scenario', y='Median Relative Error SPR') +
@@ -262,9 +287,17 @@ ggsave('Figures/SimTest/SPR_MRE.png', width=6, height=4)
 DF_F <- DF %>% group_by(Rec_scen, Sim) %>%
   summarize(F_MRE=median((F_pred-F_act)/F_act))
 
+tt <- DF %>% filter(Sim==1)
+
+plot(tt$t, tt$F_act, type='l')
+lines(tt$t, tt$F_pred, col='blue')
+
+median((tt$F_pred-tt$F_act)/tt$F_act)
+
+
 ggplot(DF_F, aes(x=Rec_scen, y=F_MRE)) +
   geom_hline(yintercept = 0, linetype=2) +
-  expand_limits(y=c(-1,2)) +
+  expand_limits(y=c(-1,1)) +
   geom_boxplot(fill='lightgray') +
   theme_clean() +
   labs(x='Recruitment Scenario', y='Median Relative Error Fishing Mortality (F)') +
@@ -273,7 +306,33 @@ ggplot(DF_F, aes(x=Rec_scen, y=F_MRE)) +
 
 ggsave('Figures/SimTest/F_MRE.png', width=6, height=4)
 
+DF_F %>% group_by(Rec_scen) %>% summarise(median(F_MRE))
+DF_SPR %>% group_by(Rec_scen) %>% summarise(median(SPR_MRE))
 
+ggplot(DF, aes(x=SPR_act, y=SPR_pred)) +
+  facet_wrap(~Rec_scen, ncol=2) +
+  geom_point(alpha=0.3) +
+  expand_limits(y=c(0,1), x=c(0,1)) +
+  labs(x='SPR OM', y='SPR Estimated') +
+  geom_abline(slope=1, intercept = 0, linetype=2) +
+  theme_clean() +
+  theme(plot.background=element_rect(color='white'),
+        legend.position = 'bottom')
+ggsave('Figures/SimTest/SPR_compare.png', width=6, height=6)
+
+
+axmax <- max(c(DF$F_act, DF$F_pred))
+
+ggplot(DF, aes(x=F_act, y=F_pred)) +
+  facet_wrap(~Rec_scen, ncol=2) +
+  geom_point(alpha=0.6) +
+  expand_limits(y=c(0,axmax), x=c(0,axmax)) +
+  labs(x='F OM', y='F Estimated') +
+  geom_abline(slope=1, intercept = 0, linetype=2) +
+  theme_clean() +
+  theme(plot.background=element_rect(color='white'),
+        legend.position = 'bottom')
+ggsave('Figures/SimTest/F_compare.png', width=6, height=6)
 
 # ---- Calculate optimal F pattern for Recruitment Scenarios ----
 
@@ -336,6 +395,19 @@ ggplot(scen_df, aes(x=Month, group=1)) +
 ggsave('Figures/SimTest/Fopt_patterns.png', width=8, height=6)
 
 
+ggplot(scen_df, aes(x=Month, group=1)) +
+  facet_grid(Rec_Scen~utilpow, scales='free_y') +
+  expand_limits(y=c(0, 0.2)) +
+  geom_line(aes(y=SPR)) +
+  geom_line(data=rec_pattern_df2, aes(y=Rec, group=1), linetype=2) +
+  theme_clean() +
+  theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.5),
+        plot.background=element_rect(color='white'),
+        legend.background = element_blank(),
+        legend.position = 'bottom') +
+  labs(y='SPR')
+ggsave('Figures/SimTest/SPRopt_patterns.png', width=8, height=6)
+
 scen_df2 <- scen_df %>% group_by(utilpow, Rec_Scen) %>%
   mutate(ctot=sum(Catch), relCatch=Catch/ctot) %>%
   group_by(Rec_Scen) %>%
@@ -356,8 +428,22 @@ ggplot(scen_df2, aes(x=Month, y=relCatch, group=1)) +
   labs(y='Relative Catch')
 ggsave('Figures/SimTest/Catchopt_patterns.png', width=8, height=6)
 
+rec_pattern_df2$utilpow <- NULL
+left_join(scen_df, rec_pattern_df2) %>% group_by(Month, Rec_Scen, utilpow) %>%
+  summarize(SPR=round(mean(SPR),2),
+            F=round(mean(Fishing.Mortality),2),
+            C=round(mean(Catch),3),
+            Rec=round(mean(Rec),2)) %>%
+  filter(Month=='Aug', utilpow==0.4)
 
-scen_df2 <- scen_df %>% tidyr::pivot_longer(cols=3:5)
+
+left_join(scen_df, rec_pattern_df2) %>% group_by(Rec_Scen, utilpow) %>%
+  summarize(SPR=round(mean(SPR),2),
+            F=round(mean(Fishing.Mortality),2),
+            C=round(mean(Catch),3),
+            Rec=round(mean(Rec),2)) %>%
+  filter(utilpow==0.8)
+
 
 
 # Sensitivity Tests ----

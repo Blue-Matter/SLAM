@@ -349,15 +349,18 @@ ggplot(WeightData_Binned_2 %>% filter(Sex=='Not Recorded'), aes(x=BinLabel, y=Co
 text2 <- text %>% group_by(Year, Month_Name) %>%
   summarize(n=sum(n), Sex=NA)
 
-ggplot(WeightData_Binned_2 %>% filter(Sex!='Not Recorded'), aes(x=BinLabel, y=Count, fill=Sex)) +
+ggplot(WeightData_Binned_2 %>% filter(Sex!='Not Recorded'), aes(x=BinLabel, y=Count)) +
   facet_grid(Month_Name~Year) +
   geom_bar(stat='identity') +
   theme_clean() +
   geom_text(data=text2,
             aes(x=-Inf, y=Inf, label=n, hjust=0, vjust=1),size=3) +
   labs(x='Weight Classes (kg)', y='Relative Frequency') +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
   theme(plot.background=element_blank(),
-        legend.position="bottom")
+        axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1))
+ggsave('Figures/Data/Weight_comp_Combined.png', width=9, height=7)
+
 
 
 # Length Comp
@@ -420,6 +423,9 @@ ggplot(LengthData_Binned_2 %>% filter(Sex=='Male'),
   theme(plot.background=element_blank(),
         axis.text.x = element_text(angle=90, vjust = 0.5, hjust=1))
 ggsave('Figures/Data/Length_comp_Male.png', width=9, height=7)
+
+
+
 
 
 # ---- Make List for Data used in Assessment ----
