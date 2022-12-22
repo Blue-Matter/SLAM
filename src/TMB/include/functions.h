@@ -79,3 +79,12 @@ vector<Type> calSelL(vector<Type> Lens, Type LF5, Type LFS, Type Vmaxlen, Type L
   return(sl);
 
 }
+
+// Shortened multinomial density function
+template <class Type>
+Type dmultinom_(vector<Type> x, vector<Type> p, int give_log=0) {
+  Type logres = (x*log(p)).sum();
+  if(give_log) return logres;
+  else return exp(logres);
+}
+
