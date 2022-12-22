@@ -455,6 +455,7 @@ Type SLAM(objective_function<Type>* obj) {
   // Predicted time-series
   REPORT(N_m); // numbers
   REPORT(SB_m); // spawning biomass
+  REPORT(SB_am); // spawning biomass by age and month
   REPORT(predCB); // catch biomass
   REPORT(StEffort); // effort
   REPORT(stpredCPUE); // CPUE
