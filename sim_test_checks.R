@@ -99,6 +99,8 @@ sim_data$use_R0rwpen <- 1
 sim_data$use_Fmeanprior <- 0
 sim_data$F_meanprior <- 1
 
+n_age <- length(sim_data$Weight_Age)
+
 # Estimation
 data <- sim_data
 # Starting parameters
@@ -115,7 +117,7 @@ histF <- Pars$Effort$Effort[Pars$Effort$Sim==1]*Pars$q
 
 ts <- (length(SimPop$Biomass)-nts+1):length(SimPop$Biomass)
 logF_m <- log(histF[ts])
-logF_minit <- log(0.01)
+logF_minit <- log(rep(1, n_age))
 logRec_Devs <- rep(0, nts-1)
 parameters <- list(ls50=ls50,
                    lsdelta=lsdelta,
