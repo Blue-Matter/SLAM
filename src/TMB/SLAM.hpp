@@ -445,7 +445,7 @@ Type SLAM(objective_function<Type>* obj) {
   // ---- Reports ----
 
   // Estimated parameters
-  ADREPORT(F_m);
+  // ADREPORT(F_m);
   ADREPORT(SPR);
 
   // Predicted time-series
