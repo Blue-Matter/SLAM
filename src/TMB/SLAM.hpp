@@ -295,7 +295,7 @@ Type SLAM(objective_function<Type>* obj) {
       pred.setZero();
       pred = predCAW.col(m);
       CAWnll(m) -= (N_obs*log(pred)).sum();
-      CAWnll2(m) -= dmultinom_(N_obs, pred, true)
+      CAWnll2(m) -= dmultinom_(N_obs, pred, true);
     }
   }
 
