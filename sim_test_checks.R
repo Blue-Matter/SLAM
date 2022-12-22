@@ -116,8 +116,13 @@ nts <- length(data$Effort)
 histF <- Pars$Effort$Effort[Pars$Effort$Sim==1]*Pars$q
 
 ts <- (length(SimPop$Biomass)-nts+1):length(SimPop$Biomass)
+FF <- fs - 0.15
+FF[14] <- 1
+FF <- c(0.001, FF)
 logF_m <- log(histF[ts])
-logF_minit <- log(rep(1, n_age))
+logF_minit <- log(FF)
+logF_minit <- log(rep(0.001, n_age))
+
 logRec_Devs <- rep(0, nts-1)
 parameters <- list(ls50=ls50,
                    lsdelta=lsdelta,
@@ -137,6 +142,7 @@ map=list(
          log_sigmaR=factor(NA),
          log_sigmaR0=factor(NA),
          logF_m=factor(rep(NA, length(logF_m))),
+         logF_minit=factor(rep(NA, length(logF_minit))),
          logR0_m_est=factor(rep(NA, 11)),
          logRec_Devs=factor(rep(NA,nts-1)))
 
@@ -182,14 +188,21 @@ rep <- obj$report(obj$env$last.par.best)
 #### TO DO ####
 # get the initial year right
 
-plot(SimPop$Number[,ts[1]]/Pars$Rbar, type='l')
+plot(SimPop$Number[,ts[1]]/Pars$Rbar, type='l', ylim=c(0,0.1))
 lines(rep$N_m[,1], col='blue')
+
+plot(SimPop$Number[,ts[2]]/Pars$Rbar, type='l')
+lines(rep$N_m[,2], col='blue')
+
+SimPop$N_unfished[,12]/Pars$Rbar
+rep$N_unfished[,12]
 
 
 rep$F_minit
 
-
-
+fs <- -log(SimPop$Number[2:15,ts[1]]/SimPop$N_unfished[1:14,12])
+plot(fs-0.15, type='l', ylim=c(0,2))
+lines(rep$F_minit, col='blue')
 
 
 
@@ -201,7 +214,19 @@ lines(rep$predCAW[,y], col='blue')
 plot(SimPop$Index, type='l', ylim=c(0,2))
 lines(rep$stpredCPUE, col='blue')
 
+rep$R0_m
 
+
+
+
+M<- 0.2
+R <- 2
+n <- c(R, 1, 0.5, 0.3)
+n2 <- R * exp(-M)
+
+-log(n2/R)
+
+-log(exp(-M))
 
 plot(simn[,1]/sum(simn[,1]))
 lines(estn[,1]/sum(estn[,1]))
