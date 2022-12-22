@@ -218,7 +218,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   for(int a=1;a<n_ages;a++){
     N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
-    SB_am(a,0) = N_m(a,0) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_init(a)/2);
+    SB_am(a,0) = N_m(a,0) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_minit(a)/2);
   }
 
   SB_m(0) = SB_am.col(0).sum();
