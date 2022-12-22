@@ -48,7 +48,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(log_sigmaR0); // sd for random walk penalty in monthly R0
 
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
-  PARAMETER(logF_minit); // mean fishing mortality for first age-classes
+  PARAMETER_VECTOR(logF_minit); // fishing mortality for first age-classes
 
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
 
@@ -83,12 +83,13 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> F_m(n_months);
   F_m.setZero();
   F_m = exp(logF_m); // monthly fishing mortality
-  Type F_minit = exp(logF_minit); // mean fishing mortality in first time-step
+  Type sigmaF = exp(log_sigmaF); // standard deviation for inter-monthly variation in F
 
-  Type sigmaF = exp(log_sigmaF); // F standard deviation
+  vector<Type> F_minit(n_ages); // fishing mortality for initial age classes
+  F_minit.setZero();
+  F_minit = exp(logF_minit);
 
   // Transform selectivity parameters
-
   // Selectivity-at-Weight
   Type S50 = exp(ls50);
   Type Sdelta = exp(lsdelta);
@@ -188,11 +189,6 @@ Type SLAM(objective_function<Type>* obj) {
     for(int a=0;a<n_ages;a++){
       if (a==0) {
         N_unfished(a,m_ind) = R0_m(m_ind);
-        // if (m_ind==0) {
-        //   N_unfished(a,m_ind) = R0_m(m_ind);
-        // } else {
-        //   N_unfished(a,m_ind) = R0_m(m_ind) * exp(logRec_Devs(m_ind) - pow(sigmaR,2)/Type(2.0));
-        // }
       } else {
         if (m_ind==0) {
           N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
@@ -205,14 +201,11 @@ Type SLAM(objective_function<Type>* obj) {
 
   // first fished age-classes - month = 0
   // F, M, and Z by month and age
-  vector<Type> F_init(n_ages);
   vector<Type> Z_init(n_ages);
   Z_init.setZero();
-  F_init.setZero();
 
   for(int a=0;a<n_ages;a++){
-    F_init(a) = F_minit * selA(a);
-    Z_init(a) =  F_init(a) + M_at_Age(a);
+    Z_init(a) =  F_minit(a) + M_at_Age(a);
   }
   matrix<Type> N_m(n_ages, n_months);
   N_m.setZero();
