@@ -274,6 +274,9 @@ Type SLAM(objective_function<Type>* obj) {
 
   vector<Type> CAWnll(n_months);
   CAWnll.setZero();
+
+  vector<Type> CAWnll2(n_months);
+  CAWnll2.setZero();
   for (int m=0; m<n_months; m++) {
     if (CAWns(m)>0) {
 
@@ -292,6 +295,7 @@ Type SLAM(objective_function<Type>* obj) {
       pred.setZero();
       pred = predCAW.col(m);
       CAWnll(m) -= (N_obs*log(pred)).sum();
+      CAWnll2(m) -= dmultinom_(N_obs, pred, true)
     }
   }
 
@@ -470,6 +474,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(sigmaR);
 
   REPORT(CAWnll);
+  REPORT(CAWnll2);
   REPORT(Effnll);
   REPORT(CPUEnll);
   REPORT(recdevnll);
