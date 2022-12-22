@@ -60,7 +60,7 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m
   Type sigmaF = exp(log_sigmaF); // standard deviation for random walk penalty for F
 
-  // Selectivity-at-Weight
+  // Selectivity-at-Age
   Type S50 = exp(ls50);
   Type Sdelta = exp(lsdelta);
   Type S95 = S50 + Sdelta;
@@ -268,24 +268,20 @@ Type SLAM(objective_function<Type>* obj) {
   // --- Catch-at-Weight ---
   vector<Type> CAWns(n_months);
   CAWns.setZero();
-  for (int m=0; m<n_months; m++) {
-    CAWns(m) = CAW.col(m).sum();
-  }
 
   vector<Type> CAWnll(n_months);
   CAWnll.setZero();
 
-  vector<Type> CAWnll2(n_months);
-  CAWnll2.setZero();
   for (int m=0; m<n_months; m++) {
-    if (CAWns(m)>0) {
+    CAWns(m) = CAW.col(m).sum(); // sum of CAW observations
 
+    if (CAWns(m)>0) {
       // standardize observed CAW to sum 1
       vector<Type> CAWp_obs(n_bins);
       CAWp_obs.setZero();
       CAWp_obs = CAW.col(m)/CAW.col(m).sum();
 
-      // scale by assumed sample size
+      // scale by effective sample size
       vector<Type> N_obs(n_bins);
       N_obs.setZero();
       N_obs = CAW_ESS(m) * CAWp_obs;
@@ -294,12 +290,12 @@ Type SLAM(objective_function<Type>* obj) {
       vector<Type> pred(n_bins);
       pred.setZero();
       pred = predCAW.col(m);
-      CAWnll(m) -= (N_obs*log(pred)).sum();
-      CAWnll2(m) -= dmultinom_(N_obs, pred, true);
+      CAWnll(m) -= dmultinom_(N_obs, pred, true);
     }
   }
 
-  // Effort
+  // ---- Relative Effort ----
+  // proportional to F
   vector<Type> RelEffort(n_months);
   RelEffort.setZero();
   for (int m=0; m<n_months; m++) {
@@ -318,6 +314,7 @@ Type SLAM(objective_function<Type>* obj) {
     Effmean = Effsum/Effn;
   }
 
+  // standardize to mean 1
   vector<Type> StEffort(n_months);
   StEffort.setZero();
   vector<Type> Effnll(n_months);
@@ -329,10 +326,11 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // CPUE
+  // ---- CPUE ----
   vector<Type> predCPUE(n_months);
   predCPUE.setZero();
 
+  // Calculate predicted CPUE
   for (int m=0; m<n_months; m++) {
       predCPUE(m) = predCB(m)/StEffort(m);
   }
@@ -348,6 +346,7 @@ Type SLAM(objective_function<Type>* obj) {
     }
     CPUEmean = CPUEsum/CPUEn;
   }
+  // standardize to mean 1
   vector<Type> CPUEnll(n_months);
   CPUEnll.setZero();
   vector<Type> stpredCPUE(n_months);
@@ -359,26 +358,34 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // Recruitment deviations
+  // ---- Recruitment deviations ----
   Type recdevnll = 0;
   for(int m=0;m<n_months;m++){
     recdevnll -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
   }
 
+  // ---- Joint likelihood ----
   vector<Type> nll_joint(7);
   nll_joint.setZero();
 
+  // CAW
   nll_joint(0) =  CAWnll.sum();
+
+  // Effort
   if (Fit_Effort>0) {
     nll_joint(1) =  Effnll.sum();
   }
+
+  // CPUE
   if (Fit_CPUE>0) {
     nll_joint(2) =  CPUEnll.sum();
   }
+
+  // Recruitment deviations
   nll_joint(3) =  recdevnll;
 
 
-  // Priors and penalties
+  // ---- Priors and penalties ----
 
   // penalty for random walk in F
   vector<Type> Frwpen(n_months-1);
@@ -430,59 +437,59 @@ Type SLAM(objective_function<Type>* obj) {
   }
   nll_joint(6) = F_month_NLL.sum();
 
+  // ---- Total negative log-likelihood ----
   Type nll=0;
   nll = nll_joint.sum();
 
 
+  // ---- Reports ----
 
-
-
-
-
-  // Reports
-  ADREPORT(SPR);
+  // Estimated parameters
   ADREPORT(S50);
   ADREPORT(S95);
   ADREPORT(selA);
   ADREPORT(F_m);
+  ADREPORT(SPR);
   ADREPORT(R0_m);
 
-  REPORT(F_month_NLL);
-  REPORT(F_mean);
-  REPORT(F_count);
-  REPORT(Frwpen);
+  // Predicted time-series
+  REPORT(N_m); // numbers
+  REPORT(SB_m); // spawning biomass
+  REPORT(predCB); // catch biomass
+  REPORT(StEffort); // effort
+  REPORT(stpredCPUE); // CPUE
+  REPORT(SPR); // SPR
+  REPORT(F_m); // fishing mortality
+  REPORT(F_minit); // initial equilibrium Fs
+  REPORT(predCAW); // catch-at-weight
+  REPORT(N_unfished);
 
-  REPORT(SPR);
-  REPORT(AWK);
+  // predicted seasonal recruitment
+  REPORT(R0_m);
+  REPORT(logRec_Devs); // recruitment deviations
+  REPORT(sigmaR); // SD for rec devs
 
+
+  // predicted selectivity-at-age
   REPORT(S50);
   REPORT(S95);
-
-  REPORT(SB_m);
-  REPORT(F_minit);
-  REPORT(F_m);
-  REPORT(R0_m);
-  REPORT(sigmaR0);
-  REPORT(logRec_Devs);
-  REPORT(StEffort);
-  REPORT(stpredCPUE);
-  REPORT(predCAW);
-  REPORT(predCB);
   REPORT(selA);
 
-  REPORT(sigmaF);
-  REPORT(sigmaR);
-
+  // likelihoods
   REPORT(CAWnll);
-  REPORT(CAWnll2);
   REPORT(Effnll);
   REPORT(CPUEnll);
   REPORT(recdevnll);
   REPORT(nll_joint);
   REPORT(nll);
 
-  REPORT(N_unfished);
-  REPORT(N_m);
+  // Other stuff
+  REPORT(AWK); // age-weight key
+  REPORT(sigmaF); // standard deviation for random walk penalty for F
+
+  REPORT(Frwpen); // random walk F penalty
+  REPORT(F_mean); // mean F
+  REPORT(F_month_NLL); // mean F prior likelihood
 
   return(nll);
 }
