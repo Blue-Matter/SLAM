@@ -221,8 +221,8 @@ Type SLAM(objective_function<Type>* obj) {
   // for(int a=0;a<n_ages;a++){
   //   Z_init(a) =  F_minit(a) + M_at_Age(a);
   // }
-  // matrix<Type> N_m(n_ages, n_months);
-  // N_m.setZero();
+  matrix<Type> N_m(n_ages, n_months);
+  N_m.setZero();
   //
   // matrix<Type> SB_am(n_ages, n_months);
   // SB_am.setZero();
