@@ -182,48 +182,66 @@ Type SLAM(objective_function<Type>* obj) {
   // first month
   matrix<Type> N_unfished(n_ages, 12);
   N_unfished.setZero();
+  vector<Type> Z_init(n_ages);
+  Z_init.setZero();
+
+  vector<Type> SB_ainit(12);
+  SB_ainit.setZero();
+  for(int a=0;a<n_ages;a++){
+    Z_init(a) =  F_minit(a) + M_at_Age(a);
+  }
 
   // initialize unfished population
   for (int t=0; t<36; t++) { // run-out for 3 years to get rid of initial conditions
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
       if (a==0) {
-        N_unfished(a,m_ind) = R0_m(m_ind);
+        if (t==0) {
+          N_unfished(a,m_ind) = R0_m(m_ind);
+        } else {
+          N_unfished(a,m_ind) = BH_SRR(R0_m(m_ind), h, SB_init(m_ind), SBpR);
+        }
       } else {
         if (m_ind==0) {
-          N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1, 11)) * (1-PSM_at_Age(a-1));
+          N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
         } else {
-          N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-M_ma(a-1, m_ind-1)) * (1-PSM_at_Age(a-1));
+          N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
         }
       }
+      SB_ainit(a,m_ind) = N_unfished(a,m_ind) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_minit(a)/2);
     }
+    SB_init(m_ind) = SB_ainit.col(m_ind).sum();
   }
 
   // first fished age-classes - month = 0
   // F, M, and Z by month and age
-  vector<Type> Z_init(n_ages);
-  Z_init.setZero();
-
-  for(int a=0;a<n_ages;a++){
-    Z_init(a) =  F_minit(a) + M_at_Age(a);
-  }
-  matrix<Type> N_m(n_ages, n_months);
-  N_m.setZero();
-
-  matrix<Type> SB_am(n_ages, n_months);
-  SB_am.setZero();
-
-  vector<Type> SB_m(n_months);
-  SB_m.setZero();
+  // vector<Type> Z_init(n_ages);
+  // Z_init.setZero();
+  //
+  // for(int a=0;a<n_ages;a++){
+  //   Z_init(a) =  F_minit(a) + M_at_Age(a);
+  // }
+  // matrix<Type> N_m(n_ages, n_months);
+  // N_m.setZero();
+  //
+  // matrix<Type> SB_am(n_ages, n_months);
+  // SB_am.setZero();
+  //
+  // vector<Type> SB_m(n_months);
+  // SB_m.setZero();
+  //
+  // for(int a=1;a<n_ages;a++){
+  //   N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
+  //   SB_am(a,0) = N_m(a,0) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_minit(a)/2);
+  // }
+  //
+  // SB_m(0) = SB_am.col(0).sum();
+  //
+  // N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
 
   for(int a=1;a<n_ages;a++){
-    N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
-    SB_am(a,0) = N_m(a,0) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_minit(a)/2);
+    N_m(a,0) = N_unfished(a-1,11);
   }
-
-  SB_m(0) = SB_am.col(0).sum();
-
-  N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
 
   // loop over remaining months
   for (int m=1; m<n_months; m++) {
