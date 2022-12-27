@@ -89,10 +89,12 @@ Type dmultinom_(vector<Type> x, vector<Type> p, int give_log=0) {
 }
 
 
+// Shortened normal density function
 template<class Type>
-Type dlognorm(Type x, Type meanlog, Type sdlog, int give_log=0){
-  Type logres = dnorm( log(x), meanlog, sdlog, true) - log(x);
-  if(give_log) return logres; else return exp(logres);
+Type dnorm_(Type x, Type mean, Type sd, int give_log=0) {
+  Type resid = (x - mean) / sd;
+  Type logans = - Type(.5) * resid * resid;
+  if(give_log) return logans; else return exp(logans);
 }
 
 
