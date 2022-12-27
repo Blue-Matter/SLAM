@@ -147,10 +147,12 @@ Simulate <- function(Pars, sim=1) {
   for (t in 1:nts) {
     CAW_exp[,t] <- apply(AWK * C[,t], 2, sum)
   }
-  CAW_samp <- matrix(0, nrow=nbins, ncol=nts)
-  for (t in 1:nts) {
+  CAW_samp <- matrix(0, nrow=nbins, ncol=data_nts)
+  ii <- 0
+  for (t in data_ts) {
+    ii <- ii + 1
     if (sum(CAW_exp[,t])>0)
-      CAW_samp[,t] <- Pars$CAW_nsamp * (rmultinom(1, size=Pars$CAW_ESS, prob=CAW_exp[,t]))/Pars$CAW_ESS
+      CAW_samp[,ii] <- Pars$CAW_nsamp * (rmultinom(1, size=Pars$CAW_ESS, prob=CAW_exp[,t]))/Pars$CAW_ESS
   }
 
   out <- list()
@@ -201,18 +203,19 @@ Assess <- function(data, options=list(),
                             log_sigmaR0=factor(NA)),
                    Fit_Effort=1,
                    Fit_CPUE=1,
-                   log_sigmaF=log(0.5),
-                   log_sigmaR=log(0.9),
-                   log_sigmaR0=log(0.6)) {
+                   log_sigmaF=log(0.1),
+                   log_sigmaR=log(0.3),
+                   log_sigmaR0=log(0.4)) {
 
   # Starting parameters
-  ls50 <- log(0.5)
-  lsdelta <- log(0.5)
+  ls50 <- log(5)
+  lsdelta <- log(0.1)
   logR0_m_est <- rep(log(1), 11)
 
+  n_age <- length(data$Weight_Age)
   nts <- length(data$Effort)
-  logF_m <- rep(log(0.01), nts)
-  logF_minit <- log(0.01)
+  logF_m <- rep(log(0.2), nts)
+  logF_minit <- rep(log(0.25), n_age)
   logRec_Devs <- rep(0, nts-1)
   parameters <- list(ls50=ls50,
                      lsdelta=lsdelta,
@@ -230,8 +233,8 @@ Assess <- function(data, options=list(),
     Random <- 'logRec_Devs'
   }
 
-  data$use_Fmeanprior <- 0
-  data$F_meanprior <- 1
+  data$use_Fmeanprior <- 1
+  data$F_meanprior <- 0.9
 
   if (!Fit_Effort) data$Fit_Effort <- 0
   if (!Fit_CPUE) data$Fit_CPUE <- 0
@@ -277,6 +280,39 @@ Assess <- function(data, options=list(),
     map$logRec_Devs <- factor(map$logRec_Devs)
   }
 
+
+
+
+  ###########################
+  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
+                        silent=TRUE, hessian=FALSE, map=map, random=Random)
+
+  starts <- obj$par
+  opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control)),silent=TRUE)
+
+  opt
+
+  rep <- obj$report(obj$env$last.par.best)
+  sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
+
+  sdreport$pdHess
+
+  rep$F_m
+  rep$F_month_NLL
+
+  ## UP TO HERE ##
+  ## Why is F_month_NLL all 0s?
+
+
+  ## also systematically vary to find where bias in F comes from
+  rep$nll_joint
+
+
+
+
+
+  #############################
+
   do_opt <- opt_TMB_model(data, parameters, map, Random, control, restarts=10)
   rep <- do_opt$rep
 
@@ -302,6 +338,36 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
   starts <- obj$par
   opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control)),silent=TRUE)
 
+  #############
+
+  rep <- obj$report(obj$env$last.par.best)
+
+  tt <- obj$he()
+
+  sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
+
+  exp(rep$logRec_Devs)
+
+  rep$nll_joint
+
+  sdreport$value
+  sdreport$sd
+
+
+
+  tt <- data.frame(par=sdreport$par.fixed, grad=sdreport$gradient.fixed[1,])
+
+  ind <- which(abs(tt$grad)>0.01)
+  cbind(names=names(sdreport$par.fixed)[ind],tt[ind,])
+
+  plot(tt)
+  plot(tt[,2])
+
+  sdreport$par.fixed %>% length()
+
+  stop()
+  ############
+
   rerun <- FALSE
   if (inherits(opt, 'list')) {
     rep <- obj$report(obj$env$last.par.best)
@@ -310,7 +376,7 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
     # check convergence, gradient and positive definite
     chk <- data.frame(pdHess=sdreport$pdHess,
                       conv=opt$convergence ==0,
-                      grad=max(abs(sdreport$gradient.fixed)) < 0.01)
+                      grad=max(abs(sdreport$gradient.fixed)) < 0.1)
 
     if (any(!chk)) rerun <- TRUE
   } else {
