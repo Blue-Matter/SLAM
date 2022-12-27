@@ -67,6 +67,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- indexing variables ----
   int n_ages = Weight_Age.size(); // number of age classes
+  int maxage = n_ages - 1.0;
   int n_bins = WghtMids.size(); // number of size bins
   int n_months = CPUE.size(); // number of months of data
 
@@ -96,7 +97,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- Fishing mortality ----
   // fishing mortality for initial age classes
-  vector<Type> F_minit(n_ages-1.0);
+  vector<Type> F_minit(maxage);
   F_minit.setZero();
   F_minit = exp(logF_minit);
 
