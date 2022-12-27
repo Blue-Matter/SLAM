@@ -200,9 +200,9 @@ Type SLAM(objective_function<Type>* obj) {
   SB_m.setZero();
 
   // ---- Equilibrium initial fished population ----
-  vector<Type> Z_init(n_ages-1);
+  vector<Type> Z_init(maxage);
   Z_init.setZero(); // total mortality for initial age classes
-  for(int a=0;a<n_ages;a++){
+  for(int a=0;a<maxage;a++){
     Z_init(a) =  F_minit(a) + M_at_Age(a);
   }
 
