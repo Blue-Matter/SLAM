@@ -323,7 +323,7 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=0; m<n_months; m++) {
     StEffort(m) = RelEffort(m)/Effmean;
     if (!R_IsNA(asDouble(Effort(m)))) {
-      Effnll(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+      Effnll(m)  -= dnorm(log(StEffort(m)), log(Effort(m)-pow(Effort_SD(m),2)/Type(2.0)), Effort_SD(m), true);
     }
   }
 
