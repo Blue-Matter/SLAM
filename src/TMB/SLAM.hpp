@@ -321,14 +321,11 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> Effnll(n_months);
   Effnll.setZero();
 
-  vector<Type> Effnll2(n_months);
-  Effnll2.setZero();
-
   for (int m=0; m<n_months; m++) {
     StEffort(m) = RelEffort(m)/Effmean;
     if (!R_IsNA(asDouble(Effort(m)))) {
       Effnll(m)  -= dnorm(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
-      Effnll2(m)  -= dlognorm(StEffort(m), log(Effort(m)), Effort_SD(m), true);
+      // Effnll(m)  -= dlognorm(StEffort(m), log(Effort(m)), Effort_SD(m), true);
     }
   }
 
@@ -360,8 +357,8 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=0; m<n_months; m++) {
     stpredCPUE(m) = predCPUE(m)/CPUEmean;
     if (!R_IsNA(asDouble(CPUE(m)))) {
-      // CPUEnll(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
-      CPUEnll(m) -= dlognorm(stpredCPUE(m), log(CPUE(m)), CPUE_SD(m), true);
+      CPUEnll(m) -= dnorm(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
+      // CPUEnll(m) -= dlognorm(stpredCPUE(m), log(CPUE(m)), CPUE_SD(m), true);
     }
   }
 
@@ -380,8 +377,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Effort
   if (Fit_Effort>0) {
-    // nll_joint(1) =  Effnll.sum();
-    nll_joint(1) =  Effnll2.sum();
+    nll_joint(1) =  Effnll.sum();
   }
 
   // CPUE
@@ -483,7 +479,6 @@ Type SLAM(objective_function<Type>* obj) {
   // likelihoods
   REPORT(CAWnll);
   REPORT(Effnll);
-  REPORT(Effnll2);
   REPORT(CPUEnll);
   REPORT(recdevnll);
   REPORT(nll_joint);
