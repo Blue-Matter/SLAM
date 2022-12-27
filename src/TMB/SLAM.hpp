@@ -32,7 +32,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_SCALAR(h); // steepness of BH-SRR
 
   // priors and penalties
-  DATA_VECTOR(F_meanprior); // mean and log-normal SD for monthly F
+  DATA_VECTOR(F_meanprior); // log-normal SD for monthly F
 
   // options
   DATA_INTEGER(Fit_Effort);
@@ -199,7 +199,7 @@ Type SLAM(objective_function<Type>* obj) {
   SB_m.setZero();
 
   // ---- Equilibrium initial fished population ----
-  vector<Type> Z_init(n_ages);
+  vector<Type> Z_init(n_ages-1);
   Z_init.setZero(); // total mortality for initial age classes
   for(int a=0;a<n_ages;a++){
     Z_init(a) =  F_minit(a) + M_at_Age(a);
@@ -209,7 +209,7 @@ Type SLAM(objective_function<Type>* obj) {
   N_m.setZero();
 
   for(int a=1;a<n_ages;a++){
-    N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
+    N_m(a,0) = N_unfished(a,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
     SB_am(a,0) =  N_m(a,0) * Weight_Age(a) * Mat_at_Age(a); //  * exp(-F_minit(a)/2);
   }
   SB_m(0) = SB_am.col(0).sum(); // spawning biomass in initial month
