@@ -96,7 +96,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- Fishing mortality ----
   // fishing mortality for initial age classes
-  vector<Type> F_minit(n_ages);
+  vector<Type> F_minit(n_ages-1);
   F_minit.setZero();
   F_minit = exp(logF_minit);
 
