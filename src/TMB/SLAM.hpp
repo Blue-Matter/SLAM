@@ -379,8 +379,8 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Effort
   if (Fit_Effort>0) {
-    nll_joint(1) =  Effnll.sum();
-    // nll_joint(1) =  Effnll2.sum();
+    // nll_joint(1) =  Effnll.sum();
+    nll_joint(1) =  Effnll2.sum();
   }
 
   // CPUE
