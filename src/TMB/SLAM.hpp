@@ -334,7 +334,10 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Calculate predicted CPUE
   for (int m=0; m<n_months; m++) {
+    if (StEffort(m)>0) {
       predCPUE(m) = predCB(m)/StEffort(m);
+    }
+
   }
 
   // mean 1 over time-steps where CPUE data exists
