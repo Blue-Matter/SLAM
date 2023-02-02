@@ -45,7 +45,7 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   q <- Exploitation$q
 
   # Import Data Parameters
-  n_recent_years <- Data$n_recent_years
+  n_recent_months <- Data$n_recent_months
   Rel_Sample_Month <- Data$Rel_Sample_Month
   CPUE_CV <- Data$CPUE_CV
   Catch_CV <- Data$Catch_CV
@@ -81,7 +81,9 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   Effort_Month_Deviations <- rlnorm(nts*nsim, -0.5*Effort_Month_SD^2, Effort_Month_SD)
   Effort_Month_Deviations <- matrix(Effort_Month_Deviations, nrow=nts, ncol=nsim)
 
-  Effort_Month_Mean <- matrix(rep(Effort_Month_Mean, each=nyears), nrow=nts, ncol=nsim)
+  Effort_Month_Mean <- matrix(rep(Exploitation$Effort_Month_Mean, nyears),
+                              nrow=nts, ncol=nsim, byrow=FALSE)
+
   Effort_Month <- matrix(rep(Effort_Annual, each=12), nrow=nts, ncol=nsim) * Effort_Month_Mean * Effort_Month_Deviations
   Effort_Month <- t(Effort_Month)
   F_Month <- Effort_Month * q
@@ -231,10 +233,8 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   Effort_Sample <- Effort_Month/apply(Effort_Month, 1, mean) * exp(rnorm(nts*nsim, -0.5*Effort_CV^2, Effort_CV))
 
 
-  # Generate Monthly Samples for n_recent_years
-  sample_years <- (nyears-n_recent_years+1):nyears
-  sample_ts <- sample_years * 12
-  sample_ts <- seq(sample_ts[1]-11, sample_ts[length(sample_ts)])
+  # ---- Generate Monthly Samples for n_recent_months ----
+  sample_ts <- (nts-n_recent_months+1):nts
   n_sample_ts <- length(sample_ts)
   Catch_Sample <- Catch_Sample[,sample_ts]
   CPUE_Sample <- CPUE_Sample[,sample_ts]
@@ -244,13 +244,13 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
 
   CAW_Sample <- array(0, dim=c(nsim, nBins, n_sample_ts))
   Rel_Sample_Month <- Rel_Sample_Month/sum(Rel_Sample_Month)
-  Rel_Sample_Month <- c(0.1, 0.2, 0.3, 0.4,0.5,0.6,0.6,0.5,0.4,0.3,0.2,0.1)
-  Rel_Sample_Month <- rep(Rel_Sample_Month, n_recent_years)
 
   for (i in seq_along(sample_ts)) {
     ts <- sample_ts[i]
-    ts_sample_size <- CAW_Annual_Sample_Size * Rel_Sample_Month[i]
-    ts_ess <- CAW_Annual_ESS * Rel_Sample_Month[i]
+    month <- ts %%12
+    if (month==0) month <- 12
+    ts_sample_size <- CAW_Annual_Sample_Size * Rel_Sample_Month[month]
+    ts_ess <- CAW_Annual_ESS * Rel_Sample_Month[month]
 
     CAW_Sample[,,i] <- t(sapply(1:nsim, function(x)
       if (sum(CAW_exp[x,,ts])>0) {
@@ -282,11 +282,18 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
                       Catch=as.vector(Catch_B_Month),
                       SPR=as.vector(SPR),
                       Effort=as.vector(Effort_Month),
-                      F_mort=as.vector(F_Month))
+                      F_mort=as.vector(F_Month),
+                      Rec_Devs=as.vector(Rec_Devs[,(maxage+1):ncol(Rec_Devs)]))
+
+  # Data
+  month_ind <- sample_ts %%12
+  month_ind[month_ind==0] <- 12
+
+  Months <- month.abb[month_ind]
+  n_recent_years <- Months %>% table() %>% max()
 
   Years <- (currentYr-n_recent_years+1):currentYr
   Years <- rep(Years, each=12)
-  Months <- rep(month.abb, n_recent_years)
 
   Data_TS_DF <- data.frame(Sim=1:nsim,
                          Year=rep(Years, each=nsim),
@@ -302,6 +309,7 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
                             Month=rep(Months, each=nsim*nBins),
                             Month_ind=rep(1:n_sample_ts, each=nsim*nBins),
                             Count=as.vector(CAW_Sample))
+
 
   list(LifeHistory=LifeHistory,
        Exploitation=Exploitation,
