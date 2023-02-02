@@ -197,7 +197,6 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   SB_unfished_Month <- apply(N_Age_unfished * Weight_Age_Mean_array * Maturity_at_Age_array, c(1,3), sum)
 
   B_Month <- apply(N_Age_fished * Weight_Age_Mean_array, c(1,3), sum)
-  SB_fished_Month <- apply(N_Age_fished * Weight_Age_Mean_array * Maturity_at_Age_array, c(1,3), sum)
   Catch_N_Month <- apply(Catch_Age, c(1,3), sum)
   Catch_B_Month <- apply(Catch_Age * Weight_Age_Mean_array, c(1,3), sum)
 
@@ -275,7 +274,7 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
                       B_fished=as.vector(B_Month),
                       SB_unfished=as.vector(SB_unfished_Month),
                       SB_unfished_eq=as.vector(SB_unfished_eq),
-                      SB_fished=as.vector(SB_fished_Month),
+                      SB_fished=as.vector(SB_fished),
                       N_unfished=as.vector(N_unfished),
                       N_fished=as.vector(N_fished),
                       Recruits=as.vector(N_Age_fished[,1,]),
