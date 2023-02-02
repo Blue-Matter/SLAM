@@ -63,7 +63,7 @@ Import_Data <- function(csv='Parameters.csv', dir = getwd()) {
 
   Indata <- read.csv(file.path(dir, csv))
 
-  Data <- read_pars(Indata, Data, 'n_recent_years', 1)
+  Data <- read_pars(Indata, Data, 'n_recent_months', 1)
   Data <- read_pars(Indata, Data, 'Rel_Sample_Month', 12)
   Data <- read_pars(Indata, Data, 'CPUE_CV', 1)
   Data <- read_pars(Indata, Data, 'Catch_CV', 1)
