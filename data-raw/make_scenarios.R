@@ -8,7 +8,7 @@ library(dplyr)
 # Scenarios:
 
 Monthly_Recruitment_Pattern <- c('Constant', 'Pulse')
-Data_n_months <- c(3, 6, 9, 12, 24, 60, 120)
+Data_n_months <- c(12, 24, 60, 120)
 Data_types <- c('CAW', 'CAW+Index', 'CAW+Effort', 'Index+Effort', 'CAW+Index+Effort')
 Conditions <- c('Idealized', 'Process+Observation Error')
 

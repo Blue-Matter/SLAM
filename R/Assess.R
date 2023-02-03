@@ -138,8 +138,8 @@ Construct_Data_OM <- function(SimMod,
   # Priors and penalties
   data$F_meanprior <- 0
 
-  if (nrow(Effort_DF<3)) Fit_Effort <- 0
-  if (nrow(CPUE_DF<3)) Fit_CPUE <- 0
+  if (nrow(Effort_DF)<3) Fit_Effort <- 0
+  if (nrow(CPUE_DF)<3) Fit_CPUE <- 0
 
   data$Fit_Effort <- Fit_Effort
   data$Fit_CPUE <- Fit_CPUE
