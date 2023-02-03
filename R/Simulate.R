@@ -235,10 +235,10 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   # ---- Generate Monthly Samples for n_recent_months ----
   sample_ts <- (nts-n_recent_months+1):nts
   n_sample_ts <- length(sample_ts)
-  Catch_Sample <- Catch_Sample[,sample_ts]
-  CPUE_Sample <- CPUE_Sample[,sample_ts]
+  Catch_Sample <- Catch_Sample[,sample_ts, drop=FALSE]
+  CPUE_Sample <- CPUE_Sample[,sample_ts, drop=FALSE]
   CPUE_Sample <- CPUE_Sample/apply(CPUE_Sample, 1, mean)
-  Effort_Sample <- Effort_Sample[,sample_ts]
+  Effort_Sample <- Effort_Sample[,sample_ts, drop=FALSE]
   Effort_Sample <- Effort_Sample/apply(Effort_Sample, 1, mean)
 
   CAW_Sample <- array(0, dim=c(nsim, nBins, n_sample_ts))
@@ -292,7 +292,6 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   n_recent_years <- Months %>% table() %>% max()
 
   Years <- (currentYr-n_recent_years+1):currentYr
-  Years <- rep(Years, each=12)
 
   Data_TS_DF <- data.frame(Sim=1:nsim,
                          Year=rep(Years, each=nsim),
@@ -308,7 +307,6 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
                             Month=rep(Months, each=nsim*nBins),
                             Month_ind=rep(1:n_sample_ts, each=nsim*nBins),
                             Count=as.vector(CAW_Sample))
-
 
   list(LifeHistory=LifeHistory,
        Exploitation=Exploitation,

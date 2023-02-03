@@ -8,7 +8,7 @@ library(dplyr)
 # Scenarios:
 
 Monthly_Recruitment_Pattern <- c('Constant', 'Pulse')
-Data_n_months <- c(1, 3, 12, 60, 120, 360)
+Data_n_months <- c(3, 6, 9, 12, 24, 60, 120)
 Data_types <- c('CAW', 'CAW+Index', 'CAW+Effort', 'Index+Effort', 'CAW+Index+Effort')
 Conditions <- c('Idealized', 'Process+Observation Error')
 
@@ -23,9 +23,6 @@ names <- gsub(" ", "", names, fixed = TRUE)
 
 Scenario_Grid$Name <- names
 
-Scenario_Grid_drop <- Scenario_Grid %>% filter(Data_n_months==1 , Data_types !="CAW")
-
-Scenario_Grid <- Scenario_Grid[!(Scenario_Grid$Name %in% Scenario_Grid_drop$Name),]
 
 make_scenario_data <- function(i, Scenario_Grid) {
 

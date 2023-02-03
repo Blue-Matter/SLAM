@@ -31,7 +31,7 @@ Initialize_Parameters <- function(data,
 
   parameters$logF_m <- rep(log(mean(data$M_at_Age)), n_ts)
   parameters$log_sigmaF <- log_sigmaF # standard deviation for random walk penalty for F
-  parameters$logR0_m_est <- rep(1/12, 12)
+  parameters$logR0_m_est <- rep(1/12, 11)
   parameters$log_sigmaR0 <- log_sigmaR0 # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- rep(log(1), n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
@@ -91,16 +91,17 @@ Initialize_Parameters_OM <- function(SimMod,
 #'
 #' @return
 #' @export
-Construct_Data_OM <- function(SimMod, sim=1,
-                           CAW_Monthly_ESS=100,
-                           Effort_CV=0.2,
-                           CPUE_CV=0.2,
-                           Fit_Effort=1,
-                           Fit_CPUE=1,
-                           Fit_CAW=1,
-                           use_Frwpen=0,
-                           use_R0rwpen=0,
-                           use_Fmeanprior=0) {
+Construct_Data_OM <- function(SimMod,
+                              sim=1,
+                              CAW_Monthly_ESS=100,
+                              Effort_CV=0.2,
+                              CPUE_CV=0.2,
+                              Fit_Effort=1,
+                              Fit_CPUE=1,
+                              Fit_CAW=1,
+                              use_Frwpen=0,
+                              use_R0rwpen=0,
+                              use_Fmeanprior=0) {
 
   data <- list()
   # Assumed life-history parameters
@@ -136,6 +137,9 @@ Construct_Data_OM <- function(SimMod, sim=1,
 
   # Priors and penalties
   data$F_meanprior <- 0
+
+  if (nrow(Effort_DF<3)) Fit_Effort <- 0
+  if (nrow(CPUE_DF<3)) Fit_CPUE <- 0
 
   data$Fit_Effort <- Fit_Effort
   data$Fit_CPUE <- Fit_CPUE
