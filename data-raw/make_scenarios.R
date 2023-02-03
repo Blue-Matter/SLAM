@@ -8,7 +8,7 @@ library(SLAM)
 
 Monthly_Recruitment_Pattern <- c('Constant', 'Pulse')
 Data_n_months <- c(1, 3, 12, 60, 120, 360)
-Data_types <- c('CAW', 'CAW+Index', 'CAW+Index+Effort')
+Data_types <- c('CAW', 'CAW+Index', 'CAW+Effort', 'Index+Effort', 'CAW+Index+Effort')
 Conditions <- c('Idealized', 'Process+Observation Error')
 
 Scenario_Grid <- expand.grid(Monthly_Recruitment_Pattern=Monthly_Recruitment_Pattern,

@@ -1,14 +1,65 @@
-Initialize_Parameters_OM <- function(SimMod,
-                                     log_sigmaF=log(0.05),
-                                     log_sigmaR0=log(0.1),
-                                     log_sigmaR=log(0.3)) {
+#' Iniitialize Parameters for SLAM Estimation
+#'
+#' @param data A data object
+#' @param as50 initial value for age at 50% selection
+#' @param as95 initial value for age at 95% selection
+#' @param Feq_init
+#' @param sigmaR
+#' @param log_sigmaF
+#' @param log_sigmaR0
+#' @param log_sigmaR
+#'
+#' @return
+#' @export
+#'
+Initialize_Parameters <- function(data,
+                                  as50=4, as95=6,
+                                  Feq_init=0.05,
+                                  sigmaR=0.3,
+                                  log_sigmaF=log(0.05),
+                                  log_sigmaR0=log(0.1),
+                                  log_sigmaR=log(0.3)) {
+  parameters <- list()
+
+  parameters$ls50 <- log(as50)
+  parameters$lsdelta <- log(as95-as50)
+
+  n_age <- length(data$Weight_Age)
+  parameters$logF_minit <- log(0.05)
+
+  n_ts <- length(data$Effort)
+
+  parameters$logF_m <- rep(log(mean(data$M_at_Age)), n_ts)
+  parameters$log_sigmaF <- log_sigmaF # standard deviation for random walk penalty for F
+  parameters$logR0_m_est <- rep(1/12, 12)
+  parameters$log_sigmaR0 <- log_sigmaR0 # sd for random walk penalty for monthly recruitment
+  parameters$logRec_Devs <- rep(log(1), n_ts)
+  parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
+
+  parameters
+}
+
+
+#' Title
+#'
+#' @param SimMod
+#' @param log_sigmaF
+#' @param log_sigmaR0
+#' @param log_sigmaR
+#'
+#' @return
+#' @export
+Initialize_Parameters <- function(SimMod,
+                                  log_sigmaF=log(0.05),
+                                  log_sigmaR0=log(0.1),
+                                  log_sigmaR=log(0.3)) {
   parameters <- list()
 
   parameters$ls50 <- log(SimMod$Exploitation$SA50)
   parameters$lsdelta <- log(SimMod$Exploitation$SA95-SimMod$Exploitation$SA50)
 
   n_age <- SimMod$LifeHistory$maxage+1
-  parameters$logF_minit <- rep(log(0.05), n_age)
+  parameters$logF_minit <- log(0.05)
 
 
   Data_Y_M <- SimMod$Data_TS_DF %>% filter(Sim==1) %>% distinct(Year, Month)
@@ -24,10 +75,32 @@ Initialize_Parameters_OM <- function(SimMod,
   parameters
 }
 
+#' Title
+#'
+#' @param SimMod
+#' @param sim
+#' @param CAW_Monthly_ESS
+#' @param Effort_CV
+#' @param CPUE_CV
+#' @param Fit_Effort
+#' @param Fit_CPUE
+#' @param Fit_CAW
+#' @param use_Frwpen
+#' @param use_R0rwpen
+#' @param use_Fmeanprior
+#'
+#' @return
+#' @export
 Construct_Data_OM <- function(SimMod, sim=1,
                            CAW_Monthly_ESS=100,
                            Effort_CV=0.2,
-                           CPUE_CV=0.2) {
+                           CPUE_CV=0.2,
+                           Fit_Effort=1,
+                           Fit_CPUE=1,
+                           Fit_CAW=1,
+                           use_Frwpen=0,
+                           use_R0rwpen=0,
+                           use_Fmeanprior=0) {
 
   data <- list()
   # Assumed life-history parameters
@@ -64,11 +137,12 @@ Construct_Data_OM <- function(SimMod, sim=1,
   # Priors and penalties
   data$F_meanprior <- 0
 
-  data$Fit_Effort <- 1
-  data$Fit_CPUE <- 1
-  data$use_Frwpen <- 1
-  data$use_R0rwpen <- 1
-  data$use_Fmeanprior <- 0
+  data$Fit_Effort <- Fit_Effort
+  data$Fit_CPUE <- Fit_CPUE
+  data$Fit_CAW <- Fit_CAW
+  data$use_Frwpen <- use_Frwpen
+  data$use_R0rwpen <- use_R0rwpen
+  data$use_Fmeanprior <- use_Fmeanprior
 
   data$model <- 'SLAM'
   data$currentYr <- max(SimMod$OM_DF$Year)
