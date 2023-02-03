@@ -492,6 +492,11 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SB0_m);
   REPORT(N_unfished);
 
+  // Fished equilibirum
+  REPORT(N_fished_eq);
+  REPORT(SB_am_eq);
+  REPORT(SB_m_eq);
+
   // Predicted time-series
   REPORT(N_m); // numbers
   REPORT(SB_m); // spawning biomass
