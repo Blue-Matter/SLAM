@@ -45,7 +45,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(ls50);  // log age-at-50% selectivity
   PARAMETER(lsdelta); // log interval age-50 - age-95% selectivity
 
-  PARAMETER_VECTOR(logF_minit); // equilibrium fishing mortality for first age-classes
+  PARAMETER(logF_minit); // equilibrium fishing mortality for first age-classes
   PARAMETER_VECTOR(logF_m); // monthly fishing mortality
   PARAMETER(log_sigmaF); // standard deviation for random walk penalty for F
 
@@ -97,9 +97,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- Fishing mortality ----
   // fishing mortality for initial age classes
-  vector<Type> F_minit(maxage);
-  F_minit.setZero();
-  F_minit = exp(logF_minit);
+  Type F_minit = exp(logF_minit);
 
   // monthly fishing mortality
   vector<Type> F_m(n_months);
@@ -176,7 +174,16 @@ Type SLAM(objective_function<Type>* obj) {
   // run-out for 3 years to get rid of initial conditions
   // and get equilibrium conditions for seasonal recruitment
   matrix<Type> N_unfished(n_ages, 12);
+  matrix<Type> B0_am(n_ages, 12); // B0 by age and month
+  matrix<Type> SB0_am(n_ages, 12); // SB0 by age and month
+  vector<Type> B0_m(12);
+  vector<Type> SB0_m(12);
+  B0_m.setZero();
+  SB0_m.setZero();
   N_unfished.setZero();
+  B0_am.setZero();
+  SB0_am.setZero();
+
   for (int t=0; t<36; t++) {
     int m_ind = t % 12; // month index
     for(int a=0;a<n_ages;a++){
@@ -189,7 +196,43 @@ Type SLAM(objective_function<Type>* obj) {
           N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-M_ma(a-1)) * (1-PSM_at_Age(a-1));
         }
       }
+      B0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age(a) ;
+      SB0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age(a) * Mat_at_Age(a);
     }
+    B0_m(m_ind) = B0_am.col(m_ind).sum();
+    SB0_m(m_ind) = SB0_am.col(m_ind).sum();
+  }
+
+  // ---- Equilibrium initial fished population ----
+  matrix<Type> N_fished_eq(n_ages, 12);
+  matrix<Type> SB_am_eq(n_ages, 12);
+  vector<Type> SB_m_eq(12);
+  N_fished_eq.setZero();
+  SB_am_eq.setZero();
+  SB_m_eq.setZero();
+
+  vector<Type> Za_init(n_ages);
+  vector<Type> Fa_init(n_ages);
+  Fa_init.setZero(); // total mortality for initial age classes
+  Za_init.setZero(); // total mortality for initial age classes
+  for(int a=0;a<n_ages;a++){
+    Fa_init(a) = F_minit(a) * selA(a)
+    Za_init(a) =  Fa_init(a) + M_at_Age(a);
+  }
+
+  for (int t=0; t<36; t++) {
+    int m_ind = t % 12; // month index
+    for(int a=1;a<n_ages;a++){
+
+      if (t==0) {
+        N_fished_eq(a,m_ind) = N_unfished(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+      } else {
+        N_fished_eq(a,m_ind) = N_fished_eq(a-1,m_ind-1) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+      }
+      SB_am_eq(a, m_ind) =  N_fished_eq(a,m_ind) * Weight_Age(a) * Mat_at_Age(a) * exp(-Fa_init(a)/2);;
+    }
+    SB_m_eq(m_ind) = SB_am_eq.col(m_ind).sum();
+    N_fished_eq(0,m_ind) = BH_SRR(R0_m(m_ind), h, SB_m_eq(m_ind), SBpR);
   }
 
   // ---- Biomass matrices and vector ----
@@ -197,22 +240,13 @@ Type SLAM(objective_function<Type>* obj) {
   SB_am.setZero();
   vector<Type> SB_m(n_months); // SB by month
   SB_m.setZero();
-
-  // ---- Equilibrium initial fished population ----
-  vector<Type> Z_init(maxage);
-  Z_init.setZero(); // total mortality for initial age classes
-  for(int a=0;a<maxage;a++){
-    Z_init(a) =  F_minit(a) + M_at_Age(a);
-  }
-
   matrix<Type> N_m(n_ages, n_months); // N by age and month
   N_m.setZero();
 
   for(int a=1;a<n_ages;a++){
-    N_m(a,0) = N_unfished(a-1,11) * exp(-Z_init(a-1)) * (1-PSM_at_Age(a-1));
-    SB_am(a,0) =  N_m(a,0) * Weight_Age(a) * Mat_at_Age(a); //  * exp(-F_minit(a)/2);
+    N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+    SB_am(a,0) =  N_m(a,0) * Weight_Age(a) * Mat_at_Age(a)  * exp(-Fa_init(a)/2);
   }
-
   // recruitment in initial month
   N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
 
@@ -327,14 +361,14 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // ---- CPUE ----
-  vector<Type> predCPUE(n_months);
-  predCPUE.setZero();
+  // ---- Index ----
+  vector<Type> predIndex(n_months);
+  predIndex.setZero();
 
-  // Calculate predicted CPUE
+  // Calculate predicted Index
   for (int m=0; m<n_months; m++) {
     if (StEffort(m)>0) {
-      predCPUE(m) = predCB(m)/StEffort(m);
+      predIndex(m) = predCB(m)/StEffort(m);
     }
 
   }
@@ -345,7 +379,7 @@ Type SLAM(objective_function<Type>* obj) {
   Type CPUEn = 0;
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(CPUE(m)))) {
-      CPUEsum += predCPUE(m);
+      CPUEsum += predIndex(m);
       CPUEn += 1;
     }
     CPUEmean = CPUEsum/CPUEn;
@@ -353,12 +387,12 @@ Type SLAM(objective_function<Type>* obj) {
   // standardize to mean 1
   vector<Type> CPUEnll(n_months);
   CPUEnll.setZero();
-  vector<Type> stpredCPUE(n_months);
-  stpredCPUE.setZero();
+  vector<Type> stpredIndex(n_months);
+  stpredIndex.setZero();
   for (int m=0; m<n_months; m++) {
-    stpredCPUE(m) = predCPUE(m)/CPUEmean;
+    stpredIndex(m) = predIndex(m)/CPUEmean;
     if (!R_IsNA(asDouble(CPUE(m)))) {
-      CPUEnll(m) -= dnorm_(log(stpredCPUE(m)), log(CPUE(m)), CPUE_SD(m), true);
+      CPUEnll(m) -= dnorm_(log(stpredIndex(m)), log(CPUE(m)), CPUE_SD(m), true);
     }
   }
 
@@ -449,8 +483,15 @@ Type SLAM(objective_function<Type>* obj) {
   // ---- Reports ----
 
   // Estimated parameters
-  // ADREPORT(F_m);
+  ADREPORT(F_m);
   ADREPORT(SPR);
+
+  // Unfished
+  REPORT(B0_am);
+  REPORT(SB0_am);
+  REPORT(B0_m);
+  REPORT(SB0_m);
+  REPORT(N_unfished);
 
   // Predicted time-series
   REPORT(N_m); // numbers
@@ -458,18 +499,15 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SB_am); // spawning biomass by age and month
   REPORT(predCB); // catch biomass
   REPORT(StEffort); // effort
-  REPORT(stpredCPUE); // CPUE
+  REPORT(stpredIndex); // Index of abundance
   REPORT(SPR); // SPR
   REPORT(F_m); // fishing mortality
-  REPORT(F_minit); // initial equilibrium Fs
   REPORT(predCAW); // catch-at-weight
-  REPORT(N_unfished);
 
   // predicted seasonal recruitment
   REPORT(R0_m);
   REPORT(logRec_Devs); // recruitment deviations
   REPORT(sigmaR); // SD for rec devs
-
 
   // predicted selectivity-at-age
   REPORT(S50);
