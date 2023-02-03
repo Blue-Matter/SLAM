@@ -89,9 +89,6 @@ make_scenario_data <- function(i, Scenario_Grid) {
 sapply(1:nrow(Scenario_Grid), function(i)
   make_scenario_data(i=i, Scenario_Grid = Scenario_Grid))
 
-
-
-
 usethis::use_data(Scenario_Grid, overwrite = TRUE)
 
 
