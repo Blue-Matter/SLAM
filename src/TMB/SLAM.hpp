@@ -215,7 +215,7 @@ Type SLAM(objective_function<Type>* obj) {
   Fa_init.setZero(); // total mortality for initial age classes
   Za_init.setZero(); // total mortality for initial age classes
   for(int a=0;a<n_ages;a++){
-    Fa_init(a) = F_minit * selA(a)
+    Fa_init(a) = F_minit * selA(a);
     Za_init(a) =  Fa_init(a) + M_at_Age(a);
   }
 
