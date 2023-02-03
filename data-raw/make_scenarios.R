@@ -24,8 +24,7 @@ Scenario_Grid$Name <- names
 
 Scenario_Grid_drop <- Scenario_Grid %>% filter(Data_n_months==1 , Data_types !="CAW")
 
-Scenario_Grid[!(Scenario_Grid$Name %in% Scenario_Grid_drop$Name),]
-
+Scenario_Grid <- Scenario_Grid[!(Scenario_Grid$Name %in% Scenario_Grid_drop$Name),]
 
 make_scenario_data <- function(i, Scenario_Grid) {
 
