@@ -37,6 +37,7 @@ Type SLAM(objective_function<Type>* obj) {
   // options
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
+  DATA_INTEGER(Fit_CAW);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
   DATA_INTEGER(use_Fmeanprior);
@@ -416,8 +417,9 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint.setZero();
 
   // CAW
-  nll_joint(0) =  CAWnll.sum();
-
+  if (Fit_CAW>0) {
+    nll_joint(0) =  CAWnll.sum();
+  }
   // Effort
   if (Fit_Effort>0) {
     nll_joint(1) =  Effnll.sum();
