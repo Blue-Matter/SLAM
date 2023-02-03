@@ -17,6 +17,16 @@ Scenario_Grid <- expand.grid(Monthly_Recruitment_Pattern=Monthly_Recruitment_Pat
                              Conditions=Conditions,
                              stringsAsFactors = FALSE)
 
+names <- apply(Scenario_Grid, 1, paste0, collapse="_")
+names <- gsub(" ", "", names, fixed = TRUE)
+
+Scenario_Grid$Name <- names
+
+Scenario_Grid_drop <- Scenario_Grid %>% filter(Data_n_months==1 , Data_types !="CAW")
+
+Scenario_Grid[!(Scenario_Grid$Name %in% Scenario_Grid_drop$Name),]
+
+
 make_scenario_data <- function(i, Scenario_Grid) {
 
   Scenario <- Scenario_Grid[i,]
@@ -71,6 +81,7 @@ make_scenario_data <- function(i, Scenario_Grid) {
               Data=Data)
 
   name <- paste(Scenario, collapse="_")
+  name <- gsub(" ", "", name, fixed = TRUE)
   assign(name, out)
 
   do.call("use_data", list(as.name(name), overwrite = TRUE))
@@ -80,10 +91,7 @@ sapply(1:nrow(Scenario_Grid), function(i)
   make_scenario_data(i=i, Scenario_Grid = Scenario_Grid))
 
 
-names <- apply(Scenario_Grid, 1, paste0, collapse="_")
-names <- gsub(" ", "", names, fixed = TRUE)
 
-Scenario_Grid$Name <- names
 
 usethis::use_data(Scenario_Grid, overwrite = TRUE)
 
