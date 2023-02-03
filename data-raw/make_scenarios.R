@@ -3,6 +3,7 @@
 # ---- Make Scenario Parameter Files ----
 library(usethis)
 library(SLAM)
+library(dplyr)
 
 # Scenarios:
 
@@ -79,8 +80,7 @@ make_scenario_data <- function(i, Scenario_Grid) {
               Exploitation=Exploitation,
               Data=Data)
 
-  name <- paste(Scenario, collapse="_")
-  name <- gsub(" ", "", name, fixed = TRUE)
+  name <- Scenario$Name
   assign(name, out)
 
   do.call("use_data", list(as.name(name), overwrite = TRUE))
