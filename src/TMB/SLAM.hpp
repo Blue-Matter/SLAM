@@ -497,6 +497,10 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SB_am_eq);
   REPORT(SB_m_eq);
 
+  REPORT(F_minit);
+  REPORT(Fa_init);
+  REPORT(Za_init);
+
   // Predicted time-series
   REPORT(N_m); // numbers
   REPORT(SB_m); // spawning biomass
