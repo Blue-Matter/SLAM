@@ -5,30 +5,25 @@
 \title{Iniitialize Parameters for SLAM Estimation}
 \usage{
 Initialize_Parameters(
-  SimMod,
-  log_sigmaF = log(0.05),
-  log_sigmaR0 = log(0.1),
-  log_sigmaR = log(0.3)
-)
-
-Initialize_Parameters(
-  SimMod,
+  data,
+  as50 = 4,
+  as95 = 6,
+  Feq_init = 0.05,
+  sigmaR = 0.3,
   log_sigmaF = log(0.05),
   log_sigmaR0 = log(0.1),
   log_sigmaR = log(0.3)
 )
 }
 \arguments{
-\item{log_sigmaR}{}
-
 \item{data}{A data object}
 
 \item{as50}{initial value for age at 50\% selection}
 
 \item{as95}{initial value for age at 95\% selection}
+
+\item{log_sigmaR}{}
 }
 \description{
 Iniitialize Parameters for SLAM Estimation
-
-Title
 }
