@@ -219,7 +219,7 @@ Type SLAM(objective_function<Type>* obj) {
     Za_init(a) =  Fa_init(a) + M_at_Age(a);
   }
 
-  for (int t=0; t<48; t++) {
+  for (int t=0; t<13; t++) {
     int m_ind = t % 12; // month index
     for(int a=1;a<n_ages;a++){
 
