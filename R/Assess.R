@@ -49,7 +49,7 @@ Initialize_Parameters <- function(data,
 #'
 #' @return
 #' @export
-Initialize_Parameters <- function(SimMod,
+Initialize_Parameters_OM <- function(SimMod,
                                   log_sigmaF=log(0.05),
                                   log_sigmaR0=log(0.1),
                                   log_sigmaR=log(0.3)) {
