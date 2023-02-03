@@ -67,7 +67,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- indexing variables ----
   int n_ages = Weight_Age.size(); // number of age classes
-  int maxage = n_ages - 1;
   int n_bins = WghtMids.size(); // number of size bins
   int n_months = CPUE.size(); // number of months of data
 
@@ -216,7 +215,7 @@ Type SLAM(objective_function<Type>* obj) {
   Fa_init.setZero(); // total mortality for initial age classes
   Za_init.setZero(); // total mortality for initial age classes
   for(int a=0;a<n_ages;a++){
-    Fa_init(a) = F_minit(a) * selA(a)
+    Fa_init(a) = F_minit * selA(a)
     Za_init(a) =  Fa_init(a) + M_at_Age(a);
   }
 
