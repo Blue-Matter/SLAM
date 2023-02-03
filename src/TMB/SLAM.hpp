@@ -242,18 +242,24 @@ Type SLAM(objective_function<Type>* obj) {
   // ---- Biomass matrices and vector ----
   matrix<Type> SB_am(n_ages, n_months); // SB by age and month
   SB_am.setZero();
+  matrix<Type> B_am(n_ages, n_months); // B by age and month
+  B_am.setZero();
   vector<Type> SB_m(n_months); // SB by month
   SB_m.setZero();
+  vector<Type> B_m(n_months); // B by month
+  B_m.setZero();
   matrix<Type> N_m(n_ages, n_months); // N by age and month
   N_m.setZero();
 
   for(int a=1;a<n_ages;a++){
     N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
     SB_am(a,0) =  N_m(a,0) * Weight_Age(a) * Mat_at_Age(a)  * exp(-Fa_init(a)/2);
+    B_am(a,0) = N_m(a,0) * Weight_Age(a) * exp(-F_ma(a,m)/2);
   }
 
   // recruitment in initial month
   SB_m(0) = SB_am.col(0).sum();
+  B_m(0) = B_am.col(0).sum();
   N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
 
   // ---- Population dynamics for remaining months ----
@@ -262,8 +268,10 @@ Type SLAM(objective_function<Type>* obj) {
     for(int a=1;a<n_ages;a++){
       N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
       SB_am(a,m) = N_m(a,m) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_ma(a,m)/2);
+      B_am(a,m) = N_m(a,m) * Weight_Age(a) * exp(-F_ma(a,m)/2);
     }
     SB_m(m) = SB_am.col(m).sum();
+    B_m(m) = B_am.col(m).sum();
     // recruitment
     N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB_m(m), SBpR) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
   }
@@ -372,12 +380,7 @@ Type SLAM(objective_function<Type>* obj) {
   predIndex.setZero();
 
   // Calculate predicted Index
-  for (int m=0; m<n_months; m++) {
-    if (StEffort(m)>0) {
-      predIndex(m) = predCB(m)/StEffort(m);
-    }
-
-  }
+  predIndex = B_m;
 
   // mean 1 over time-steps where CPUE data exists
   Type CPUEmean = 0;
