@@ -219,7 +219,7 @@ Type SLAM(objective_function<Type>* obj) {
     Za_init(a) =  Fa_init(a) + M_at_Age(a);
   }
 
-  for (int t=0; t<12; t++) {
+  for (int t=0; t<48; t++) {
     int m_ind = t % 12; // month index
     for(int a=1;a<n_ages;a++){
 
@@ -246,7 +246,9 @@ Type SLAM(objective_function<Type>* obj) {
     N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
     SB_am(a,0) =  N_m(a,0) * Weight_Age(a) * Mat_at_Age(a)  * exp(-Fa_init(a)/2);
   }
+
   // recruitment in initial month
+  SB_m(0) = SB_am.col(0).sum();
   N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
 
   // ---- Population dynamics for remaining months ----
