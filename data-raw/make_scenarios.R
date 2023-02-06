@@ -9,7 +9,7 @@ library(dplyr)
 
 Monthly_Recruitment_Pattern <- c('Constant', 'Pulse')
 Data_n_months <- c(12, 24, 60, 120)
-Data_types <- c('CAW', 'CAW+Index', 'CAW+Effort', 'Index+Effort', 'CAW+Index+Effort')
+Data_types <- c('CAW', 'CAW+Index', 'CAW+Effort', 'CAW+Index+Effort')
 Conditions <- c('Idealized', 'Process+Observation Error')
 
 Scenario_Grid <- expand.grid(Monthly_Recruitment_Pattern=Monthly_Recruitment_Pattern,
