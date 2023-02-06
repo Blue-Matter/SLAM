@@ -57,8 +57,8 @@ make_scenario_data <- function(i, Scenario_Grid) {
                                                                   CPUE_CV=0.3,
                                                                   Catch_CV=0.3,
                                                                   Effort_CV=0.3,
-                                                                  CAW_Annual_Sample_Size=1000,
-                                                                  CAW_Annual_ESS=500))
+                                                                  CAW_Annual_Sample_Size=5000,
+                                                                  CAW_Annual_ESS=2400))
 
   nm1 <- intersect(names(Condition_Parameters), names(LifeHistory))
   LifeHistory <- modifyList(LifeHistory, Condition_Parameters[nm1])
