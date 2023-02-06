@@ -451,7 +451,7 @@ Type SLAM(objective_function<Type>* obj) {
   // ---- Priors and penalties ----
 
   // penalty for random walk in
-  vector<Type> Frwpen(11);
+  vector<Type> Frwpen(n_months-1);
   Frwpen.setZero();
   if (use_Frwpen>0) {
     for (int m=1; m<n_months; m++) {
