@@ -7,7 +7,6 @@
 #' @param sigmaR
 #' @param log_sigmaF
 #' @param log_sigmaR0
-#' @param log_sigmaR
 #'
 #' @return
 #' @export
@@ -17,8 +16,7 @@ Initialize_Parameters <- function(data,
                                   Feq_init=0.05,
                                   sigmaR=0.3,
                                   log_sigmaF=log(0.05),
-                                  log_sigmaR0=log(0.1),
-                                  log_sigmaR=log(0.3)) {
+                                  log_sigmaR0=log(0.1)) {
   parameters <- list()
 
   parameters$ls50 <- log(as50)
@@ -99,8 +97,8 @@ Construct_Data_OM <- function(SimMod,
                               Fit_Effort=1,
                               Fit_CPUE=1,
                               Fit_CAW=1,
-                              use_Frwpen=0,
-                              use_R0rwpen=0,
+                              use_Frwpen=1,
+                              use_R0rwpen=1,
                               use_Fmeanprior=0) {
 
   data <- list()
@@ -136,10 +134,7 @@ Construct_Data_OM <- function(SimMod,
   data$CPUE_SD <- rep(CPUE_CV, nMonths)
 
   # Priors and penalties
-  data$F_meanprior <- 0
-
-  if (nrow(Effort_DF)<3) Fit_Effort <- 0
-  if (nrow(CPUE_DF)<3) Fit_CPUE <- 0
+  data$F_meanprior <- 0.3
 
   data$Fit_Effort <- Fit_Effort
   data$Fit_CPUE <- Fit_CPUE
@@ -153,3 +148,155 @@ Construct_Data_OM <- function(SimMod,
 
   data
 }
+
+set_data_types <- function(data, Data_types) {
+  Data_types <- strsplit(Data_types, "\\+")[[1]]
+  if (!'CAW' %in% Data_types) data$Fit_CAW <-0
+  if (!'Index' %in% Data_types) data$Fit_CPUE <-0
+  if (!'Effort' %in% Data_types) data$Fit_Effort <-0
+  data
+}
+
+#' Title
+#'
+#' @param data
+#' @param as50
+#' @param as95
+#' @param Feq_init
+#' @param sigmaR
+#' @param control
+#' @param map
+#' @param log_sigmaF
+#' @param log_sigmaR0
+#'
+#' @return
+#' @export
+#'
+Assess <- function(data,
+                   as50=4,
+                   as95=6,
+                   Feq_init=0.05,
+                   sigmaR=0.5,
+                   control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
+                   map=list(log_sigmaF=factor(NA),
+                            log_sigmaR=factor(NA),
+                            log_sigmaR0=factor(NA)),
+                   log_sigmaF = log(0.05),
+                   log_sigmaR0 = log(0.1)) {
+
+  parameters <- Initialize_Parameters(data,
+                                      as50, as95,
+                                      Feq_init,
+                                      sigmaR,
+                                      log_sigmaF,
+                                      log_sigmaR0)
+
+  if (!is.null(map$log_sigmaR)) {
+    Random <- NULL
+  } else {
+    Random <- 'logRec_Devs'
+  }
+
+  starts <- obj$par
+
+  rep <- obj$report(obj$env$last.par.best)
+  do_opt <- opt_TMB_model(data, parameters, map, Random, control, restarts=10)
+  do_opt
+}
+
+
+#' Title
+#'
+#' @param data
+#' @param parameters
+#' @param map
+#' @param Random
+#' @param control
+#' @param restarts
+#'
+#' @return
+#' @export
+#'
+opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
+
+  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
+                        silent=TRUE, hessian=FALSE, map=map, random=Random)
+
+  starts <- obj$par
+  opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control)),silent=TRUE)
+
+  rerun <- FALSE
+  if (inherits(opt, 'list')) {
+    rep <- obj$report(obj$env$last.par.best)
+    sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
+
+    # check convergence, gradient and positive definite
+    chk <- data.frame(pdHess=sdreport$pdHess,
+                      conv=opt$convergence ==0,
+                      grad=max(abs(sdreport$gradient.fixed)) < 0.1)
+
+    if (any(!chk)) rerun <- TRUE
+  } else {
+    chk <- opt
+    rerun <- TRUE
+    sdreport <- NA
+    rep <- NA
+  }
+
+  if (rerun & restarts>0) {
+    parameters$ls50 <- parameters$ls50 * rnorm(1, 1, 0.1)
+    parameters$lsdelta <- parameters$lsdelta  * rnorm(1, 1, 0.4)
+    parameters$logR0_m_est <- rep(log(1), 11) + rnorm(11, 0, 0.4)
+    Recall(data, parameters,  map, Random, control, restarts-1)
+  }
+  list(opt=opt, obj=obj, rep=rep, sdreport=sdreport, chk=chk)
+}
+
+#' Title
+#'
+#' @param data
+#' @param parameters
+#' @param map
+#' @param Random
+#' @param control
+#' @param restarts
+#'
+#' @return
+#' @export
+#'
+Compare_OM_Assess <- function(x, SimMod, Assessment) {
+
+  # OM
+  Mod <- SimMod$OM_DF %>% filter(Sim==x)
+  month_ind <- rev(seq(Exploitation$nyears*12, by=-1, length.out=Data$n_recent_months))
+  Mod_data <- SimMod$OM_DF %>% filter(Sim==x, Month_ind%in%month_ind)
+  Mod_data$Month_ind <- 1:nrow(Mod_data)
+  Mod_data$Model <- 'OM'
+  Mod_data$Year_Month <- paste(Mod_data$Year, Mod_data$Month, sep="_")
+
+  # Assessment
+  nMonths <- length(Assessment$obj$env$data$CPUE)
+  nYears <- nMonths/12
+  currentYr <- Assessment$obj$env$data$currentYr
+  Years <- (currentYr-nYears+1):currentYr
+  Years <- rep(Years, each=12)
+  Months <- rep(month.abb, nYears)
+
+  Est_TS_DF <- data.frame(Sim=x,
+                          Year=Years,
+                          Month=Months,
+                          Month_ind=1:nMonths,
+                          SB_fished=Assessment$rep$SB_m,
+                          N_fished=apply( Assessment$rep$N_m,2,sum),
+                          Catch= Assessment$rep$predCB,
+                          SPR= Assessment$rep$SPR,
+                          Effort= Assessment$rep$StEffort,
+                          F_mort= Assessment$rep$F_m,
+                          Rec_Devs=exp(Assessment$rep$logRec_Devs),
+                          Index= Assessment$rep$stpredIndex,
+                          Model='Assessment'
+  )
+  Est_TS_DF$Year_Month <- paste(Est_TS_DF$Year, Est_TS_DF$Month, sep="_")
+  bind_rows(Mod_data, Est_TS_DF)
+}
+
