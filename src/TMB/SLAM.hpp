@@ -71,7 +71,7 @@ Type SLAM(objective_function<Type>* obj) {
   int n_ages = Weight_Age.size(); // number of age classes
   int n_bins = WghtMids.size(); // number of size bins
   int n_months = CPUE.size(); // number of months of data
-  int n_years = ceiling(n_months/Type(12));
+  int n_years = ceil(n_months/Type(12));
 
   // ---- Generate Age-Weight Key ----
   matrix<Type> AWK(n_ages, n_bins);
