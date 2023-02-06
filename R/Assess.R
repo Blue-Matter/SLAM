@@ -19,6 +19,7 @@ Initialize_Parameters <- function(data,
                                   log_sigmaR0=log(0.1)) {
   parameters <- list()
 
+
   parameters$ls50 <- log(as50)
   parameters$lsdelta <- log(as95-as50)
 
@@ -27,8 +28,8 @@ Initialize_Parameters <- function(data,
 
   n_ts <- length(data$Effort)
 
-  parameters$logF_y <- rep(log(mean(data$M_at_Age)), data$n_years)
-  parameters$logF_m_dev <- rep(log(1), 12)
+  parameters$logF_m <- rep(log(mean(data$M_at_Age)), n_ts)
+  # parameters$logF_m_dev <- rep(log(1), 12)
   parameters$log_sigmaF <- log_sigmaF # standard deviation for random walk penalty for F
   parameters$logR0_m_est <- rep(1/12, 11)
   parameters$log_sigmaR0 <- log_sigmaR0 # sd for random walk penalty for monthly recruitment
@@ -190,8 +191,6 @@ Do_Assess <- function(data,
 
   if (data$n_years==1) {
     map$logRec_Devs <- rep(factor(NA), length(parameters$logRec_Devs))
-    parameters$logF_y <- log(1)
-    map$logF_y <- rep(factor(NA), length(parameters$logF_y))
   }
 
 
