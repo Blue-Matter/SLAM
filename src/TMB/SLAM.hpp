@@ -28,7 +28,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
 
-  DATA_INTEGER(n_years); // number of year of data
+  // DATA_INTEGER(n_years); // number of year of data
 
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
