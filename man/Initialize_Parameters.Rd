@@ -11,8 +11,7 @@ Initialize_Parameters(
   Feq_init = 0.05,
   sigmaR = 0.3,
   log_sigmaF = log(0.05),
-  log_sigmaR0 = log(0.1),
-  log_sigmaR = log(0.3)
+  log_sigmaR0 = log(0.1)
 )
 }
 \arguments{
@@ -22,7 +21,7 @@ Initialize_Parameters(
 
 \item{as95}{initial value for age at 95\% selection}
 
-\item{log_sigmaR}{}
+\item{log_sigmaR0}{}
 }
 \description{
 Iniitialize Parameters for SLAM Estimation

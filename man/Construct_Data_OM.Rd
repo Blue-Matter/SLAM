@@ -13,8 +13,8 @@ Construct_Data_OM(
   Fit_Effort = 1,
   Fit_CPUE = 1,
   Fit_CAW = 1,
-  use_Frwpen = 0,
-  use_R0rwpen = 0,
+  use_Frwpen = 1,
+  use_R0rwpen = 1,
   use_Fmeanprior = 0
 )
 }
