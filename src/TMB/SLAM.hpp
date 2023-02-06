@@ -125,6 +125,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
   vector<Type> rec_dev_m(n_months);
   rec_dev_m.setZero();
+  int year = -1;
   for (int m=0; m<n_months; m++) {
     int m_ind = m % 12; // month index
     if (m_ind==0) year = year +1;
