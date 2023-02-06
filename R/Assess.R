@@ -27,15 +27,17 @@ Initialize_Parameters <- function(data,
 
   n_ts <- length(data$Effort)
 
-  parameters$logF_m <- rep(log(mean(data$M_at_Age)), n_ts)
+  parameters$logF_y <- rep(log(mean(data$M_at_Age)), data$n_years)
+  parameters$logF_m_dev <- rep(log(1), 12)
   parameters$log_sigmaF <- log_sigmaF # standard deviation for random walk penalty for F
   parameters$logR0_m_est <- rep(1/12, 11)
   parameters$log_sigmaR0 <- log_sigmaR0 # sd for random walk penalty for monthly recruitment
-  parameters$logRec_Devs <- rep(log(1), n_ts)
+  parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
 
   parameters
 }
+
 
 
 #' Title
@@ -97,7 +99,7 @@ Construct_Data_OM <- function(SimMod,
                               Fit_Effort=1,
                               Fit_CPUE=1,
                               Fit_CAW=1,
-                              use_Frwpen=1,
+                              use_Frwpen=0,
                               use_R0rwpen=1,
                               use_Fmeanprior=0) {
 
@@ -122,6 +124,7 @@ Construct_Data_OM <- function(SimMod,
   data$CAW <- CAW
 
   data$CAW_ESS <- rep(CAW_Monthly_ESS, nMonths)
+  data$n_years <- ceiling(nMonths/12)
 
   # Effort Index
   Effort_DF <- SimMod$Data_TS_DF %>% filter(Sim==sim) %>% select(Effort)
@@ -149,13 +152,7 @@ Construct_Data_OM <- function(SimMod,
   data
 }
 
-set_data_types <- function(data, Data_types) {
-  Data_types <- strsplit(Data_types, "\\+")[[1]]
-  if (!'CAW' %in% Data_types) data$Fit_CAW <-0
-  if (!'Index' %in% Data_types) data$Fit_CPUE <-0
-  if (!'Effort' %in% Data_types) data$Fit_Effort <-0
-  data
-}
+
 
 #' Title
 #'
@@ -172,7 +169,7 @@ set_data_types <- function(data, Data_types) {
 #' @return
 #' @export
 #'
-Assess <- function(data,
+Do_Assess <- function(data,
                    as50=4,
                    as95=6,
                    Feq_init=0.05,
@@ -196,10 +193,6 @@ Assess <- function(data,
   } else {
     Random <- 'logRec_Devs'
   }
-
-  starts <- obj$par
-
-  rep <- obj$report(obj$env$last.par.best)
   do_opt <- opt_TMB_model(data, parameters, map, Random, control, restarts=10)
   do_opt
 }
