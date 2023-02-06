@@ -28,6 +28,8 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
 
+  DATA_INTEGER(n_years); // number of year of data
+
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
 
@@ -41,6 +43,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
   DATA_INTEGER(use_Fmeanprior);
+
 
   // ---- Estimated Parameters ----
   PARAMETER(ls50);  // log age-at-50% selectivity
@@ -71,7 +74,6 @@ Type SLAM(objective_function<Type>* obj) {
   int n_ages = Weight_Age.size(); // number of age classes
   int n_bins = WghtMids.size(); // number of size bins
   int n_months = CPUE.size(); // number of months of data
-  int n_years = ceil(n_months/Type(12));
 
   // ---- Generate Age-Weight Key ----
   matrix<Type> AWK(n_ages, n_bins);
