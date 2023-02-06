@@ -448,13 +448,21 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- Priors and penalties ----
 
-  // penalty for random walk in F
-  vector<Type> Frwpen(n_months-1);
+  // penalty for random walk in
+  vector<Type> Frwpen(n_years);
   Frwpen.setZero();
+  // if (use_Frwpen>0) {
+  //   for (int m=1; m<n_months; m++) {
+  //     Frwpen(m-1) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+  //   }
+  // }
   if (use_Frwpen>0) {
-    for (int m=1; m<n_months; m++) {
-      Frwpen(m-1) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+    if (n_years>1) {
+      for (int y=1; y<n_years; y++) {
+        Frwpen(y-1) -= dnorm(F_y_mean(y), F_y_mean(y-1), sigmaF, true);
+      }
     }
+
   }
   nll_joint(4) =Frwpen.sum();
 
