@@ -188,6 +188,13 @@ Do_Assess <- function(data,
                                       log_sigmaF,
                                       log_sigmaR0)
 
+  if (data$n_years==1) {
+    map$logRec_Devs <- rep(factor(NA), length(parameters$logRec_Devs))
+    parameters$logF_y <- log(1)
+    map$logF_y <- rep(factor(NA), length(parameters$logF_y))
+  }
+
+
   if (!is.null(map$log_sigmaR)) {
     Random <- NULL
   } else {
