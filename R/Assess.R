@@ -178,7 +178,7 @@ Do_Assess <- function(data,
                    map=list(log_sigmaF=factor(NA),
                             log_sigmaR=factor(NA),
                             log_sigmaR0=factor(NA)),
-                   log_sigmaF = log(0.05),
+                   log_sigmaF = log(0.2),
                    log_sigmaR0 = log(0.1)) {
 
   parameters <- Initialize_Parameters(data,
@@ -231,7 +231,7 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
     sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
 
     # check convergence, gradient and positive definite
-    chk <- data.frame(pdHess=sdreport$pdHess,
+    chk <- data.frame(#pdHess=sdreport$pdHess,
                       conv=opt$convergence ==0,
                       grad=max(abs(sdreport$gradient.fixed)) < 0.1)
 
@@ -268,7 +268,9 @@ Compare_OM_Assess <- function(x, SimMod, Assessment) {
 
   # OM
   Mod <- SimMod$OM_DF %>% filter(Sim==x)
-  month_ind <- rev(seq(Exploitation$nyears*12, by=-1, length.out=Data$n_recent_months))
+  nyears <- SimMod$OM_DF$Year %>% unique() %>% length()
+  n_recent_months <- SimMod$Data_TS_DF$Month_ind %>% unique() %>% length()
+  month_ind <- rev(seq(nyears*12, by=-1, length.out=n_recent_months))
   Mod_data <- SimMod$OM_DF %>% filter(Sim==x, Month_ind%in%month_ind)
   Mod_data$Month_ind <- 1:nrow(Mod_data)
   Mod_data$Model <- 'OM'
