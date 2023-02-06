@@ -57,8 +57,8 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
   PARAMETER(log_sigmaR0); // sd for random walk penalty for monthly recruitment
 
-  PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
-  PARAMETER(log_sigmaR); // monthly rec dev sd (usually fixed)
+  PARAMETER_VECTOR(logRec_Devs); // mean annual recruitment deviations
+  PARAMETER(log_sigmaR); // annual rec dev sd (usually fixed)
 
   // ---- Transform Parameters ----
   Type sigmaR = exp(log_sigmaR); // rec process error dev sd
@@ -117,6 +117,19 @@ Type SLAM(objective_function<Type>* obj) {
     F_m(m) = F_y_mean(year) *  exp(logF_m_dev(m_ind)); // monthly fishing mortality
   }
 
+  // annual mean recruitment deviation
+  vector<Type> rec_dev_y(n_years);
+  rec_dev_y.setZero();
+  for (int y=0; y<n_years; y++) {
+    rec_dev_y(y) =  exp(logRec_Devs(y) - pow(sigmaR,2)/Type(2.0));
+  }
+  vector<Type> rec_dev_m(n_months);
+  rec_dev_m.setZero();
+  for (int m=0; m<n_months; m++) {
+    int m_ind = m % 12; // month index
+    if (m_ind==0) year = year +1;
+    rec_dev_m(m) = rec_dev_y(year);
+  }
 
 
   // ---- Selectivity-at-Age ----
@@ -125,7 +138,6 @@ Type SLAM(objective_function<Type>* obj) {
   for(int a=0;a<n_ages;a++){
     selA(a) = 1 / (1 + exp(-log(Type(19))*((a - S50)/Sdelta)));
   }
-
 
   // --- Set up mortality matrices ----
   matrix<Type> M_ma(n_ages, n_months);
@@ -275,7 +287,7 @@ Type SLAM(objective_function<Type>* obj) {
   // recruitment in initial month
   SB_m(0) = SB_am.col(0).sum();
   B_m(0) = B_am.col(0).sum();
-  N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
+  N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * rec_dev_m(0);
 
   // ---- Population dynamics for remaining months ----
   for (int m=1; m<n_months; m++) {
@@ -288,7 +300,7 @@ Type SLAM(objective_function<Type>* obj) {
     SB_m(m) = SB_am.col(m).sum();
     B_m(m) = B_am.col(m).sum();
     // recruitment
-    N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB_m(m), SBpR) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+    N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB_m(m), SBpR) * rec_dev_m(m);
   }
 
   // ---- Calculate catch ----
@@ -421,9 +433,14 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Recruitment deviations ----
+  // Type recdevnll = 0;
+  // for(int m=0;m<n_months;m++){
+  //   recdevnll -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
+  // }
+
   Type recdevnll = 0;
-  for(int m=0;m<n_months;m++){
-    recdevnll -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
+  for(int y=0;y<n_years;y++){
+    recdevnll -= dnorm(logRec_Devs(y), Type(0.0), sigmaR, true);
   }
 
   // ---- Joint likelihood ----
