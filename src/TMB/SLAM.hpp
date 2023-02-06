@@ -47,7 +47,8 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(lsdelta); // log interval age-50 - age-95% selectivity
 
   PARAMETER(logF_minit); // equilibrium fishing mortality for first age-classes
-  PARAMETER_VECTOR(logF_m); // monthly fishing mortality
+  PARAMETER_VECTOR(logF_y); // annual mean fishing mortality
+  PARAMETER_VECTOR(logF_m_dev); // monthly fishing mortality deviation
   PARAMETER(log_sigmaF); // standard deviation for random walk penalty for F
 
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
@@ -70,6 +71,7 @@ Type SLAM(objective_function<Type>* obj) {
   int n_ages = Weight_Age.size(); // number of age classes
   int n_bins = WghtMids.size(); // number of size bins
   int n_months = CPUE.size(); // number of months of data
+  int n_years = n_months/Type(12);
 
   // ---- Generate Age-Weight Key ----
   matrix<Type> AWK(n_ages, n_bins);
@@ -100,9 +102,20 @@ Type SLAM(objective_function<Type>* obj) {
   Type F_minit = exp(logF_minit);
 
   // monthly fishing mortality
+  vector<Type> F_y_mean(n_years);
+  F_y_mean.setZero();
+  F_y_mean = exp(logF_y); // mean annual fishing mortality
+
   vector<Type> F_m(n_months);
   F_m.setZero();
-  F_m = exp(logF_m); // monthly fishing mortality
+  int year = -1;
+  for (int m=0; m<n_months; m++) {
+    int m_ind = m % 12; // month index
+    if (m_ind==0) year = year +1;
+    F_m(m) = F_y_mean(year) *  exp(logF_m_dev(m_ind)); // monthly fishing mortality
+  }
+
+
 
   // ---- Selectivity-at-Age ----
   vector<Type> selA(n_ages);
@@ -168,7 +181,6 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=0; m<n_months; m++) {
     SPR(m) = eggF(m)/SBpR;
   }
-
 
   // ---- Initialize unfished population ----
   // run-out for 3 years to get rid of initial conditions
