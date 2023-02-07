@@ -420,7 +420,7 @@ Type SLAM(objective_function<Type>* obj) {
   // ---- Effort deviations ----
   Type effdevnll = 0;
   for(int m=0;m<n_months;m++){
-    effdevnll -= dnorm(Effort_ts_dev(m), Type(0.0), sigmaEff_m, true);
+    effdevnll -= dnorm(logEffort_ts_dev(m), Type(0.0), sigmaEff_m, true);
   }
 
 
