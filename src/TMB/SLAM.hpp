@@ -536,7 +536,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Other stuff
   REPORT(AWK); // age-weight key
-  REPORT(Eff_ts_SD);
   REPORT(sigmaEff_m);
   REPORT(Effort_m_dev);
   REPORT(Effort_ts_dev);
