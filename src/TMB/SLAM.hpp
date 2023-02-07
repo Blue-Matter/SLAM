@@ -523,7 +523,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(predCAW); // catch-at-weight
 
   REPORT(logEffort_m_dev);
-  REPROT(logEffort_ts_dev);
+  REPORT(logEffort_ts_dev);
 
   // predicted seasonal recruitment
   REPORT(R0_m);
