@@ -52,7 +52,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(logq_effort);
   PARAMETER_VECTOR(logEffort_m_dev); // monthly mean fishing effort deviation (seasonal pattern)
   PARAMETER_VECTOR(logEffort_ts_dev); // fishing effort deviation for each timestep (month)
-  PARAMETER(log_sigmaEff_ts); // monthly rec dev sd (fixed or random effect)
+
   PARAMETER(log_sigmaEff_m); // mean monthly rec dev sd (fixed or random effect)
 
   // random walk penalties for effort
@@ -65,7 +65,6 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(log_sigmaR); // monthly rec dev sd (fixed or random effect; usually fixed)
 
   // ---- Transform Parameters ----
-  Type sigmaEff_ts = exp(log_sigmaEff_ts); // fishing effort monthly deviation sd
   Type sigmaEff_m = exp(log_sigmaEff_m); // fishing effort monthly deviation sd
   Type sigmaR = exp(log_sigmaR); // rec process error dev sd
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m (seasonal; monthly)
@@ -420,11 +419,6 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Effort deviations ----
-  Type effdev_ts_nll = 0;
-  for(int m=0;m<n_months;m++){
-    effdev_ts_nll -= dnorm(logEffort_ts_dev(m), Type(0.0), sigmaEff_ts, true);
-  }
-
   Type effdev_m_nll = 0;
   for(int m=0;m<12;m++){
     effdev_m_nll -= dnorm(logEffort_m_dev(m), Type(0.0), sigmaEff_m, true);
@@ -437,7 +431,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Joint likelihood ----
-  vector<Type> nll_joint(8);
+  vector<Type> nll_joint(7);
   nll_joint.setZero();
 
   // CAW
@@ -455,11 +449,10 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // Effort deviations
-  nll_joint(3) =  effdev_ts_nll;
-  nll_joint(4) =  effdev_m_nll;
+  nll_joint(3) =  effdev_m_nll;
 
   // Recruitment deviations
-  nll_joint(5) =  recdevnll;
+  nll_joint(4) =  recdevnll;
 
   // ---- Penalties ----
 
@@ -472,14 +465,14 @@ Type SLAM(objective_function<Type>* obj) {
     }
     Eff_m_rwpen(11) -= dnorm(Effort_m_dev(11), Effort_m_dev(0), Eff_m_SD, true);
   }
-  nll_joint(6) =Eff_m_rwpen.sum();
+  nll_joint(5) =Eff_m_rwpen.sum();
 
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(6) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(6) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
   // ---- Total negative log-likelihood ----
@@ -536,7 +529,6 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(CAWnll);
   REPORT(Effnll);
   REPORT(CPUEnll);
-  REPORT(effdev_ts_nll);
   REPORT(effdev_m_nll);
   REPORT(recdevnll);
   REPORT(nll_joint);
