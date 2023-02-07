@@ -28,21 +28,20 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
 
-  // DATA_INTEGER(n_years); // number of year of data
+  // Annual time-series data (calculated from monthly)
+  DATA_VECTOR(Effort_y_mean); // mean annual effort
+  DATA_INTEGER(n_years); // number of year of data
 
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
-
-  // priors and penalties
-  DATA_VECTOR(F_meanprior); // log-normal SD for monthly F
 
   // options
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
   DATA_INTEGER(Fit_CAW);
-  DATA_INTEGER(use_Frwpen);
+  DATA_INTEGER(use_Eff_rwpen);  // use penalty for random walk in season effort
   DATA_INTEGER(use_R0rwpen);
-  DATA_INTEGER(use_Fmeanprior);
+
 
 
   // ---- Estimated Parameters ----
@@ -50,20 +49,29 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(lsdelta); // log interval age-50 - age-95% selectivity
 
   PARAMETER(logF_minit); // equilibrium fishing mortality for first age-classes
-  // PARAMETER_VECTOR(logF_y); // annual mean fishing mortality
-  PARAMETER_VECTOR(logF_m); // monthly fishing mortality
-  PARAMETER(log_sigmaF); // standard deviation for random walk penalty for F
+
+  PARAMETER(logq_effort);
+  PARAMETER_VECTOR(logEffort_m_dev); // monthly mean fishing effort deviation (seasonal pattern)
+  PARAMETER_VECTOR(logEffort_ts_dev); // fishing effort deviation for each timestep (month)
+  PARAMETER(log_sigmaEff_m); // monthly rec dev sd (fixed or random effect)
+
+  // random walk penalties for effort
+  PARAMETER(log_Eff_m_SD); // standard deviation for random walk penalty for seasonal effort deviation
+  PARAMETER(log_Eff_ts_SD); // standard deviation for random walk penalty for monthly effort deviation
 
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
   PARAMETER(log_sigmaR0); // sd for random walk penalty for monthly recruitment
 
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
-  PARAMETER(log_sigmaR); // monthly rec dev sd (usually fixed)
+  PARAMETER(log_sigmaR); // monthly rec dev sd (fixed or random effect; usually fixed)
 
   // ---- Transform Parameters ----
+  Type sigmaEff_m = exp(log_sigmaEff_m); // fishing effort monthly deviation sd
   Type sigmaR = exp(log_sigmaR); // rec process error dev sd
-  Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m
-  Type sigmaF = exp(log_sigmaF); // standard deviation for random walk penalty for F
+  Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m (seasonal; monthly)
+
+  Type Eff_m_SD = exp(log_Eff_m_SD); // standard deviation for random walk penalty for F
+  Type Eff_ts_SD = exp(log_Eff_ts_SD); // standard deviation for random walk penalty for F
 
   // Selectivity-at-Age
   Type S50 = exp(ls50);
@@ -99,25 +107,25 @@ Type SLAM(objective_function<Type>* obj) {
     R0_m(m) = R0_m(m)/R0_mtotal;
   }
 
-  // ---- Fishing mortality ----
+  // ---- Fishing effort and mortality ----
   // fishing mortality for initial age classes
   Type F_minit = exp(logF_minit);
 
-  // monthly fishing mortality
-  // vector<Type> F_y_mean(n_years);
-  // F_y_mean.setZero();
-  // F_y_mean = exp(logF_y); // mean annual fishing mortality
+  Type q_effort = exp(logq_effort);
+  vector<Type> Effort_m_dev = exp(logEffort_m_dev)
+  vector<Type> Effort_ts_dev = exp(logEffort_ts_dev)
 
-  vector<Type> F_m(n_months);
+  vector<Type> Effort_m(n_months); // fishing effort each timestep (month)
+  vector<Type> F_m(n_months); // fishing mortality each timestep (month)
+  Effort_m.setZero();
   F_m.setZero();
-  F_m = exp(logF_m);
-
-  // int year = -1;
-  // for (int m=0; m<n_months; m++) {
-  //   int m_ind = m % 12; // month index
-  //   if (m_ind==0) year = year +1;
-  //   F_m(m) = F_y_mean(year) *  exp(logF_m_dev(m_ind)); // monthly fishing mortality
-  // }
+  int year_ind = -1;
+  for(int m=0;m<n_months;m++){
+    int m_ind = m % 12; // month index
+    if (m_ind==0) year_ind = year_ind +1;
+    Effort_m(m) = Effort_y_mean(year) * Effort_m_dev(m_ind) * Effort_ts_dev(m);
+    F_m(m) =  q_effort * Effort_m(m);
+  }
 
   // ---- Selectivity-at-Age ----
   vector<Type> selA(n_ages);
@@ -125,7 +133,6 @@ Type SLAM(objective_function<Type>* obj) {
   for(int a=0;a<n_ages;a++){
     selA(a) = 1 / (1 + exp(-log(Type(19))*((a - S50)/Sdelta)));
   }
-
 
   // --- Set up mortality matrices ----
   matrix<Type> M_ma(n_ages, n_months);
@@ -358,20 +365,13 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Relative Effort ----
-  // proportional to F
-  vector<Type> RelEffort(n_months);
-  RelEffort.setZero();
-  for (int m=0; m<n_months; m++) {
-      RelEffort(m) = F_m(m);
-  }
-
   // mean 1 over time-steps where effort data exists
   Type Effmean = 0;
   Type Effsum = 0;
   Type Effn = 0;
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      Effsum += RelEffort(m);
+      Effsum += Effort_m(m);
       Effn += 1;
     }
     Effmean = Effsum/Effn;
@@ -384,7 +384,7 @@ Type SLAM(objective_function<Type>* obj) {
   Effnll.setZero();
 
   for (int m=0; m<n_months; m++) {
-    StEffort(m) = RelEffort(m)/Effmean;
+    StEffort(m) = Effort_m(m)/Effmean;
     if ((!R_IsNA(asDouble(Effort(m)))) & (Effort(m)!=0)) {
       Effnll(m)  -= dnorm_(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
     }
@@ -420,6 +420,13 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // ---- Effort deviations ----
+  Type effdevnll = 0;
+  for(int m=0;m<n_months;m++){
+    effdevnll -= dnorm(Effort_ts_dev(m), Type(0.0), sigmaEff_m, true);
+  }
+
+
   // ---- Recruitment deviations ----
   Type recdevnll = 0;
   for(int m=0;m<n_months;m++){
@@ -444,66 +451,36 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(2) =  CPUEnll.sum();
   }
 
+  // Effort deviations
+  nll_joint(3) =  effdevnll;
+
   // Recruitment deviations
-  nll_joint(3) =  recdevnll;
+  nll_joint(4) =  recdevnll;
 
+  // ---- Penalties ----
 
-  // ---- Priors and penalties ----
-
-  // penalty for random walk in
-  vector<Type> Frwpen(n_months-1);
-  Frwpen.setZero();
-  if (use_Frwpen>0) {
-    for (int m=1; m<n_months; m++) {
-      Frwpen(m-1) -= dnorm(F_m(m), F_m(m-1), sigmaF, true);
+  // penalty for random walk in seasonal effort
+  vector<Type> Eff_m_rwpen(12);
+  Eff_m_rwpen.setZero();
+  if (use_Eff_rwpen>0) {
+    for (int m=1; m<12; m++) {
+      Eff_m_rwpen(m-1) -= dnorm(Effort_m_dev(m), Effort_m_dev(m-1), sigmaEff_m, true);
     }
+    Eff_m_rwpen(11) -= dnorm(Effort_m_dev(11), Effort_m_dev(0), sigmaEff_m, true);
   }
-  nll_joint(4) =Frwpen.sum();
+  nll_joint(5) =Eff_m_rwpen.sum();
 
-  // penalty for random walk in logR0_m
+  // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(5) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(6) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(6) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
-
-  // penalty for mean monthly F
-  vector<Type> F_month(12);
-  F_month.setZero();
-  vector<Type> F_count(12);
-  F_count.setZero();
-  // calculate mean F for months where CPUE data exists
-  for (int m=0; m<n_months; m++) {
-    int m_ind = m % 12; // calendar month index
-    if (!R_IsNA(asDouble(CPUE(m)))) {
-      F_month(m_ind) += F_m(m);
-      F_count(m_ind) += Type(1);
-    }
-  }
-  vector<Type> F_mean(12);
-  F_mean.setZero();
-  for (int m=0; m<12; m++) {
-    F_mean(m) = F_month(m)/F_count(m);
-  }
-
-  vector<Type> F_month_NLL(12);
-  F_month_NLL.setZero();
-  if (use_Fmeanprior>0) {
-    for (int m=0; m<n_months; m++) {
-      int m_ind = m % 12; // calendar month index
-      if (R_IsNA(asDouble(CPUE(m)))) {
-        F_month_NLL(m_ind) += Type(-1)* dnorm(log(F_m(m)),log(F_mean(m_ind)), F_meanprior(0), true);
-      }
-
-    }
-  }
-  nll_joint(6) = F_month_NLL.sum();
 
   // ---- Total negative log-likelihood ----
   Type nll=0;
   nll = nll_joint.sum();
-
 
   // ---- Reports ----
 
@@ -527,6 +504,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(Fa_init);
   REPORT(Za_init);
 
+  REPORT(q_effort); // catchability
+
   // Predicted time-series
   REPORT(N_m); // numbers
   REPORT(SB_m); // spawning biomass
@@ -535,6 +514,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(StEffort); // effort
   REPORT(stpredIndex); // Index of abundance
   REPORT(SPR); // SPR
+  REPORT(Effort_m); // fishing effort
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
 
@@ -552,17 +532,15 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(CAWnll);
   REPORT(Effnll);
   REPORT(CPUEnll);
+  REPORT(effdevnll);
   REPORT(recdevnll);
   REPORT(nll_joint);
   REPORT(nll);
 
   // Other stuff
   REPORT(AWK); // age-weight key
-  REPORT(sigmaF); // standard deviation for random walk penalty for F
-
-  REPORT(Frwpen); // random walk F penalty
-  REPORT(F_mean); // mean F
-  REPORT(F_month_NLL); // mean F prior likelihood
+  REPORT(Eff_ts_SD);
+  REPORT(sigmaEff_m);
 
   return(nll);
 }
