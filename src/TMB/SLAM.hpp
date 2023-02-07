@@ -30,7 +30,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Annual time-series data (calculated from monthly)
   DATA_VECTOR(Effort_y_mean); // mean annual effort
-  DATA_INTEGER(n_years); // number of year of data
 
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
@@ -112,8 +111,8 @@ Type SLAM(objective_function<Type>* obj) {
   Type F_minit = exp(logF_minit);
 
   Type q_effort = exp(logq_effort);
-  vector<Type> Effort_m_dev = exp(logEffort_m_dev)
-  vector<Type> Effort_ts_dev = exp(logEffort_ts_dev)
+  vector<Type> Effort_m_dev = exp(logEffort_m_dev);
+  vector<Type> Effort_ts_dev = exp(logEffort_ts_dev);
 
   vector<Type> Effort_m(n_months); // fishing effort each timestep (month)
   vector<Type> F_m(n_months); // fishing mortality each timestep (month)
