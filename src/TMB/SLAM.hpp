@@ -64,6 +64,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(log_sigmaR); // monthly rec dev sd (fixed or random effect; usually fixed)
 
   // ---- Transform Parameters ----
+  Type sigmaEff_ts = exp(log_sigmaEff_ts); // fishing effort monthly deviation sd
   Type sigmaEff_m = exp(log_sigmaEff_m); // fishing effort monthly deviation sd
   Type sigmaR = exp(log_sigmaR); // rec process error dev sd
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m (seasonal; monthly)
@@ -418,11 +419,15 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Effort deviations ----
-  Type effdevnll = 0;
+  Type effdev_ts_nll = 0;
   for(int m=0;m<n_months;m++){
-    effdevnll -= dnorm(logEffort_ts_dev(m), Type(0.0), sigmaEff_m, true);
+    effdev_ts_nll -= dnorm(logEffort_ts_dev(m), Type(0.0), sigmaEff_ts, true);
   }
 
+  Type effdev_m_nll = 0;
+  for(int m=0;m<12;m++){
+    effdev_m_nll -= dnorm(Effort_m_dev(m), Type(0.0), sigmaEff_m, true);
+  }
 
   // ---- Recruitment deviations ----
   Type recdevnll = 0;
@@ -431,7 +436,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Joint likelihood ----
-  vector<Type> nll_joint(7);
+  vector<Type> nll_joint(8);
   nll_joint.setZero();
 
   // CAW
@@ -449,10 +454,11 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // Effort deviations
-  nll_joint(3) =  effdevnll;
+  nll_joint(3) =  effdev_ts_nll;
+  nll_joint(4) =  effdev_m_nll;
 
   // Recruitment deviations
-  nll_joint(4) =  recdevnll;
+  nll_joint(5) =  recdevnll;
 
   // ---- Penalties ----
 
@@ -465,14 +471,14 @@ Type SLAM(objective_function<Type>* obj) {
     }
     Eff_m_rwpen(11) -= dnorm(Effort_m_dev(11), Effort_m_dev(0), Eff_m_SD, true);
   }
-  nll_joint(5) =Eff_m_rwpen.sum();
+  nll_joint(6) =Eff_m_rwpen.sum();
 
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(6) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(6) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
   // ---- Total negative log-likelihood ----
