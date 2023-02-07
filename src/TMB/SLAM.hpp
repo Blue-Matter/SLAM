@@ -122,7 +122,7 @@ Type SLAM(objective_function<Type>* obj) {
   for(int m=0;m<n_months;m++){
     int m_ind = m % 12; // month index
     if (m_ind==0) year_ind = year_ind +1;
-    Effort_m(m) = Effort_y_mean(year) * Effort_m_dev(m_ind) * Effort_ts_dev(m);
+    Effort_m(m) = Effort_y_mean(year_ind) * Effort_m_dev(m_ind) * Effort_ts_dev(m);
     F_m(m) =  q_effort * Effort_m(m);
   }
 
@@ -540,6 +540,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(AWK); // age-weight key
   REPORT(Eff_ts_SD);
   REPORT(sigmaEff_m);
+  REPORT(Effort_m_dev);
+  REPORT(Effort_ts_dev);
 
   return(nll);
 }
