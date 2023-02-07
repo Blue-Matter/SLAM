@@ -52,7 +52,8 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(logq_effort);
   PARAMETER_VECTOR(logEffort_m_dev); // monthly mean fishing effort deviation (seasonal pattern)
   PARAMETER_VECTOR(logEffort_ts_dev); // fishing effort deviation for each timestep (month)
-  PARAMETER(log_sigmaEff_m); // monthly rec dev sd (fixed or random effect)
+  PARAMETER(log_sigmaEff_ts); // monthly rec dev sd (fixed or random effect)
+  PARAMETER(log_sigmaEff_m); // mean monthly rec dev sd (fixed or random effect)
 
   // random walk penalties for effort
   PARAMETER(log_Eff_m_SD); // standard deviation for random walk penalty for seasonal effort deviation
