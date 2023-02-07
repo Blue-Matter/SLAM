@@ -14,9 +14,13 @@
 Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
                                   Feq_init=0.05,
-                                  sigmaR=0.3,
-                                  log_sigmaF=log(0.05),
-                                  log_sigmaR0=log(0.1)) {
+                                  q_effort=0.01,
+                                  sigmaEff=0.3,
+                                  sigmaR=0.5,
+                                  sigmaEff_ts=0.4,
+                                  sigmaEff_m=0.4,
+                                  sigmaR0=0.5) {
+
   parameters <- list()
 
 
@@ -24,20 +28,24 @@ Initialize_Parameters <- function(data,
   parameters$lsdelta <- log(as95-as50)
 
   n_age <- length(data$Weight_Age)
-  parameters$logF_minit <- log(0.05)
-
   n_ts <- length(data$Effort)
 
-  parameters$logF_m <- rep(log(mean(data$M_at_Age)), n_ts)
-  # parameters$logF_m_dev <- rep(log(1), 12)
-  parameters$log_sigmaF <- log_sigmaF # standard deviation for random walk penalty for F
+  parameters$logF_minit <- log(Feq_init)
+  parameters$logq_effort <- log(q_effort)
+  parameters$logEffort_m_dev <- rep(log(1),12)
+  parameters$logEffort_ts_dev <- rep(log(1),n_ts)
+  parameters$log_sigmaEff_ts <- log(sigmaEff_ts)
+  parameters$log_sigmaEff_m <- log(sigmaEff_m)
+
+  parameters$log_Eff_m_SD <- log(sigmaEff_m)
+
   parameters$logR0_m_est <- rep(1/12, 11)
-  parameters$log_sigmaR0 <- log_sigmaR0 # sd for random walk penalty for monthly recruitment
+  parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
-
   parameters
 }
+
 
 
 
@@ -78,8 +86,8 @@ Initialize_Parameters_OM <- function(SimMod,
 
 #' Title
 #'
-#' @param SimMod
 #' @param sim
+#' @param SimMod
 #' @param CAW_Monthly_ESS
 #' @param Effort_CV
 #' @param CPUE_CV
@@ -92,17 +100,16 @@ Initialize_Parameters_OM <- function(SimMod,
 #'
 #' @return
 #' @export
-Construct_Data_OM <- function(SimMod,
-                              sim=1,
+Construct_Data_OM <- function(sim=1,
+                              SimMod,
                               CAW_Monthly_ESS=100,
                               Effort_CV=0.2,
                               CPUE_CV=0.2,
                               Fit_Effort=1,
                               Fit_CPUE=1,
                               Fit_CAW=1,
-                              use_Frwpen=1,
-                              use_R0rwpen=1,
-                              use_Fmeanprior=0) {
+                              use_Eff_rwpen=1,
+                              use_R0rwpen=1) {
 
   data <- list()
   # Assumed life-history parameters
@@ -125,7 +132,6 @@ Construct_Data_OM <- function(SimMod,
   data$CAW <- CAW
 
   data$CAW_ESS <- rep(CAW_Monthly_ESS, nMonths)
-  data$n_years <- ceiling(nMonths/12)
 
   # Effort Index
   Effort_DF <- SimMod$Data_TS_DF %>% filter(Sim==sim) %>% select(Effort)
@@ -137,15 +143,17 @@ Construct_Data_OM <- function(SimMod,
   data$CPUE <- CPUE_DF$CPUE
   data$CPUE_SD <- rep(CPUE_CV, nMonths)
 
-  # Priors and penalties
-  data$F_meanprior <- 0.3
+  effort_by_year <- split(data$Effort, ceiling(seq_along(data$Effort)/12))
+  data$Effort_y_mean <- as.vector(unlist(lapply(effort_by_year, mean)))
 
+  # Options
   data$Fit_Effort <- Fit_Effort
   data$Fit_CPUE <- Fit_CPUE
   data$Fit_CAW <- Fit_CAW
-  data$use_Frwpen <- use_Frwpen
+
+  # Penalties
+  data$use_Eff_rwpen <- use_Eff_rwpen
   data$use_R0rwpen <- use_R0rwpen
-  data$use_Fmeanprior <- use_Fmeanprior
 
   data$model <- 'SLAM'
   data$currentYr <- max(SimMod$OM_DF$Year)
@@ -226,8 +234,8 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
 
   rerun <- FALSE
   if (inherits(opt, 'list')) {
-    rep <- obj$report(obj$env$last.par.best)
-    sdreport <- TMB::sdreport(obj, obj$env$last.par.best)
+    rep <- obj$report()
+    sdreport <- TMB::sdreport(obj)
 
     # check convergence, gradient and positive definite
     chk <- data.frame(#pdHess=sdreport$pdHess,
