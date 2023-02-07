@@ -535,7 +535,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(CAWnll);
   REPORT(Effnll);
   REPORT(CPUEnll);
-  REPORT(effdevnll);
+  REPORT(effdev_ts_nll);
+  REPORT(effdev_m_nll);
   REPORT(recdevnll);
   REPORT(nll_joint);
   REPORT(nll);
