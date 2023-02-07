@@ -56,7 +56,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   // random walk penalties for effort
   PARAMETER(log_Eff_m_SD); // standard deviation for random walk penalty for seasonal effort deviation
-  PARAMETER(log_Eff_ts_SD); // standard deviation for random walk penalty for monthly effort deviation
 
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
   PARAMETER(log_sigmaR0); // sd for random walk penalty for monthly recruitment
@@ -70,7 +69,6 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m (seasonal; monthly)
 
   Type Eff_m_SD = exp(log_Eff_m_SD); // standard deviation for random walk penalty for F
-  Type Eff_ts_SD = exp(log_Eff_ts_SD); // standard deviation for random walk penalty for F
 
   // Selectivity-at-Age
   Type S50 = exp(ls50);
@@ -463,9 +461,9 @@ Type SLAM(objective_function<Type>* obj) {
   Eff_m_rwpen.setZero();
   if (use_Eff_rwpen>0) {
     for (int m=1; m<12; m++) {
-      Eff_m_rwpen(m-1) -= dnorm(Effort_m_dev(m), Effort_m_dev(m-1), sigmaEff_m, true);
+      Eff_m_rwpen(m-1) -= dnorm(Effort_m_dev(m), Effort_m_dev(m-1), Eff_m_SD, true);
     }
-    Eff_m_rwpen(11) -= dnorm(Effort_m_dev(11), Effort_m_dev(0), sigmaEff_m, true);
+    Eff_m_rwpen(11) -= dnorm(Effort_m_dev(11), Effort_m_dev(0), Eff_m_SD, true);
   }
   nll_joint(5) =Eff_m_rwpen.sum();
 
