@@ -477,7 +477,7 @@ Type SLAM(objective_function<Type>* obj) {
   for(int m=0;m<n_months;m++){
     int m_ind = m % 12; // calendar month index
     if (m_ind==0) year_ind3 = year_ind3+1;
-    Effort_Dev_by_Year(m_ind, year_ind) = Effort_dev(m);
+    Effort_Dev_by_Year(m_ind, year_ind3) = Effort_dev(m);
   }
   vector<Type> mean_Effort_dev(12);
   mean_Effort_dev.setZero();
