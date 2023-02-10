@@ -35,7 +35,6 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
   DATA_INTEGER(Fit_CAW);
-  DATA_INTEGER(use_Eff_rwpen);  // use penalty for random walk in season effort
   DATA_INTEGER(use_R0rwpen);
 
   // ---- Estimated Parameters ----
@@ -47,9 +46,6 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(logq_effort);
   PARAMETER_VECTOR(logF_ts_dev); // fishing mortality deviation for each timestep (month)
   PARAMETER(log_sigmaF_m); // mean monthly F sd (fixed or random effect)
-
-  // random walk penalties for effort
-  PARAMETER(log_Eff_m_SD); // standard deviation for random walk penalty for seasonal effort deviation
 
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
   PARAMETER(log_sigmaR0); // sd for random walk penalty for monthly recruitment
