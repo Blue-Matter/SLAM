@@ -399,7 +399,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- F deviations ----
-  Type effdev_ts_nll = 0;
+  Type Fdev_ts_nll = 0;
   for(int m=0;m<n_months;m++){
     Fdev_ts_nll -= dnorm(logF_ts_dev(m), Type(0.0), sigmaF_m, true);
   }
