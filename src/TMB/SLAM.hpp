@@ -100,7 +100,7 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> F_m(n_months); // fishing mortality each timestep (month)
   F_m.setZero();
   vector<Type> F_ts_dev = exp(logF_ts_dev);
-  F_ts_dev.setZero();
+
   for(int m=0;m<n_months;m++){
     F_m(m) =  q_effort * Effort(m) * F_ts_dev(m);
   }
@@ -503,7 +503,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Other stuff
   REPORT(AWK); // age-weight key
-
+  REPORT(F_ts_dev);
 
   return(nll);
 }
