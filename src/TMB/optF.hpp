@@ -154,6 +154,7 @@ Type optF(objective_function<Type>* obj) {
   vector<Type> util(12);
   util.setZero();
   Type nll=0;
+  Type HARA = 0;
   Type CBtotal = predCB.sum();
   if (opt_type==0) {
     // maximize yield
@@ -164,7 +165,7 @@ Type optF(objective_function<Type>* obj) {
     for (int m=0; m<12; m++) {
       util(m) = pow(predCB(m), power);
     }
-    Type HARA = util.sum();
+    HARA = util.sum();
     nll = -1*HARA;
   }
 
@@ -174,6 +175,7 @@ Type optF(objective_function<Type>* obj) {
   REPORT(util);
   REPORT(HARA);
   REPORT(nll);
+
   return(nll);
 
 }
