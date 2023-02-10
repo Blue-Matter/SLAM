@@ -441,26 +441,26 @@ Type SLAM(objective_function<Type>* obj) {
   // Calculate deviations in logEffort from mean for each year
   matrix<Type> Effort_by_Year(Type(12), n_year);
   Effort_by_Year.setZero();
-  int year_ind = -1;
-  for(int m=0;m<n_months;m++){
-    int m_ind = m % 12; // calendar month index
-    if (m_ind==0) year_ind = year_ind+1;
-    Effort_by_Year(m_ind, year_ind) = StEffort(m);
-  }
+  // int year_ind = -1;
+  // for(int m=0;m<n_months;m++){
+  //   int m_ind = m % 12; // calendar month index
+  //   if (m_ind==0) year_ind = year_ind+1;
+  //   Effort_by_Year(m_ind, year_ind) = StEffort(m);
+  // }
 
   vector<Type> mean_effort(n_year);
   mean_effort.setZero();
 
-  for(int y=0;y<n_year;y++){
-    mean_effort(y) = Effort_by_Year.col(y).sum();
-    double N = 0;
-    for (int m=0;m<12;m++) {
-      if (Effort_by_Year(m,y)>0) {
-        N += 1;
-      }
-    }
-    mean_effort(y) = mean_effort(y)/N;
-  }
+  // for(int y=0;y<n_year;y++){
+  //   mean_effort(y) = Effort_by_Year.col(y).sum();
+  //   double N = 0;
+  //   for (int m=0;m<12;m++) {
+  //     if (Effort_by_Year(m,y)>0) {
+  //       N += 1;
+  //     }
+  //   }
+  //   mean_effort(y) = mean_effort(y)/N;
+  // }
 
   vector<Type> Effort_dev(n_months);
   Effort_dev.setZero();
