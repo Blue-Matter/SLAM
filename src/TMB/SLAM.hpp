@@ -43,7 +43,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   PARAMETER(logF_minit); // equilibrium fishing mortality for first age-classes
 
-  PARAMETER(logq_effort);
+  PARAMETER(logF_mean);  // mean F over all timesteps
   PARAMETER_VECTOR(logF_ts_dev); // fishing mortality deviation for each timestep (month)
   PARAMETER(log_sigmaF_m); // mean monthly F sd (fixed or random effect)
 
@@ -96,13 +96,17 @@ Type SLAM(objective_function<Type>* obj) {
   // fishing mortality for initial age classes
   Type F_minit = exp(logF_minit);
 
-  Type q_effort = exp(logq_effort);
+  Type F_mean = exp(logF_mean);
   vector<Type> F_m(n_months); // fishing mortality each timestep (month)
   F_m.setZero();
+  vector<Type> Effort_m(n_months); // relative predicted effort each timestep (month)
+  Effort_m.setZero();
+
   vector<Type> F_ts_dev = exp(logF_ts_dev);
 
   for(int m=0;m<n_months;m++){
-    F_m(m) =  q_effort * Effort(m) * F_ts_dev(m);
+    F_m(m) =  F_mean * F_ts_dev(m);
+    Effort_m(m) = F_m(m); // proportional to F
   }
 
   // ---- Selectivity-at-Age ----
@@ -347,7 +351,7 @@ Type SLAM(objective_function<Type>* obj) {
   Type Effn = 0;
   for (int m=0; m<n_months; m++) {
     if (!R_IsNA(asDouble(Effort(m)))) {
-      Effsum += Effort(m);
+      Effsum += Effort_m(m);
       Effn += 1;
     }
     Effmean = Effsum/Effn;
@@ -360,7 +364,7 @@ Type SLAM(objective_function<Type>* obj) {
   Effnll.setZero();
 
   for (int m=0; m<n_months; m++) {
-    StEffort(m) = Effort(m)/Effmean;
+    StEffort(m) = Effort_m(m)/Effmean;
     if ((!R_IsNA(asDouble(Effort(m)))) & (Effort(m)!=0)) {
       Effnll(m)  -= dnorm_(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
     }
@@ -416,6 +420,7 @@ Type SLAM(objective_function<Type>* obj) {
   if (Fit_CAW>0) {
     nll_joint(0) =  CAWnll.sum();
   }
+
   // Effort
   if (Fit_Effort>0) {
     nll_joint(1) =  Effnll.sum();
@@ -470,7 +475,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(Fa_init);
   REPORT(Za_init);
 
-  REPORT(q_effort); // catchability
+  REPORT(F_mean);
 
   // Predicted time-series
   REPORT(N_m); // numbers
