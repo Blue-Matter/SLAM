@@ -171,6 +171,9 @@ Type optF(objective_function<Type>* obj) {
   REPORT(F_m);
   REPORT(predCB);
   REPORT(SPR);
+  REPORT(util);
+  REPORT(HARA);
+  REPORT(nll);
   return(nll);
 
 }
