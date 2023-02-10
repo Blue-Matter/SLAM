@@ -58,8 +58,6 @@ Type SLAM(objective_function<Type>* obj) {
   Type sigmaR = exp(log_sigmaR); // rec process error dev sd
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m (seasonal; monthly)
 
-  Type Eff_m_SD = exp(log_Eff_m_SD); // standard deviation for random walk penalty for F
-
   // Selectivity-at-Age
   Type S50 = exp(ls50);
   Type Sdelta = exp(lsdelta);
