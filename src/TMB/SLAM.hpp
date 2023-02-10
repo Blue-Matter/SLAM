@@ -101,7 +101,7 @@ Type SLAM(objective_function<Type>* obj) {
   Effort_m.setZero();
 
   for(int m=0;m<n_months;m++){
-    F_m(m) =  exp(logF_ts(m))
+    F_m(m) =  exp(logF_ts(m));
     Effort_m(m) = F_m(m); // proportional to F
   }
 
