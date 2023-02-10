@@ -453,7 +453,12 @@ Type SLAM(objective_function<Type>* obj) {
 
   for(int y=0;y<n_year;y++){
     mean_effort(y) = Effort_by_Year.col(y).sum();
-    double N = sum(Effort_by_Year.col(y)>0);
+    double N = 0;
+    for (int m=0;m<12;m++) {
+      if (Effort_by_Year(m,y)>0) {
+        N += 1;
+      }
+    }
     mean_effort(y) = mean_effort(y)/N;
   }
 
@@ -480,8 +485,13 @@ Type SLAM(objective_function<Type>* obj) {
   log_mean_Effort_dev.setZero();
   for(int m=0;m<12;m++){
     mean_Effort_dev(m) = Effort_Dev_by_Year.row(m).sum();
-    double N2 = sum(Effort_Dev_by_Year.row(m)>0);
-    mean_Effort_dev(m) = mean_Effort_dev(m)/N;
+    double N2 = 0;
+    for (int m=0;m<12;m++) {
+      if (Effort_by_Year(m,y)>0) {
+        N2 += 1;
+      }
+    }
+    mean_Effort_dev(m) = mean_Effort_dev(m)/N2;
     log_mean_Effort_dev(m) = log(mean_Effort_dev)
   }
 
