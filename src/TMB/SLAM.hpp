@@ -464,45 +464,45 @@ Type SLAM(objective_function<Type>* obj) {
 
   vector<Type> Effort_dev(n_months);
   Effort_dev.setZero();
-  int year_ind2 = -1;
-  for(int m=0;m<n_months;m++){
-    int m_ind = m % 12; // calendar month index
-    if (m_ind==0) year_ind2 = year_ind2+1;
-    Effort_dev(m) = StEffort(m)/mean_effort(year_ind2);
-  }
+  // int year_ind2 = -1;
+  // for(int m=0;m<n_months;m++){
+  //   int m_ind = m % 12; // calendar month index
+  //   if (m_ind==0) year_ind2 = year_ind2+1;
+  //   Effort_dev(m) = StEffort(m)/mean_effort(year_ind2);
+  // }
 
   matrix<Type> Effort_Dev_by_Year(Type(12), n_year);
   Effort_Dev_by_Year.setZero();
-  int year_ind3 = -1;
-  for(int m=0;m<n_months;m++){
-    int m_ind = m % 12; // calendar month index
-    if (m_ind==0) year_ind3 = year_ind3+1;
-    Effort_Dev_by_Year(m_ind, year_ind3) = Effort_dev(m);
-  }
+  // int year_ind3 = -1;
+  // for(int m=0;m<n_months;m++){
+  //   int m_ind = m % 12; // calendar month index
+  //   if (m_ind==0) year_ind3 = year_ind3+1;
+  //   Effort_Dev_by_Year(m_ind, year_ind3) = Effort_dev(m);
+  // }
   vector<Type> mean_Effort_dev(12);
   mean_Effort_dev.setZero();
   vector<Type> log_mean_Effort_dev(12);
   log_mean_Effort_dev.setZero();
-  for(int m=0;m<12;m++){
-    mean_Effort_dev(m) = Effort_Dev_by_Year.row(m).sum();
-    double N2 = 0;
-    for (int y=0;y<n_year;y++) {
-      if (Effort_by_Year(m,y)>0) {
-        N2 += 1;
-      }
-    }
-    mean_Effort_dev(m) = mean_Effort_dev(m)/N2;
-    log_mean_Effort_dev(m) = log(mean_Effort_dev(m));
-  }
+  // for(int m=0;m<12;m++){
+  //   mean_Effort_dev(m) = Effort_Dev_by_Year.row(m).sum();
+  //   double N2 = 0;
+  //   for (int y=0;y<n_year;y++) {
+  //     if (Effort_by_Year(m,y)>0) {
+  //       N2 += 1;
+  //     }
+  //   }
+  //   mean_Effort_dev(m) = mean_Effort_dev(m)/N2;
+  //   log_mean_Effort_dev(m) = log(mean_Effort_dev(m));
+  // }
 
 
 
-  if (use_R0rwpen>0) {
-    for(int m=1;m<12;m++){
-      nll_joint(6) -= dnorm(log_mean_Effort_dev(m), log_mean_Effort_dev(m-1), sigmaF_season, true);
-    }
-    nll_joint(6) -= dnorm(log_mean_Effort_dev(11), log_mean_Effort_dev(0), sigmaF_season, true);
-  }
+  // if (use_R0rwpen>0) {
+  //   for(int m=1;m<12;m++){
+  //     nll_joint(6) -= dnorm(log_mean_Effort_dev(m), log_mean_Effort_dev(m-1), sigmaF_season, true);
+  //   }
+  //   nll_joint(6) -= dnorm(log_mean_Effort_dev(11), log_mean_Effort_dev(0), sigmaF_season, true);
+  // }
 
 
 
