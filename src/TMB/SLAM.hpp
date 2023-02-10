@@ -397,12 +397,6 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // ---- F deviations ----
-  Type Fdev_ts_nll = 0;
-  for(int m=0;m<n_months;m++){
-    Fdev_ts_nll -= dnorm(logF_ts_dev(m), Type(0.0), sigmaF_m, true);
-  }
-
   // ---- Recruitment deviations ----
   Type recdevnll = 0;
   for(int m=0;m<n_months;m++){
@@ -427,9 +421,6 @@ Type SLAM(objective_function<Type>* obj) {
   if (Fit_CPUE>0) {
     nll_joint(2) =  CPUEnll.sum();
   }
-
-  // F deviations
-  nll_joint(3) =  Fdev_ts_nll;
 
 
   // Recruitment deviations
