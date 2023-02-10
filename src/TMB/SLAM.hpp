@@ -95,14 +95,13 @@ Type SLAM(objective_function<Type>* obj) {
   // fishing mortality for initial age classes
   Type F_minit = exp(logF_minit);
 
-  Type F_mean = exp(logF_mean);
   vector<Type> F_m(n_months); // fishing mortality each timestep (month)
   F_m.setZero();
   vector<Type> Effort_m(n_months); // relative predicted effort each timestep (month)
   Effort_m.setZero();
 
   for(int m=0;m<n_months;m++){
-    F_m(m) =  exp(logF_ts)
+    F_m(m) =  exp(logF_ts(m))
     Effort_m(m) = F_m(m); // proportional to F
   }
 
