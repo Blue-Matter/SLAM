@@ -26,8 +26,7 @@ Initialize_Parameters <- function(data,
   n_ts <- length(data$Month_ind)
 
   parameters$logF_minit <- log(Feq_init)
-  parameters$logF_mean <- log(F_mean)
-  parameters$logF_ts_dev <- rep(log(1), n_ts)
+  parameters$logF_ts <- rep(log(0.1), n_ts)
 
   parameters$log_sigmaF_m <- log(sigmaF_m)
 
@@ -108,7 +107,7 @@ Construct_Data_OM <- function(sim=1,
                               Fit_Effort=1,
                               Fit_CPUE=1,
                               Fit_CAW=1,
-                              use_Eff_rwpen=1,
+                              use_Frwpen=1,
                               use_R0rwpen=1) {
 
   data <- list()
@@ -152,7 +151,7 @@ Construct_Data_OM <- function(sim=1,
   data$Fit_CAW <- Fit_CAW
 
   # Penalties
-  data$use_Eff_rwpen <- use_Eff_rwpen
+  data$use_Frwpen <- use_Frwpen
   data$use_R0rwpen <- use_R0rwpen
 
   data$model <- 'SLAM'
