@@ -492,7 +492,7 @@ Type SLAM(objective_function<Type>* obj) {
       }
     }
     mean_Effort_dev(m) = mean_Effort_dev(m)/N2;
-    log_mean_Effort_dev(m) = log(mean_Effort_dev);
+    log_mean_Effort_dev(m) = log(mean_Effort_dev(m));
   }
 
 
