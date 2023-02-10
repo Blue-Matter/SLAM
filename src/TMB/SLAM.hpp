@@ -43,8 +43,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   PARAMETER(logF_minit); // equilibrium fishing mortality for first age-classes
 
-  PARAMETER(logF_mean);  // mean F over all timesteps
-  PARAMETER_VECTOR(logF_ts_dev); // fishing mortality deviation for each timestep (month)
+  PARAMETER_VECTOR(logF_ts); // fishing mortality for each timestep (month)
   PARAMETER(log_sigmaF_m); // mean monthly F sd (fixed or random effect)
 
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
@@ -102,10 +101,8 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> Effort_m(n_months); // relative predicted effort each timestep (month)
   Effort_m.setZero();
 
-  vector<Type> F_ts_dev = exp(logF_ts_dev);
-
   for(int m=0;m<n_months;m++){
-    F_m(m) =  F_mean * F_ts_dev(m);
+    F_m(m) =  exp(logF_ts)
     Effort_m(m) = F_m(m); // proportional to F
   }
 
@@ -475,8 +472,6 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(Fa_init);
   REPORT(Za_init);
 
-  REPORT(F_mean);
-
   // Predicted time-series
   REPORT(N_m); // numbers
   REPORT(SB_m); // spawning biomass
@@ -508,7 +503,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Other stuff
   REPORT(AWK); // age-weight key
-  REPORT(F_ts_dev);
+  REPORT(F_ts);
 
   return(nll);
 }
