@@ -471,7 +471,7 @@ Type SLAM(objective_function<Type>* obj) {
   //   Effort_dev(m) = StEffort(m)/mean_effort(year_ind2);
   // }
 
-  matrix<Type> Effort_Dev_by_Year(Type(12), n_year);
+  matrix<Type> Effort_Dev_by_Year(12, n_year);
   Effort_Dev_by_Year.setZero();
   // int year_ind3 = -1;
   // for(int m=0;m<n_months;m++){
