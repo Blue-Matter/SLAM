@@ -16,6 +16,7 @@ Initialize_Parameters <- function(data,
                                   Feq_init=0.05,
                                   sigmaR=0.5,
                                   sigmaF_m=0.4,
+                                  sigmaF_season=0.2,
                                   sigmaR0=0.5) {
 
   parameters <- list()
@@ -28,6 +29,7 @@ Initialize_Parameters <- function(data,
   parameters$logF_ts <- rep(log(0.1), n_ts)
 
   parameters$log_sigmaF_m <- log(sigmaF_m)
+  parameters$log_sigmaF_season <- log(sigmaF_season)
 
   parameters$logR0_m_est <- rep(1/12, 11)
   parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
@@ -107,7 +109,8 @@ Construct_Data_OM <- function(sim=1,
                               Fit_CPUE=1,
                               Fit_CAW=1,
                               use_Frwpen=1,
-                              use_R0rwpen=1) {
+                              use_R0rwpen=1,
+                              use_F_seasonrwpen=1) {
 
   data <- list()
   # Assumed life-history parameters
@@ -144,6 +147,8 @@ Construct_Data_OM <- function(sim=1,
   # effort_by_year <- split(data$Effort, ceiling(seq_along(data$Effort)/12))
   # data$Effort_y_mean <- as.vector(unlist(lapply(effort_by_year, mean)))
 
+  data$n_year <- ceiling(nMonths/12)
+
   # Options
   data$Fit_Effort <- Fit_Effort
   data$Fit_CPUE <- Fit_CPUE
@@ -152,6 +157,7 @@ Construct_Data_OM <- function(sim=1,
   # Penalties
   data$use_Frwpen <- use_Frwpen
   data$use_R0rwpen <- use_R0rwpen
+  data$use_F_seasonrwpen <- use_F_seasonrwpen
 
   data$model <- 'SLAM'
   data$currentYr <- max(SimMod$OM_DF$Year)
