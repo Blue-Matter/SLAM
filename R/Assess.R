@@ -17,8 +17,6 @@ Initialize_Parameters <- function(data,
                                   F_mean=0.1,
                                   sigmaR=0.5,
                                   sigmaF_m=0.4,
-                                  sigmaEff_ts=0.4,
-                                  sigmaEff_m=0.4,
                                   sigmaR0=0.5) {
 
   parameters <- list()
@@ -28,12 +26,6 @@ Initialize_Parameters <- function(data,
   n_ts <- length(data$Month_ind)
 
   parameters$logF_minit <- log(Feq_init)
-  parameters$logq_effort <- log(q_effort)
-  parameters$logEffort_m_dev <- rep(log(1),12)
-  parameters$logEffort_ts_dev <- rep(log(1),n_ts)
-  parameters$log_sigmaEff_ts <- log(sigmaEff_ts)
-  parameters$log_sigmaEff_m <- log(sigmaEff_m)
-
   parameters$logF_mean <- log(F_mean)
   parameters$logF_ts_dev <- rep(log(1), n_ts)
 
@@ -44,8 +36,6 @@ Initialize_Parameters <- function(data,
   parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
   parameters
-
-  parameters <- list()
 
   parameters
 }
@@ -153,8 +143,8 @@ Construct_Data_OM <- function(sim=1,
   data$CPUE <- CPUE_DF$CPUE
   data$CPUE_SD <- rep(CPUE_CV, nMonths)
 
-  effort_by_year <- split(data$Effort, ceiling(seq_along(data$Effort)/12))
-  data$Effort_y_mean <- as.vector(unlist(lapply(effort_by_year, mean)))
+  # effort_by_year <- split(data$Effort, ceiling(seq_along(data$Effort)/12))
+  # data$Effort_y_mean <- as.vector(unlist(lapply(effort_by_year, mean)))
 
   # Options
   data$Fit_Effort <- Fit_Effort
