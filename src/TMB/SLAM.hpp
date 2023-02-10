@@ -573,6 +573,7 @@ Type SLAM(objective_function<Type>* obj) {
   // Other stuff
   REPORT(mean_effort);
   REPORT(Effort_dev);
+  REPORT(mean_Effort_dev);
   REPORT(Effort_Dev_by_Year);
   REPORT(log_mean_Effort_dev);
 
