@@ -441,7 +441,7 @@ Type SLAM(objective_function<Type>* obj) {
   // Calculate deviations in logEffort from mean for each year
   matrix<Type> Effort_by_Year(Type(12), n_year);
   Effort_by_Year.setZero();
-  Type year_ind = -1;
+  int year_ind = -1;
   for(int m=0;m<n_months;m++){
     int m_ind = m % 12; // calendar month index
     if (m_ind==0) year_ind = year_ind+1;
@@ -473,7 +473,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   matrix<Type> Effort_Dev_by_Year(Type(12), n_year);
   Effort_Dev_by_Year.setZero();
-  Type year_ind3 = -1;
+  int year_ind3 = -1;
   for(int m=0;m<n_months;m++){
     int m_ind = m % 12; // calendar month index
     if (m_ind==0) year_ind3 = year_ind3+1;
