@@ -14,7 +14,6 @@
 Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
                                   Feq_init=0.05,
-                                  F_mean=0.1,
                                   sigmaR=0.5,
                                   sigmaF_m=0.4,
                                   sigmaR0=0.5) {
