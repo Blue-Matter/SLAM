@@ -39,6 +39,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_CAW);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
+  DATA_INTEGER(use_F_seasonrwpen);
 
   // ---- Estimated Parameters ----
   PARAMETER(ls50);  // log age-at-50% selectivity
@@ -496,7 +497,12 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
 
-
+  if (use_F_seasonrwpen>0) {
+    for(int m=1;m<12;m++){
+      nll_joint(6) -= dnorm(log_mean_Effort_dev(m), log_mean_Effort_dev(m-1), sigmaF_season, true);
+    }
+    nll_joint(6) -= dnorm(log_mean_Effort_dev(11), log_mean_Effort_dev(0), sigmaF_season, true);
+  }
 
 
   // penalty for random walk in logR0_m (seasonal recruitment)
