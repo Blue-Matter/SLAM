@@ -493,7 +493,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Other stuff
   REPORT(AWK); // age-weight key
-  REPORT(F_ts);
 
   return(nll);
 }
