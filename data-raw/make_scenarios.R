@@ -34,7 +34,7 @@ make_scenario_data <- function(i, Scenario_Grid) {
 
   Rec_Pattern_Pars <- switch(Scenario$Monthly_Recruitment_Pattern,
                              'Constant'=list(1, 1000),
-                             'Pulse'=list(6.5, 1),
+                             'Pulse'=list(6.5, 1.5),
                              'Diffuse'=list(6.5,3),
                              'Bi-Modal'=list(c(3.5,8.5), c(1,1)))
 
@@ -67,7 +67,9 @@ make_scenario_data <- function(i, Scenario_Grid) {
   nm1 <- intersect(names(Data), names(Condition_Parameters))
   Data <- modifyList(Data, Condition_Parameters[nm1])
 
-  month_opt_F <- calculate_optimal_fishing(LifeHistory, Exploitation, opt_type=1, utilpow=0.3)$F_m
+
+  opt_F_pattern <- calculate_optimal_fishing(LifeHistory, Exploitation, opt_type=1, utilpow=0.3)
+  month_opt_F <- opt_F_pattern$F_m
 
   Exploitation$Effort_Month_Mean <- month_opt_F/sum(month_opt_F)
 
