@@ -35,6 +35,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
   DATA_INTEGER(Fit_CAW);
+  DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
 
   // ---- Estimated Parameters ----
@@ -44,7 +45,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(logF_minit); // equilibrium fishing mortality for first age-classes
 
   PARAMETER_VECTOR(logF_ts); // fishing mortality for each timestep (month)
-  PARAMETER(log_sigmaF_m); // mean monthly F sd (fixed or random effect)
+  PARAMETER(log_sigmaF_m); // sd for random walk penalty for F
 
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
   PARAMETER(log_sigmaR0); // sd for random walk penalty for monthly recruitment
@@ -53,7 +54,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER(log_sigmaR); // monthly rec dev sd (fixed or random effect; usually fixed)
 
   // ---- Transform Parameters ----
-  Type sigmaF_m = exp(log_sigmaF_m); // fishing effort monthly deviation sd
+  Type sigmaF_m = exp(log_sigmaF_m); // fishing effort monthly random walk sd
   Type sigmaR = exp(log_sigmaR); // rec process error dev sd
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m (seasonal; monthly)
 
@@ -426,14 +427,19 @@ Type SLAM(objective_function<Type>* obj) {
   nll_joint(4) =  recdevnll;
 
   // ---- Penalties ----
-
+  // penalty for random walk in F
+  if (use_Frwpen>0) {
+    for(int m=1;m<n_months;m++){
+      nll_joint(5) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
+    }
+  }
 
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(5) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(6) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(6) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
   // ---- Total negative log-likelihood ----
