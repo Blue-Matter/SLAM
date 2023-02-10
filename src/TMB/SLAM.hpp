@@ -28,6 +28,8 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
 
+  DATA_SCALAR(n_year); // total number of years of data
+
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
 
@@ -46,6 +48,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   PARAMETER_VECTOR(logF_ts); // fishing mortality for each timestep (month)
   PARAMETER(log_sigmaF_m); // sd for random walk penalty for F
+  PARAMETER(log_sigmaF_season);
 
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
   PARAMETER(log_sigmaR0); // sd for random walk penalty for monthly recruitment
@@ -55,6 +58,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- Transform Parameters ----
   Type sigmaF_m = exp(log_sigmaF_m); // fishing effort monthly random walk sd
+  Type sigmaF_season = exp(log_sigmaF_season);
   Type sigmaR = exp(log_sigmaR); // rec process error dev sd
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m (seasonal; monthly)
 
@@ -434,13 +438,73 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // Calculate deviations in logEffort from mean for each year
+  matrix<Type> Effort_by_Year(Type(12), n_year);
+  Effort_by_Year.setZero();
+  Type year_ind = -1;
+  for(int m=0;m<n_months;m++){
+    int m_ind = m % 12; // calendar month index
+    if (m_ind==0) year_ind = year_ind+1;
+    Effort_by_Year(m_ind, year_ind) = StEffort(m);
+  }
+
+  vector<Type> mean_effort(n_year);
+  mean_effort.setZero();
+
+  for(int y=0;y<n_year;y++){
+    mean_effort(y) = Effort_by_Year.col(y).sum();
+    double N = sum(Effort_by_Year.col(y)>0);
+    mean_effort(y) = mean_effort(y)/N;
+  }
+
+  vector<Type> Effort_dev(n_months);
+  Effort_dev.setZero();
+  Type year_ind2 = -1;
+  for(int m=0;m<n_months;m++){
+    int m_ind = m % 12; // calendar month index
+    if (m_ind==0) year_ind2 = year_ind2+1;
+    Effort_dev(m) = StEffort(m)/mean_effort(year_ind2);
+  }
+
+  matrix<Type> Effort_Dev_by_Year(Type(12), n_year);
+  Effort_Dev_by_Year.setZero();
+  Type year_ind3 = -1;
+  for(int m=0;m<n_months;m++){
+    int m_ind = m % 12; // calendar month index
+    if (m_ind==0) year_ind3 = year_ind3+1;
+    Effort_Dev_by_Year(m_ind, year_ind) = Effort_dev(m);
+  }
+  vector<Type> mean_Effort_dev(12);
+  mean_Effort_dev.setZero();
+  vector<Type> log_mean_Effort_dev(12);
+  log_mean_Effort_dev.setZero();
+  for(int m=0;m<12;m++){
+    mean_Effort_dev(m) = Effort_Dev_by_Year.row(m).sum();
+    double N2 = sum(Effort_Dev_by_Year.row(m)>0);
+    mean_Effort_dev(m) = mean_Effort_dev(m)/N;
+    log_mean_Effort_dev(m) = log(mean_Effort_dev)
+  }
+
+
+
+  if (use_R0rwpen>0) {
+    for(int m=1;m<12;m++){
+      nll_joint(6) -= dnorm(log_mean_Effort_dev(m), log_mean_Effort_dev(m-1), sigmaF_season, true);
+    }
+    nll_joint(6) -= dnorm(log_mean_Effort_dev(11), log_mean_Effort_dev(0), sigmaF_season, true);
+  }
+
+
+
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(6) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(6) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
+
+
 
   // ---- Total negative log-likelihood ----
   Type nll=0;
@@ -498,7 +562,10 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(nll);
 
   // Other stuff
-  REPORT(AWK); // age-weight key
+  REPORT(mean_effort);
+  REPORT(Effort_dev);
+  REPORT(Effort_Dev_by_Year);
+  REPORT(log_mean_Effort_dev);
 
   return(nll);
 }
