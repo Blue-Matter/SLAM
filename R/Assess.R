@@ -16,7 +16,6 @@ Initialize_Parameters <- function(data,
                                   Feq_init=0.05,
                                   sigmaR=0.5,
                                   sigmaF_m=0.4,
-                                  sigmaF_season=0.2,
                                   sigmaR0=0.5) {
 
   parameters <- list()
@@ -29,14 +28,11 @@ Initialize_Parameters <- function(data,
   parameters$logF_ts <- rep(log(0.1), n_ts)
 
   parameters$log_sigmaF_m <- log(sigmaF_m)
-  parameters$log_sigmaF_season <- log(sigmaF_season)
 
   parameters$logR0_m_est <- rep(1/12, 11)
   parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
-  parameters
-
   parameters
 }
 
@@ -163,7 +159,7 @@ Construct_Data_OM <- function(sim=1,
   data$CPUE <- CPUE_DF$CPUE
   data$CPUE_SD <- rep(CPUE_CV, nMonths)
 
-
+  data$n_years <- floor(nMonths/12)
 
   # Options
   data$Fit_Effort <- Fit_Effort
@@ -207,19 +203,19 @@ Do_Assess <- function(data,
                    as95=6,
                    Feq_init=0.05,
                    sigmaR=0.5,
+                   sigmaF_m = 0.2,
+                   sigmaR0 = 0.1,
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    map=list(log_sigmaF=factor(NA),
                             log_sigmaR=factor(NA),
-                            log_sigmaR0=factor(NA)),
-                   log_sigmaF = log(0.2),
-                   log_sigmaR0 = log(0.1)) {
+                            log_sigmaR0=factor(NA))) {
 
   parameters <- Initialize_Parameters(data,
                                       as50, as95,
                                       Feq_init,
-                                      sigmaR,
-                                      log_sigmaF,
-                                      log_sigmaR0)
+                                      sigmaR=sigmaR,
+                                      sigmaF_m=sigmaF_m,
+                                      sigmaR0=sigmaR0)
 
   if (data$n_years==1) {
     map$logRec_Devs <- rep(factor(NA), length(parameters$logRec_Devs))
