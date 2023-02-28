@@ -359,7 +359,7 @@ Type SLAM(objective_function<Type>* obj) {
       // standardize observed CAA to sum 1
       vector<Type> CAAp_obs(n_ages);
       CAAp_obs.setZero();
-      CAAp_obs = predC_a.col(m)/predC_a.col(m).sum();
+      CAAp_obs = CAA.col(m)/CAA.col(m).sum();
 
       // scale by effective sample size
       vector<Type> Ncaa_obs(n_ages);
@@ -539,6 +539,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(nll_joint);
   REPORT(nll);
 
+  // other stuff
+  REPORT(CAAns);
 
   return(nll);
 }
