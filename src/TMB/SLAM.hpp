@@ -357,17 +357,17 @@ Type SLAM(objective_function<Type>* obj) {
 
     if (CAAns(m)>0) {
       // standardize observed CAA to sum 1
-      vector<Type> CAAp_obs(n_age);
+      vector<Type> CAAp_obs(n_ages);
       CAAp_obs.setZero();
       CAAp_obs = predC_a.col(m)/predC_a.col(m).sum();
 
       // scale by effective sample size
-      vector<Type> Ncaa_obs(n_age);
+      vector<Type> Ncaa_obs(n_ages);
       Ncaa_obs.setZero();
       Ncaa_obs = CAA_ESS(m) * CAAp_obs;
 
       // multinomial likelihood
-      vector<Type> predCAA(n_age);
+      vector<Type> predCAA(n_ages);
       predCAA.setZero();
       predCAA = predC_a.col(m);
       CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA, true);
