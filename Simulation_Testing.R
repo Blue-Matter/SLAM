@@ -5,10 +5,39 @@ remotes::install_github('blue-matter/SLAM')
 # To do:
 # - make standard data file structure
 # - modify SLAM.hpp to fit to Age Comps
-# - get rid of seasonal F random walk penalty
 # - compare CAA vs CAW
 # - test and confirm for 12 months of data with Pulse and Constant Recruitment
 #
+
+# add plot(data) function
+
+
+library(SLAM)
+library(dplyr)
+
+nsim <- 100
+
+Scenarios <- Scenario_Grid %>% filter(Conditions=='Idealized',
+                                      Monthly_Recruitment_Pattern=='Constant')
+
+i <- 1
+Scenario <- Scenarios[i,]
+Parameters <- get(Scenario$Name)
+LifeHistory <- Parameters$LifeHistory
+Exploitation <- Parameters$Exploitation
+Data <- Parameters$Data
+
+SimMod <- Simulate(LifeHistory, Exploitation, Data, nsim = nsim)
+
+
+x <- 1
+
+message(x, '/', nsim)
+data <- Construct_Data_OM(x, SimMod, Data_types=Scenario$Data_types)
+
+
+assess <- Do_Assess(data)
+
 
 
 
