@@ -381,7 +381,7 @@ Type SLAM(objective_function<Type>* obj) {
       vector<Type> predCAA_m(n_ages);
       predCAA_m.setZero();
       predCAA_m = predCAA.col(m);
-      CAAnll(m) -= dmultinom(Ncaa_obs, predCAA_m, true);
+      CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA_m, true);
     }
   }
 
