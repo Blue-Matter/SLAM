@@ -103,14 +103,16 @@ Initialize_Parameters_OM <- function(SimMod,
 Construct_Data_OM <- function(sim=1,
                               SimMod,
                               CAW_Monthly_ESS=100,
+                              CAA_Monthly_ESS=100,
                               Effort_CV=0.2,
                               CPUE_CV=0.2,
                               Fit_Effort=1,
                               Fit_CPUE=1,
                               Fit_CAW=1,
+                              Fit_CAA=1,
                               use_Frwpen=1,
-                              use_R0rwpen=1,
-                              use_F_seasonrwpen=1) {
+                              use_R0rwpen=1
+                              ) {
 
   data <- list()
   # Assumed life-history parameters
@@ -120,6 +122,7 @@ Construct_Data_OM <- function(sim=1,
   data$M_at_Age <- SimMod$LifeHistory$M_at_Age
   data$PSM_at_Age <- SimMod$LifeHistory$Post_Spawning_Mortality
   data$h <- SimMod$LifeHistory$steepness
+  nAges <- length(data$Weight_Age)
 
   # CAW Data
   data$WghtBins <- SimMod$Data$Weight_Bins
@@ -131,8 +134,13 @@ Construct_Data_OM <- function(sim=1,
 
   CAW <- matrix(CAW_DF$Count, nrow=nBins, nMonths)
   data$CAW <- CAW
-
   data$CAW_ESS <- rep(CAW_Monthly_ESS, nMonths)
+
+  # CAA Data
+  CAA_DF <- SimMod$Data_CAA_DF %>% filter(Sim==sim) %>% select(Month_ind, Age, Count)
+  CAA <- matrix(CAA_DF$Count, nrow=nAges, nMonths)
+  data$CAA <- CAA
+  data$CAA_ESS <- rep(CAA_Monthly_ESS, nMonths)
 
   # Effort Index
   Effort_DF <- SimMod$Data_TS_DF %>% filter(Sim==sim) %>% select(Effort)
@@ -144,20 +152,17 @@ Construct_Data_OM <- function(sim=1,
   data$CPUE <- CPUE_DF$CPUE
   data$CPUE_SD <- rep(CPUE_CV, nMonths)
 
-  # effort_by_year <- split(data$Effort, ceiling(seq_along(data$Effort)/12))
-  # data$Effort_y_mean <- as.vector(unlist(lapply(effort_by_year, mean)))
 
-  data$n_year <- ceiling(nMonths/12)
 
   # Options
   data$Fit_Effort <- Fit_Effort
   data$Fit_CPUE <- Fit_CPUE
   data$Fit_CAW <- Fit_CAW
+  data$Fit_CAA <- Fit_CAA
 
   # Penalties
   data$use_Frwpen <- use_Frwpen
   data$use_R0rwpen <- use_R0rwpen
-  data$use_F_seasonrwpen <- use_F_seasonrwpen
 
   data$model <- 'SLAM'
   data$currentYr <- max(SimMod$OM_DF$Year)
