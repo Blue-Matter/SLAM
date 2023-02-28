@@ -4,10 +4,8 @@ remotes::install_github('blue-matter/SLAM')
 
 # To do:
 # - make standard data file structure
-# - modify SLAM.hpp to fit to Age Comps
-# - compare CAA vs CAW
 # - test and confirm for 12 months of data with Pulse and Constant Recruitment
-#
+# - test under perfect conditions with 12 month CAW and CAW & Effort
 
 # add plot(data) function
 
@@ -17,29 +15,160 @@ library(dplyr)
 
 nsim <- 100
 
-Scenarios <- Scenario_Grid %>% filter(Conditions=='Idealized',
-                                      Monthly_Recruitment_Pattern=='Constant')
+# Don't include CAA data - not available in these fisheries
+Scenarios <- Scenario_Grid %>% filter(grepl('CAA', Data_types) == FALSE,
+                                      Monthly_Recruitment_Pattern =='Constant',
+                                      Conditions=='Idealized')
 
-i <- 1
-Scenario <- Scenarios[i,]
-Parameters <- get(Scenario$Name)
+# Simulate data
+SimScenario <- Scenarios %>% filter(Data_n_months==max(Data_n_months)) %>%
+  group_by(Conditions) %>%
+  filter(Data_n_months==max(Data_n_months), Data_types=='CAW')
+
+Parameters <- get(SimScenario$Name)
 LifeHistory <- Parameters$LifeHistory
 Exploitation <- Parameters$Exploitation
 Data <- Parameters$Data
 
 SimMod <- Simulate(LifeHistory, Exploitation, Data, nsim = nsim)
 
+# Modify simulated data time-series based on scenario
+Scen_res <- list()
+for (i in 1:nrow(Scenarios)) {
+  message('Scenario: ', i, '/', nrow(Scenarios))
+  Scenario <- Scenarios[i,]
+  Data_types <- Scenario$Data_types
+  Data_n_months <- Scenario$Data_n_months
 
-x <- 1
+  modify_data <- function(SimMod, Data_n_months) {
+    Month_ind <- SimMod$Data_TS_DF$Month_ind %>% unique()
+    Month_ind_keep <- Month_ind[(length(Month_ind)-Data_n_months+1):length(Month_ind)]
 
-message(x, '/', nsim)
-data <- Construct_Data_OM(x, SimMod, Data_types=Scenario$Data_types)
+    SimMod$Data_TS_DF <- SimMod$Data_TS_DF %>% filter(Month_ind %in% Month_ind_keep)
+
+    SimMod$Data_TS_DF <- SimMod$Data_TS_DF %>% group_by(Sim) %>%
+      mutate(CPUE=CPUE/mean(CPUE), Effort=Effort/mean(Effort)) %>% ungroup()
+
+    SimMod$Data_CAW_DF <- SimMod$Data_CAW_DF %>% filter(Month_ind %in% Month_ind_keep)
+    SimMod$Data_CAA_DF <- SimMod$Data_CAA_DF %>% filter(Month_ind %in% Month_ind_keep)
+    SimMod
+  }
+
+  SimMod_Scen <- modify_data(SimMod, Data_n_months)
+
+  assess_list <- list()
+  for (x in 1:nsim) {
+    message(x, '/', nsim)
+    data <- Construct_Data_OM(x, SimMod_Scen, Data_types=Data_types)
+    Assessment <- Do_Assess(data)
+    assess_list[[x]] <- Compare_OM_Assess(x, SimMod_Scen, Assessment)
+  }
+
+  assess_DF <- do.call('rbind', assess_list)
+
+  # Last 12 months
+  n_months <- assess_DF$Month_ind %>% max()
+  sel_months <- (n_months-11):n_months
+  assess_DF <- assess_DF %>% filter(Month_ind %in% sel_months)
+  assess_DF <- bind_cols(assess_DF, Scenario)
+
+  saveRDS(assess_DF, file.path('Results/Sim_Testing', paste0(Scenario$Name, '.rda')))
+
+  Scen_res[[i]] <- assess_DF
+}
+RE_Results <- do.call('rbind', Scen_res)
+
+library(ggplot2)
+
+DF$RE_F <- NA
+DF$RE_SPR <- NA
+DF <- RE_Results %>%
+  group_by(Sim, Data_types , Data_n_months, Monthly_Recruitment_Pattern, Conditions) %>%
+  summarise(RE_F=(F_mort[Model=='Assessment']-F_mort[Model=='OM'])/F_mort[Model=='OM'],
+         RE_SPR=(SPR[Model=='Assessment']-SPR[Model=='OM'])/SPR[Model=='OM'])
+
+DF$Data_n_months <- factor(DF$Data_n_months)
+DF$SPR <- DF$RE_SPR
+DF$F <- DF$RE_F
+
+DF_long <- DF %>% tidyr::pivot_longer(., cols=c('SPR', 'F'))
+
+ggplot(DF_long %>% filter(Monthly_Recruitment_Pattern=='Constant'), aes(x=Data_n_months, y=value)) +
+  facet_grid(name~Data_types, scales='free') +
+  geom_boxplot(aes(fill=Conditions)) +
+  geom_hline(yintercept = 0, linetype=2) +
+  theme_bw() +
+  labs(y='Relative Error', x="n Months")
 
 
-assess <- Do_Assess(data)
+ggplot(DF_long %>% filter(Monthly_Recruitment_Pattern=='Pulse'), aes(x=Data_n_months, y=value)) +
+  facet_grid(name~Data_types, scales='free') +
+  geom_boxplot(aes(fill=Conditions)) +
+  geom_hline(yintercept = 0, linetype=2) +
+  theme_bw() +
+  labs(y='Relative Error', x="n Months")
+
+
+OM_DF <- OM_Assess_DF %>% filter(Model=='OM')
+Assess_DF <- OM_Assess_DF %>% filter(Model=='Assessment')
 
 
 
+
+
+
+
+plot(OM_DF$Month_ind, OM_DF$F_mort, type='l', ylim=c(0,max(c(OM_DF$F_mort, Assess_DF$F_mort))))
+lines(Assess_DF$Month_ind, Assess_DF$F_mort, col='blue')
+
+median((Assess_DF$F_mort-OM_DF$F_mort)/OM_DF$F_mort)
+median((Assess_DF$SPR-OM_DF$SPR)/OM_DF$SPR)
+
+
+
+rep <- Assessment$rep
+rep$F_minit
+rep$F_m
+rep$logRec_Devs %>% exp()
+OM_DF$F_mort
+
+par(mfrow=c(3,4))
+dd <- dim(data$CAA)
+ms <- ((dd[2] - 12 + 1):dd[2])
+for (i in ms) {
+  plot(0:14, data$CAA[,i]/sum(data$CAA[,i]), type='l')
+  lines(0:14, rep$predCAA[,i], col='blue')
+}
+
+par(mfrow=c(2,2))
+plot(data$CPUE, type='l')
+lines(rep$stpredIndex, col='blue')
+
+plot(data$Effort, type='l')
+lines(rep$StEffort, col='blue')
+
+Mod <- SimMod$OM_DF %>% filter(Sim==x)
+month_ind <- rev(seq(Exploitation$nyears*12, by=-1, length.out=Data$n_recent_months))
+Mod_data <- SimMod$OM_DF %>% filter(Sim==x, Month_ind%in%month_ind)
+
+plot(Mod_data$F_mort, type='l', ylim=c(0, max(c(Mod_data$F_mort, rep$F_m))))
+lines(rep$F_m, col='blue')
+nonzero <- which(Mod_data$F_mort>0)
+median((rep$F_m[nonzero]-Mod_data$F_mort[nonzero])/Mod_data$F_mort[nonzero])
+
+rep$F_minit
+rep$F_m
+
+par(mfrow=c(3,4))
+dd <- dim(data$CAA)
+ms <- ((dd[2] - 12 + 1):dd[2])
+for (i in ms) {
+  plot(0:14, data$CAA[,i]/sum(data$CAA[,i]), type='l')
+  lines(0:14, rep$predCAA[,i], col='blue')
+}
+
+rep$nll_joint
+rep$CAAnll
 
 # Run test for no obs error
 # Run test with process error
