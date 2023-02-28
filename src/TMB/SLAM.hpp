@@ -32,8 +32,6 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
 
-  DATA_INTEGER(n_year); // total number of years of data
-
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
 
@@ -44,7 +42,6 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_CAA);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
-  DATA_INTEGER(use_F_seasonrwpen);
 
   // ---- Estimated Parameters ----
   PARAMETER(ls50);  // log age-at-50% selectivity
@@ -372,7 +369,7 @@ Type SLAM(objective_function<Type>* obj) {
       // multinomial likelihood
       vector<Type> predCAA(n_age);
       predCAA.setZero();
-      predCAA = predCAA.col(m);
+      predCAA = predC_a.col(m);
       CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA, true);
     }
   }
@@ -521,7 +518,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SPR); // SPR
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
-  REPORT(predCAA); // catch-at-age
+  REPORT(predC_a); // catch-at-age
 
   // predicted seasonal recruitment
   REPORT(R0_m);
