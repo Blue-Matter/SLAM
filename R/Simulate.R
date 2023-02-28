@@ -215,7 +215,7 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   }
   AWK[,nBins] <- 1 - plnorm(Weight_Bins[nBins], mu, Weight_Age_SD)
 
-  # Catch-at-Weight - multinomial
+  # Catch-at-Weight - expected
   CAW_exp <- array(0, dim=c(nsim, nBins, nts))
   for (ts in 1:nts) {
     CAW_exp[,,ts] <- t(sapply(1:nsim, function(x)
@@ -259,6 +259,26 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
       }
     ))
   }
+
+
+  CAA_Sample <- array(0, dim=c(nsim, nAge, n_sample_ts))
+
+  for (i in seq_along(sample_ts)) {
+    ts <- sample_ts[i]
+    month <- ts %%12
+    if (month==0) month <- 12
+    ts_sample_size <- CAW_Annual_Sample_Size * Rel_Sample_Month[month]
+    ts_ess <- CAW_Annual_ESS * Rel_Sample_Month[month]
+
+    CAA_Sample[,,i] <- t(sapply(1:nsim, function(x)
+      if (sum(Catch_Age[x,,ts])>0) {
+        val <-  ts_sample_size * (rmultinom(1, size=ts_ess, prob=Catch_Age[x,,ts]))/ts_ess
+      } else {
+        val <- rep(NA, nAge)
+      }
+    ))
+  }
+
 
   # Return info
   currentYr <- as.numeric(currentYr)
@@ -308,12 +328,20 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
                             Month_ind=rep(1:n_sample_ts, each=nsim*nBins),
                             Count=as.vector(CAW_Sample))
 
+  Data_CAA_DF <- data.frame(Sim=1:nsim,
+                            Weight=rep(Weight_Mids, each=nsim),
+                            Year=rep(Years, each=nsim*nAge),
+                            Month=rep(Months, each=nsim*nAge),
+                            Month_ind=rep(1:n_sample_ts, each=nsim*nAge),
+                            Count=as.vector(CAA_Sample))
+
   list(LifeHistory=LifeHistory,
        Exploitation=Exploitation,
        Data=Data,
        OM_DF=OM_DF,
        Data_TS_DF=Data_TS_DF,
-       Data_CAW_DF=Data_CAW_DF)
+       Data_CAW_DF=Data_CAW_DF,
+       Data_CAA_DF=Data_CAA_DF)
 
 }
 
