@@ -64,9 +64,9 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   CAW_Annual_ESS <- Data$CAW_Annual_ESS
 
   if (is.null(Data$CAA_Annual_Sample_Size))
-    Data$CAA_Annual_Sample_Size <- - Data$CAW_Annual_Sample_Size
+    Data$CAA_Annual_Sample_Size <- Data$CAW_Annual_Sample_Size
   if (is.null(Data$CAA_Annual_ESS))
-    Data$CAA_Annual_ESS <- - Data$CAW_Annual_ESS
+    Data$CAA_Annual_ESS <- Data$CAW_Annual_ESS
   CAA_Annual_Sample_Size <- Data$CAA_Annual_Sample_Size
   CAA_Annual_ESS <- Data$CAA_Annual_ESS
 
