@@ -307,13 +307,24 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // Standardize CAW data to sum to one
+  // Standardize predicted CAW to sum to one
   for (int m=0; m<n_months; m++) {
     Type temp = predCAW.col(m).sum();
     for(int w=0;w<n_bins;w++){
       predCAW(w,m) = predCAW(w,m)/temp;
     }
   }
+
+  // Standardize predicted CAA to sum to one
+  matrix<Type> predCAA(n_ages, n_months); // catch numbers by age and month
+  predCAA.setZero();
+  for (int m=0; m<n_months; m++) {
+    Type temp2 = predC_a.col(m).sum();
+    for(int a=0;a<n_ages;a++){
+      predCAA(a,m) = predC_a(a,m)/temp2;
+    }
+  }
+
 
   // ---- Calculate likelihoods ----
 
@@ -353,7 +364,7 @@ Type SLAM(objective_function<Type>* obj) {
   CAAnll.setZero();
 
   for (int m=0; m<n_months; m++) {
-    CAAns(m) = predC_a.col(m).sum(); // sum of CAA observations
+    CAAns(m) = predCAA.col(m).sum(); // sum of CAA observations
 
     if (CAAns(m)>0) {
       // standardize observed CAA to sum 1
@@ -367,10 +378,10 @@ Type SLAM(objective_function<Type>* obj) {
       Ncaa_obs = CAA_ESS(m) * CAAp_obs;
 
       // multinomial likelihood
-      vector<Type> predCAA(n_ages);
-      predCAA.setZero();
-      predCAA = predC_a.col(m);
-      CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA, true);
+      vector<Type> predCAA_m(n_ages);
+      predCAA_m.setZero();
+      predCAA_m = predCAA.col(m);
+      CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA_m, true);
     }
   }
 
@@ -518,7 +529,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SPR); // SPR
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
-  REPORT(predC_a); // catch-at-age
+  REPORT(predCAA); // catch-at-age
 
   // predicted seasonal recruitment
   REPORT(R0_m);
