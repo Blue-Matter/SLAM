@@ -18,8 +18,12 @@ Type SLAM(objective_function<Type>* obj) {
   // Weight composition data
   DATA_VECTOR(WghtBins);
   DATA_VECTOR(WghtMids); // mid-points of the CAW bins
-  DATA_MATRIX(CAW);    // CAL observations for each bin and month
+  DATA_MATRIX(CAW);    // CAW observations for each bin and month
   DATA_VECTOR(CAW_ESS); // number of independent observation of weight samples in each month
+
+  // Age composition data
+  DATA_MATRIX(CAA);    // CAA observations for each bin and month
+  DATA_VECTOR(CAA_ESS); // number of independent observation of age samples in each month
 
   // Monthly time-series data
   DATA_VECTOR(Effort); // monthly effort - mean 1 over time-series
@@ -37,6 +41,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_CPUE);
   DATA_INTEGER(Fit_CAW);
+  DATA_INTEGER(Fit_CAA);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
   DATA_INTEGER(use_F_seasonrwpen);
@@ -49,7 +54,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   PARAMETER_VECTOR(logF_ts); // fishing mortality for each timestep (month)
   PARAMETER(log_sigmaF_m); // sd for random walk penalty for F
-  PARAMETER(log_sigmaF_season);
 
   PARAMETER_VECTOR(logR0_m_est); // average fraction of annual recruitment in each month
   PARAMETER(log_sigmaR0); // sd for random walk penalty for monthly recruitment
@@ -59,7 +63,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- Transform Parameters ----
   Type sigmaF_m = exp(log_sigmaF_m); // fishing effort monthly random walk sd
-  Type sigmaF_season = exp(log_sigmaF_season);
   Type sigmaR = exp(log_sigmaR); // rec process error dev sd
   Type sigmaR0 = exp(log_sigmaR0); // SD for random walk in R0_m (seasonal; monthly)
 
@@ -346,6 +349,35 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // ---- Catch-at-Age ----
+  vector<Type> CAAns(n_months);
+  CAAns.setZero();
+  vector<Type> CAAnll(n_months);
+  CAAnll.setZero();
+
+  for (int m=0; m<n_months; m++) {
+    CAAns(m) = predC_a.col(m).sum(); // sum of CAA observations
+
+    if (CAAns(m)>0) {
+      // standardize observed CAA to sum 1
+      vector<Type> CAAp_obs(n_age);
+      CAAp_obs.setZero();
+      CAAp_obs = predC_a.col(m)/predC_a.col(m).sum();
+
+      // scale by effective sample size
+      vector<Type> Ncaa_obs(n_age);
+      Ncaa_obs.setZero();
+      Ncaa_obs = CAA_ESS(m) * CAAp_obs;
+
+      // multinomial likelihood
+      vector<Type> predCAA(n_age);
+      predCAA.setZero();
+      predCAA = predCAA.col(m);
+      CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA, true);
+    }
+  }
+
+
   // ---- Relative Effort ----
   // mean 1 over time-steps where effort data exists
   Type Effmean = 0;
@@ -417,14 +449,19 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(0) =  CAWnll.sum();
   }
 
+  // CAA
+  if (Fit_CAA>0) {
+    nll_joint(1) =  CAAnll.sum();
+  }
+
   // Effort
   if (Fit_Effort>0) {
-    nll_joint(1) =  Effnll.sum();
+    nll_joint(2) =  Effnll.sum();
   }
 
   // CPUE
   if (Fit_CPUE>0) {
-    nll_joint(2) =  CPUEnll.sum();
+    nll_joint(3) =  CPUEnll.sum();
   }
 
 
@@ -439,80 +476,13 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
-  // Calculate deviations in logEffort from mean for each year
-  matrix<Type> Effort_by_Year(12, n_year);
-  Effort_by_Year.setZero();
-  int year_ind = -1;
-  for(int m=0;m<n_months;m++){
-    int m_ind = m % 12; // calendar month index
-    if (m_ind==0) year_ind = year_ind+1;
-    Effort_by_Year(m_ind, year_ind) = StEffort(m);
-  }
-
-  vector<Type> mean_effort(n_year);
-  mean_effort.setZero();
-
-  for(int y=0;y<n_year;y++){
-    mean_effort(y) = Effort_by_Year.col(y).sum();
-    double N = 0;
-    for (int m=0;m<12;m++) {
-      if (Effort_by_Year(m,y)>0) {
-        N += 1;
-      }
-    }
-    mean_effort(y) = mean_effort(y)/N;
-  }
-
-  vector<Type> Effort_dev(n_months);
-  Effort_dev.setZero();
-  int year_ind2 = -1;
-  for(int m=0;m<n_months;m++){
-    int m_ind = m % 12; // calendar month index
-    if (m_ind==0) year_ind2 = year_ind2+1;
-    Effort_dev(m) = StEffort(m)/mean_effort(year_ind2);
-  }
-
-  matrix<Type> Effort_Dev_by_Year(12, n_year);
-  Effort_Dev_by_Year.setZero();
-  int year_ind3 = -1;
-  for(int m=0;m<n_months;m++){
-    int m_ind = m % 12; // calendar month index
-    if (m_ind==0) year_ind3 = year_ind3+1;
-    Effort_Dev_by_Year(m_ind, year_ind3) = Effort_dev(m);
-  }
-  vector<Type> mean_Effort_dev(12);
-  mean_Effort_dev.setZero();
-  vector<Type> log_mean_Effort_dev(12);
-  log_mean_Effort_dev.setZero();
-  for(int m=0;m<12;m++){
-    mean_Effort_dev(m) = Effort_Dev_by_Year.row(m).sum();
-    double N2 = 0;
-    for (int y=0;y<n_year;y++) {
-      if (Effort_by_Year(m,y)>0) {
-        N2 += 1;
-      }
-    }
-    mean_Effort_dev(m) = mean_Effort_dev(m)/N2;
-    log_mean_Effort_dev(m) = log(mean_Effort_dev(m));
-  }
-
-
-  if (use_F_seasonrwpen>0) {
-    for(int m=1;m<12;m++){
-      nll_joint(6) -= dnorm(log_mean_Effort_dev(m), log_mean_Effort_dev(m-1), sigmaF_season, true);
-    }
-    nll_joint(6) -= dnorm(log_mean_Effort_dev(11), log_mean_Effort_dev(0), sigmaF_season, true);
-  }
-
-
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(7) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(6) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(7) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(6) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
-
 
 
   // ---- Total negative log-likelihood ----
@@ -551,6 +521,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SPR); // SPR
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
+  REPORT(predCAA); // catch-at-age
 
   // predicted seasonal recruitment
   REPORT(R0_m);
@@ -564,18 +535,13 @@ Type SLAM(objective_function<Type>* obj) {
 
   // likelihoods
   REPORT(CAWnll);
+  REPORT(CAAnll);
   REPORT(Effnll);
   REPORT(CPUEnll);
   REPORT(recdevnll);
   REPORT(nll_joint);
   REPORT(nll);
 
-  // Other stuff
-  REPORT(mean_effort);
-  REPORT(Effort_dev);
-  REPORT(mean_Effort_dev);
-  REPORT(Effort_Dev_by_Year);
-  REPORT(log_mean_Effort_dev);
 
   return(nll);
 }
