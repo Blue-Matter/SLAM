@@ -206,7 +206,7 @@ Do_Assess <- function(data,
                    sigmaF_m = 0.2,
                    sigmaR0 = 0.1,
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
-                   map=list(log_sigmaF=factor(NA),
+                   map=list(log_sigmaF_m=factor(NA),
                             log_sigmaR=factor(NA),
                             log_sigmaR0=factor(NA))) {
 
@@ -228,6 +228,7 @@ Do_Assess <- function(data,
     Random <- 'logRec_Devs'
   }
   do_opt <- opt_TMB_model(data, parameters, map, Random, control, restarts=10)
+  do_opt$map <- map
   do_opt
 }
 
