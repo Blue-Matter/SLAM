@@ -72,7 +72,8 @@ Import_Data <- function(csv='Parameters.csv', dir = getwd()) {
   Data <- read_pars(Indata, Data, 'Weight_Bin_Width', 1)
   Data <- read_pars(Indata, Data, 'CAW_Annual_Sample_Size', 1)
   Data <- read_pars(Indata, Data, 'CAW_Annual_ESS', 1)
-
+  Data <- read_pars(Indata, Data, 'CAA_Annual_Sample_Size', 1)
+  Data <- read_pars(Indata, Data, 'CAA_Annual_ESS', 1)
   Data
 
 }
