@@ -9,7 +9,8 @@ library(dplyr)
 
 Monthly_Recruitment_Pattern <- c('Constant', 'Pulse')
 Data_n_months <- c(12, 24, 60, 120)
-Data_types <- c('CAW', 'CAW+Index', 'CAW+Effort', 'CAW+Index+Effort')
+Data_types <- c('CAA', 'CAA+Index', 'CAA+Effort', 'CAA+Index+Effort',
+                'CAW', 'CAW+Index', 'CAW+Effort', 'CAW+Index+Effort')
 Conditions <- c('Idealized', 'Process+Observation Error')
 
 Scenario_Grid <- expand.grid(Monthly_Recruitment_Pattern=Monthly_Recruitment_Pattern,
@@ -50,13 +51,17 @@ make_scenario_data <- function(i, Scenario_Grid) {
                                                   Catch_CV=0.01,
                                                   Effort_CV=0.01,
                                                   CAW_Annual_Sample_Size=10000,
-                                                  CAW_Annual_ESS=10000),
+                                                  CAW_Annual_ESS=10000,
+                                                  CAA_Annual_Sample_Size=5000,
+                                                  CAA_Annual_ESS=5000),
                                  'Process+Observation Error'=list(sigmaR=0.6,
                                                                   CPUE_CV=0.3,
                                                                   Catch_CV=0.3,
                                                                   Effort_CV=0.3,
                                                                   CAW_Annual_Sample_Size=5000,
-                                                                  CAW_Annual_ESS=2400))
+                                                                  CAW_Annual_ESS=2400,
+                                                                  CAA_Annual_Sample_Size=200,
+                                                                  CAA_Annual_ESS=100))
 
   nm1 <- intersect(names(Condition_Parameters), names(LifeHistory))
   LifeHistory <- modifyList(LifeHistory, Condition_Parameters[nm1])

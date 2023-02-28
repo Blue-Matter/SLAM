@@ -35,3 +35,5 @@ h2CR <- function(h) {
 CR2h <- function(CR) {
   CR/(CR+4)
 }
+
+

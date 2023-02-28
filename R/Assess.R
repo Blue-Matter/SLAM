@@ -84,6 +84,16 @@ Initialize_Parameters_OM <- function(SimMod,
 
 
 
+set_data_types <- function(data, Data_types) {
+  Data_types <- strsplit(Data_types, "\\+")[[1]]
+  if (!'CAW' %in% Data_types) data$Fit_CAW <-0
+  if (!'CAA' %in% Data_types) data$Fit_CAA <-0
+  if (!'Index' %in% Data_types) data$Fit_CPUE <-0
+  if (!'Effort' %in% Data_types) data$Fit_Effort <-0
+  data
+}
+
+
 #' Title
 #'
 #' @param sim
@@ -111,7 +121,8 @@ Construct_Data_OM <- function(sim=1,
                               Fit_CAW=1,
                               Fit_CAA=1,
                               use_Frwpen=1,
-                              use_R0rwpen=1
+                              use_R0rwpen=1,
+                              Data_types=NULL
                               ) {
 
   data <- list()
@@ -168,6 +179,9 @@ Construct_Data_OM <- function(sim=1,
   data$currentYr <- max(SimMod$OM_DF$Year)
   data$Month_ind <- 1:length(data$Effort)
 
+  if (!is.null(Data_types)) {
+    data <- set_data_types(data, Data_types=Data_types)
+  }
   data
 }
 
