@@ -63,6 +63,13 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   CAW_Annual_Sample_Size <- Data$CAW_Annual_Sample_Size
   CAW_Annual_ESS <- Data$CAW_Annual_ESS
 
+  if (is.null(Data$CAA_Annual_Sample_Size))
+    Data$CAA_Annual_Sample_Size <- - Data$CAW_Annual_Sample_Size
+  if (is.null(Data$CAA_Annual_ESS))
+    Data$CAA_Annual_ESS <- - Data$CAW_Annual_ESS
+  CAA_Annual_Sample_Size <- Data$CAA_Annual_Sample_Size
+  CAA_Annual_ESS <- Data$CAA_Annual_ESS
+
   # Parameter Checks
   #TODO
 
@@ -267,8 +274,8 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
     ts <- sample_ts[i]
     month <- ts %%12
     if (month==0) month <- 12
-    ts_sample_size <- CAW_Annual_Sample_Size * Rel_Sample_Month[month]
-    ts_ess <- CAW_Annual_ESS * Rel_Sample_Month[month]
+    ts_sample_size <- CAA_Annual_Sample_Size * Rel_Sample_Month[month]
+    ts_ess <- CAA_Annual_ESS * Rel_Sample_Month[month]
 
     CAA_Sample[,,i] <- t(sapply(1:nsim, function(x)
       if (sum(Catch_Age[x,,ts])>0) {
@@ -329,7 +336,7 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
                             Count=as.vector(CAW_Sample))
 
   Data_CAA_DF <- data.frame(Sim=1:nsim,
-                            Weight=rep(Weight_Mids, each=nsim),
+                            Age=rep(Ages, each=nsim),
                             Year=rep(Years, each=nsim*nAge),
                             Month=rep(Months, each=nsim*nAge),
                             Month_ind=rep(1:n_sample_ts, each=nsim*nAge),
