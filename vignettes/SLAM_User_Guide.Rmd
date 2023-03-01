@@ -1,0 +1,41 @@
+---
+title: "SLAM User Guide"
+output: rmarkdown::html_vignette
+author: Adrian Hordyk <adrian@bluematterscience.com>
+date: 
+vignette: >
+  %\VignetteIndexEntry{SLAM_User_Guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Introduction 
+The `SLAM` package is designed to simulate fishery dynamics and data, and to apply an age-structured assessment model to simulated or real fishery data, for a short-lived semelparous species such as octopus.
+
+
+
+```{r setup}
+library(SLAM)
+```
+
+
+## Simulation
+
+### Simulating Fishery Dynamics 
+
+
+### Generating Fishery Data 
+
+
+## Estimation
+
+### Applying Assessment Model to Simulated Data
+
+### Applying Assessment Model to Case Study Data
