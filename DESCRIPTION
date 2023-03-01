@@ -5,7 +5,7 @@ Authors@R:
     person("Adrian", "Hordyk", , "adrian@bluematterscience.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-5620-3446"))
 Description: A model to simulate and assess short-lived semelparous species such as octopus.
-License: use_mit_license()
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3

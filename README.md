@@ -4,7 +4,8 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of SLAM is to ...
+The `SLAM` package is designed to simulate fishery dynamics and data, and to apply an age-structured assessment model to simulated or real fishery data, for a short-lived semelparous species such as octopus.
+
 
 ## Installation
 
@@ -15,12 +16,7 @@ You can install the development version of SLAM from [GitHub](https://github.com
 devtools::install_github("Blue-Matter/SLAM")
 ```
 
-## Example
+## Help Documentation and User Guide
 
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-library(SLAM)
-## basic example code
-```
+Help Documentation and a User Guide for the `SLAM` package are available on the [SLAM homepage](https://blue-matter.github.io/SLAM/).
 
