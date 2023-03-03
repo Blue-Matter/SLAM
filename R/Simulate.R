@@ -298,7 +298,7 @@ Simulate <- function(LifeHistory=NULL,
                                    N_fished=as.vector(N_Age_fished),
                                    N_unfished=as.vector(N_Age_unfished),
                                    N_unfished_eq=as.vector(N_Age_unfished),
-                                   B_fished=as.vector(N_Age_fished * Weight_Age_Mean_array),
+                                   B_fished=as.vector(B_fished),
                                    B_unfished=as.vector(N_Age_unfished * Weight_Age_Mean_array),
                                    SB_fished=as.vector(SB_Age_fished),
                                    SB_unfished=as.vector(SB_Age_unfished),
@@ -498,10 +498,9 @@ Generate_Data <- function(Simulation=NULL, Sampling=NULL, seed=101, silent=FALSE
       if (sum(CAW_exp[x,,ts])>0) {
         val <-  ts_sample_size * (rmultinom(1, size=ts_ess, prob=CAW_exp[x,,ts]))/ts_ess
       } else {
-        val <- rep(NA, nBins)
+        val <- rep(0, nBins)
       }
     ))
-
   }
 
   CAA_Sample <- array(0, dim=c(nsim, nAge, n_sample_ts))
@@ -516,7 +515,7 @@ Generate_Data <- function(Simulation=NULL, Sampling=NULL, seed=101, silent=FALSE
       if (sum(Catch_Age[x,,ts])>0) {
         val <-  ts_sample_size * (rmultinom(1, size=ts_ess, prob=Catch_Age[x,,ts]))/ts_ess
       } else {
-        val <- rep(NA, nAge)
+        val <- rep(0, nAge)
       }
     ))
   }
