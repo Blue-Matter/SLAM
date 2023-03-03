@@ -364,7 +364,7 @@ Type SLAM(objective_function<Type>* obj) {
   CAAnll.setZero();
 
   for (int m=0; m<n_months; m++) {
-    CAAns(m) = predCAA.col(m).sum(); // sum of CAA observations
+    CAAns(m) = CAA.col(m).sum(); // sum of CAA observations
 
     if (CAAns(m)>0) {
       // standardize observed CAA to sum 1
