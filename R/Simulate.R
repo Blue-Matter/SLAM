@@ -533,7 +533,7 @@ Generate_Data <- function(Simulation=NULL, Sampling=NULL, seed=101, silent=FALSE
   Data_TS_DF <- data.frame(Sim=1:nsim,
                            Year=rep(Years, each=nsim),
                            Month=rep(Months, each=nsim),
-                           Month_ind=rep(1:n_sample_ts, each=nsim),
+                           Month_ind=rep(sample_ts, each=nsim),
                            Catch=as.vector(Catch_Sample),
                            CPUE=as.vector(CPUE_Sample),
                            Effort=as.vector(Effort_Sample))
@@ -542,14 +542,14 @@ Generate_Data <- function(Simulation=NULL, Sampling=NULL, seed=101, silent=FALSE
                             Weight=rep(Weight_Mids, each=nsim),
                             Year=rep(Years, each=nsim*nBins),
                             Month=rep(Months, each=nsim*nBins),
-                            Month_ind=rep(1:n_sample_ts, each=nsim*nBins),
+                            Month_ind=rep(sample_ts, each=nsim*nBins),
                             Count=as.vector(CAW_Sample))
 
   Data_CAA_DF <- data.frame(Sim=1:nsim,
                             Age=rep(Ages, each=nsim),
                             Year=rep(Years, each=nsim*nAge),
                             Month=rep(Months, each=nsim*nAge),
-                            Month_ind=rep(1:n_sample_ts, each=nsim*nAge),
+                            Month_ind=rep(sample_ts, each=nsim*nAge),
                             Count=as.vector(CAA_Sample))
 
 
