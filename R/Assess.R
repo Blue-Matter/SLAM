@@ -305,8 +305,8 @@ Construct_Data_OM <- function(sim=1,
 #' @export
 #'
 Assess <- function(Data, Parameters=NULL,
-                   control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20)
-                   ) {
+                   control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
+                   ...) {
 
 
   dots <- list(...)
