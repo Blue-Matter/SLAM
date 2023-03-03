@@ -7,7 +7,8 @@
 Assess(
   Data,
   Parameters = NULL,
-  control = list(eval.max = 20000, iter.max = 20000, abs.tol = 1e-20)
+  control = list(eval.max = 20000, iter.max = 20000, abs.tol = 1e-20),
+  ...
 )
 }
 \arguments{

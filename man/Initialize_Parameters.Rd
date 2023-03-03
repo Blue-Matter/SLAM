@@ -2,6 +2,7 @@
 % Please edit documentation in R/Assess.R
 \name{Initialize_Parameters}
 \alias{Initialize_Parameters}
+\alias{Initialize_Parameters_OM}
 \title{Iniitialize Parameters for SLAM Estimation}
 \usage{
 Initialize_Parameters(
@@ -13,6 +14,8 @@ Initialize_Parameters(
   sigmaF_m = 0.4,
   sigmaR0 = 0.7
 )
+
+Initialize_Parameters_OM(Simulation, sim = 1)
 }
 \arguments{
 \item{data}{A data object}
@@ -26,3 +29,8 @@ Initialize_Parameters(
 \description{
 Iniitialize Parameters for SLAM Estimation
 }
+\section{Functions}{
+\itemize{
+\item \code{Initialize_Parameters_OM()}: Initialize parameters with the OM parameters
+
+}}
