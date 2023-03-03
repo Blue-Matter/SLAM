@@ -174,6 +174,7 @@ Simulate <- function(LifeHistory=NULL,
   N_Age_fished <- array(0, dim=c(nsim, nAge, nts))
   N_Age_unfished <- N_Age_unfished_eq <- SPR <- SB_Age_fished <- SB_Age_unfished <-
     SB_Age_unfished_eq <- Catch_Age <- N_Age_fished
+  B_Age_fished <- B_Age_unfished <- B_Age_unfished_eq <- array(0, dim=c(nsim, nAge, nts))
   SB_fished <- SB_unfished <- SB_unfished_eq <- matrix(0, nrow=nsim, ncol=nts)
 
   Sel_at_Age <-  1/(1+exp(-log(19)*((Ages-SA50)/(SA95-SA50))))
@@ -237,6 +238,10 @@ Simulate <- function(LifeHistory=NULL,
   SB_unfished_eq[,1] <- apply(SB_Age_unfished_eq[,,1], 1, sum)
   Catch_Age[,,1] <- N_Age_fished[,,1]*((1-Maturity_at_Age_array[,,1])*exp(-M_at_Age[,,1]/2)+Maturity_at_Age_array[,,1]*exp(-Post_Spawning_Mortality_array[,,1]/2))*(1-exp(-F_at_Age[,,1]))
 
+  B_Age_fished[,,1] <- N_Age_fished[,,1] * Weight_Age_Mean_array[,,1]
+  B_Age_unfished[,,1]  <- N_Age_unfished[,,1] * Weight_Age_Mean_array[,,1]
+  B_Age_unfished_eq[,,1]  <- N_Age_unfished_eq[,,1] * Weight_Age_Mean_array[,,1]
+
   # Fished population - Loop over remaining time-steps
   for (t in 2:nts) {
     month <- t%%12
@@ -246,6 +251,10 @@ Simulate <- function(LifeHistory=NULL,
       N_Age_unfished[,a+1, t] <- N_Age_unfished[,a,t-1]*exp(-M_at_Age[,a,t-1])*(1-Post_Spawning_Mortality_array[,a,t-1])
       N_Age_unfished_eq[,a+1, t] <- N_Age_unfished_eq[,a,t-1]*exp(-M_at_Age[,a,t-1])*(1-Post_Spawning_Mortality_array[,a,t-1])
     }
+
+    B_Age_fished[,,t] <- N_Age_fished[,,t] * Weight_Age_Mean_array[,,t]
+    B_Age_unfished[,,t]  <- N_Age_unfished[,,t] * Weight_Age_Mean_array[,,t]
+    B_Age_unfished_eq[,,t]  <- N_Age_unfished_eq[,,t] * Weight_Age_Mean_array[,,t]
 
     # Spawning Biomass mid time-step
     SB_Age_fished[,,t] <- N_Age_fished[,,t] * Weight_Age_Mean_array[,,t] * Maturity_at_Age_array[,,t] * exp(-F_Month[,t]/2)
@@ -271,6 +280,7 @@ Simulate <- function(LifeHistory=NULL,
 
   # Calculate Monthly Time-series
   B_unfished_Month <- apply(N_Age_unfished * Weight_Age_Mean_array, c(1,3), sum)
+  B_unfished_eq_Month <- apply(N_Age_unfished_eq * Weight_Age_Mean_array, c(1,3), sum)
   SB_unfished_Month <- apply(N_Age_unfished * Weight_Age_Mean_array * Maturity_at_Age_array, c(1,3), sum)
 
   B_Month <- apply(N_Age_fished * Weight_Age_Mean_array, c(1,3), sum)
@@ -298,7 +308,7 @@ Simulate <- function(LifeHistory=NULL,
                                    N_fished=as.vector(N_Age_fished),
                                    N_unfished=as.vector(N_Age_unfished),
                                    N_unfished_eq=as.vector(N_Age_unfished),
-                                   B_fished=as.vector(B_fished),
+                                   B_fished=as.vector(B_Age_fished),
                                    B_unfished=as.vector(N_Age_unfished * Weight_Age_Mean_array),
                                    SB_fished=as.vector(SB_Age_fished),
                                    SB_unfished=as.vector(SB_Age_unfished),
@@ -314,6 +324,7 @@ Simulate <- function(LifeHistory=NULL,
                             N_unfished=as.vector(N_unfished),
                             B_fished=as.vector(B_Month),
                             B_unfished=as.vector(B_unfished_Month),
+                            B_unfished_eq=as.vector(B_unfished_eq_Month),
                             SB_fished=as.vector(SB_fished),
                             SB_unfished=as.vector(SB_unfished_Month),
                             SB_unfished_eq=as.vector(SB_unfished_eq),
