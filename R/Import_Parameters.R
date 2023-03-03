@@ -1,23 +1,73 @@
 
-read_pars <- function(Indata, list, name, ncol) {
+#' Example Life History Parameters
+#'
+#'
+#' @format ## `Life History`
+#' A named list:
+#' \describe{
+#'   \item{Stock_Name}{A name for the }
+#'   \item{Species}{}
+#'   \item{maxage}{}
+#' }
+"LifeHistory"
+
+
+
+#' Get the file path of the system files for the SLAM package
+#'
+#' @param file The name of the file to locate
+#' @return The location of the file included in the SLAM package
+#' @export
+#'
+#' @examples
+#' File_Location()
+File_Location <- function(file='Simulation_Parameters.csv') {
+  if (is.null(file))
+    return(system.file(package="SLAM"))
+  system.file(file, package="SLAM")
+}
+
+read_pars <- function(Indata, list, name, ncol, is.numeric=TRUE) {
   if (ncol==1) ind <- 2
   if (ncol>1) ind <- 2:(2+ncol-1)
-  list[[name]] <- as.numeric(Indata[Indata$Parameter==name,ind])
+  value <- trimws(Indata[Indata$Parameter==name,ind])
+  if (is.numeric) value <- as.numeric(value)
+  list[[name]] <- value
   list
 }
 
 
-#' Import the Life History Parameters from a CSV file
+#' Import the Life History, Exploitation, and Sampling Parameters
 #'
-#' @param csv The name of the CSV file containing the parameters
-#' @param dir The directory the CSV is in (defaults to current working directory)
+#' The Life History, Exploitation, and Sampling Parameters can imported from a correctly
+#' formatted CSV file. See `Simulation_Parameters.csv` included with the `SLAM` package
+#' (found at `File_Location()`) for an example.
+#'
+#' @param csv The path and name of the CSV file containing the parameters
+#' @return A named list with the life-history, exploitation, and sampling parameters
 #' @export
-#'
-Import_LifeHistory <- function(csv='Parameters.csv', dir=getwd()) {
+Import_Parameters <- function(csv=NULL) {
+  if (is.null(csv))
+    csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+  out <- list()
+  out$LifeHistory <- Import_LifeHistory(csv)
+  out$Exploitation <- Import_Exploitation(csv)
+  out$Sampling <- Import_Sampling(csv)
+  out
+}
+
+#' Import the Life History Parameters from a CSV file
+#' @rdname Import_Parameters
+#' @return A named list with the life history parameters
+#' @export
+Import_LifeHistory <- function(csv=NULL) {
+  if (is.null(csv))
+    csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+  Indata <- read.csv(csv)
+
   LifeHistory <- list()
-
-  Indata <- read.csv(file.path(dir, csv))
-
+  LifeHistory <- read_pars(Indata, LifeHistory, 'Stock_Name', 1, FALSE)
+  LifeHistory <- read_pars(Indata, LifeHistory, 'Species', 1, FALSE)
   LifeHistory <- read_pars(Indata, LifeHistory, 'maxage', 1)
   LifeHistory$Ages <- 0:LifeHistory$maxage
   LifeHistory$nAge <- length(LifeHistory$Ages)
@@ -37,32 +87,49 @@ Import_LifeHistory <- function(csv='Parameters.csv', dir=getwd()) {
 
 
 #' Import the Exploitation Parameters from a CSV file
-#' @rdname Import_LifeHistory
+#' @rdname Import_Parameters
+#' @return A named list with the exploitation parameters
 #' @export
-Import_Exploitation <- function(csv='Parameters.csv', dir = getwd()) {
+Import_Exploitation <- function(csv=NULL) {
+  if (is.null(csv))
+    csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+  Indata <- read.csv(csv)
+
   Exploitation  <- list()
-  Indata <- read.csv(file.path(dir, csv))
+  Exploitation <- read_pars(Indata, Exploitation, 'Fleet_Name', 1, FALSE)
   Exploitation <- read_pars(Indata, Exploitation, 'SA50', 1)
   Exploitation <- read_pars(Indata, Exploitation, 'SA95', 1)
-  Exploitation <- read_pars(Indata, Exploitation, 'nyears', 1)
-  nyears <- Exploitation$nyears
-  Exploitation <- read_pars(Indata, Exploitation, 'Effort_Annual_Mean', nyears)
-  Exploitation <- read_pars(Indata, Exploitation, 'Effort_Annual_SD', nyears)
-  Exploitation <- read_pars(Indata, Exploitation, 'Effort_Month_Mean', 12)
-  Exploitation <- read_pars(Indata, Exploitation, 'Effort_Month_SD', 12)
-  Exploitation <- read_pars(Indata, Exploitation, 'q', 1)
+  Exploitation <- read_pars(Indata, Exploitation, 'nmonths', 1)
 
+  if (ncol(Indata)>=Exploitation$nmonths) {
+    Exploitation <- try(read_pars(Indata, Exploitation, 'Effort_Pattern', Exploitation$nmonths), silent=TRUE)
+    if (inherits(Exploitation, 'try-error')) {
+      stop('Could not import information from row `Effort_Pattern`. Is it numerical values of length `nmonths`?')
+    }
+    Exploitation$Effort_month <- Exploitation$Effort_Pattern
+    Exploitation$Effort_current <- Exploitation$Effort_Pattern[length(Exploitation$Effort_Pattern)]
+  } else {
+    Exploitation <- read_pars(Indata, Exploitation, 'Effort_pattern', 1, FALSE)
+    Exploitation <- read_pars(Indata, Exploitation, 'Effort_current', 1)
+  }
+
+  Exploitation <- read_pars(Indata, Exploitation, 'q', 1)
+  Exploitation <- read_pars(Indata, Exploitation, 'q_cv', 1)
+  Exploitation <- read_pars(Indata, Exploitation, 'HARA_power', 1)
   Exploitation
 }
 
-#' Import the Data Parameters from a CSV file
-#' @rdname Import_LifeHistory
+
+#' Import the Sampling Parameters from a CSV file
+#' @rdname Import_Parameters
 #' @export
-Import_Data <- function(csv='Parameters.csv', dir = getwd()) {
+Import_Sampling <- function(csv=NULL) {
+  if (is.null(csv))
+    csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+  Indata <- read.csv(csv)
+
   Data <- list()
-
-  Indata <- read.csv(file.path(dir, csv))
-
+  Data <- read_pars(Indata, Data, 'Sampling_Name', 1, FALSE)
   Data <- read_pars(Indata, Data, 'n_recent_months', 1)
   Data <- read_pars(Indata, Data, 'Rel_Sample_Month', 12)
   Data <- read_pars(Indata, Data, 'CPUE_CV', 1)

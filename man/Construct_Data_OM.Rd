@@ -5,17 +5,19 @@
 \title{Title}
 \usage{
 Construct_Data_OM(
-  SimMod,
   sim = 1,
+  SimMod,
   CAW_Monthly_ESS = 100,
+  CAA_Monthly_ESS = 100,
   Effort_CV = 0.2,
   CPUE_CV = 0.2,
   Fit_Effort = 1,
   Fit_CPUE = 1,
   Fit_CAW = 1,
-  use_Frwpen = 0,
+  Fit_CAA = 1,
+  use_Frwpen = 1,
   use_R0rwpen = 1,
-  use_Fmeanprior = 0
+  Data_types = NULL
 )
 }
 \arguments{

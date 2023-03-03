@@ -8,10 +8,10 @@ Initialize_Parameters(
   data,
   as50 = 4,
   as95 = 6,
-  Feq_init = 0.05,
-  sigmaR = 0.3,
-  log_sigmaF = log(0.05),
-  log_sigmaR0 = log(0.1)
+  Feq_init = 0.15,
+  sigmaR = 0.5,
+  sigmaF_m = 0.4,
+  sigmaR0 = 0.7
 )
 }
 \arguments{

@@ -2,30 +2,82 @@
 % Please edit documentation in R/Simulate.R
 \name{Simulate}
 \alias{Simulate}
-\title{Simulate a fishery for a short-lived semelparous species}
+\title{Simulate the fishery dynamics for a short-lived semelparous species}
 \usage{
 Simulate(
-  LifeHistory,
-  Exploitation,
-  Data,
-  nsim = 3,
+  LifeHistory = NULL,
+  Exploitation = NULL,
+  nsim = 100,
   seed = 101,
-  currentYr = format(Sys.Date(), "\%Y")
+  currentYr = format(Sys.Date(), "\%Y"),
+  silent = FALSE
 )
 }
 \arguments{
-\item{LifeHistory}{A \code{list} object with the life-history parameters}
+\item{LifeHistory}{A named \code{list} object with the life-history parameters,
+or the file path to a correctly
+formatted CSV file containing the \code{LifeHistory} (and optionally \code{Exploitation}) parameters.
+The \code{LifeHistory} object can optionally include the \code{Exploitation} parameters as well.}
 
-\item{Data}{A \code{list} object with the parameters for generating data}
+\item{Exploitation}{An named \code{list} object with the exploitation parameters or
+the file path to a correctly formatted \code{Exploitation} CSV file.
+Not needed if \code{LifeHistory} already includes  the \code{Exploitation} parameters.}
 
-\item{nsim}{The number of stochastic simulations}
+\item{nsim}{The number of stochastic simulations. Default is 100.}
 
 \item{seed}{The seed for the random number generator}
 
 \item{currentYr}{The current (most recent) year for the simulations}
 
-\item{Explotation}{A \code{list} object with the exploitation parameters}
+\item{silent}{Hide messages?}
+}
+\value{
+A named list of class \code{Simulation} containing:
+\itemize{
+\item LifeHistory: The \code{LifeHistory} Object used for the simulations
+\item Exploitation: The \code{Exploitation} Object used for the simulations, with the addition of \code{Sel_at_Age} (selectivity schedule)
+\item At_Age_Time_Series: A data frame with the following columns
+\itemize{
+\item Sim: The simulation number
+\item Age: The age class
+\item Year: The year
+\item Month: Abbreviated calendar month
+\item Month_ind: Numerical index for the monthly timestep
+\item N_fished: The number of fished animals in each age class for each timestep
+\item N_unfished: The number of unfished animals in each age class for each timestep
+\item N_unfished_eq: The equilibrium number of unfished animals in each age class for each timestep
+\item B_fished: The biomass of fished animals in each age class for each timestep
+\item B_unfished: The biomass of unfished animals in each age class for each timestep
+\item SB_fished: The spawning biomass of fished animals in each age class for each timestep
+\item SB_unfished: The spawning biomass of unfished animals in each age class for each timestep
+\item Catch: The catch biomass in each age class for each timestep
+\item Catch_n: The catch numbers in each age class for each timestep
+}
+\item Time_Series: A data frame with the following columns
+\itemize{
+\item Sim: The simulation number
+\item Year: The year
+\item Month: Abbreviated calendar month
+\item Month_ind: Numerical index for the monthly timestep
+\item N_fished: The total number of fished animals in each timestep
+\item N_unfished: The total number of unfished animals in each timestep
+\item B_fished: The biomass of fished animals in each timestep
+\item B_unfished: The biomass of unfished animals in each timestep
+\item SB_fished: The spawning biomass of fished animals in each timestep
+\item SB_unfished: The spawning biomass of unfished animals in each timestep
+\item Catch: The catch biomass in each timestep
+\item Recruits: The number of recruits in each timestep
+\item SPR: The equilibrium spawning potential ratio in each timestep
+\item Effort: The fishing effort in each timestep
+\item F_mort: The fishing mortality in each timestep
+\item Rec_Devs: The recruitment deviation in each timestep
+}
+}
 }
 \description{
-Simulate a fishery for a short-lived semelparous species
+Simulate the fishery dynamics for a short-lived semelparous species
+}
+\details{
+See the example \code{SLAM::LifeHistory} and \code{SLAM::Exploitation} objects and help
+documentation (\code{?LifeHistory} and \code{?Exploitation}) for examples.
 }

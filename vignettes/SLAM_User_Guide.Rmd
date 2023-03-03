@@ -28,6 +28,11 @@ library(SLAM)
 
 ## Simulation
 
+```{r Simulate}
+Import_LifeHistory()
+Simulate()
+
+```
 ### Simulating Fishery Dynamics 
 
 

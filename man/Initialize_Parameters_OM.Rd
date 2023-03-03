@@ -4,12 +4,7 @@
 \alias{Initialize_Parameters_OM}
 \title{Title}
 \usage{
-Initialize_Parameters_OM(
-  SimMod,
-  log_sigmaF = log(0.05),
-  log_sigmaR0 = log(0.1),
-  log_sigmaR = log(0.3)
-)
+Initialize_Parameters_OM(SimMod, sigmaR = 0.5, sigmaF_m = 0.4, sigmaR0 = 0.5)
 }
 \arguments{
 \item{log_sigmaR}{}

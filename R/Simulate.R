@@ -1,26 +1,120 @@
 
-#' Simulate a fishery for a short-lived semelparous species
+#' Simulate the fishery dynamics for a short-lived semelparous species
 #'
-#' @param LifeHistory A `list` object with the life-history parameters
-#' @param Explotation A `list` object with the exploitation parameters
-#' @param Data A `list` object with the parameters for generating data
-#' @param nsim The number of stochastic simulations
+#'
+#' @param LifeHistory A named `list` object with the life-history parameters,
+#' or the file path to a correctly
+#' formatted CSV file containing the `LifeHistory` (and optionally `Exploitation`) parameters.
+#' The `LifeHistory` object can optionally include the `Exploitation` parameters as well.
+#' @param Exploitation An named `list` object with the exploitation parameters or
+#'  the file path to a correctly formatted `Exploitation` CSV file.
+#'  Not needed if `LifeHistory` already includes  the `Exploitation` parameters.
+#' @param nsim The number of stochastic simulations. Default is 100.
 #' @param seed The seed for the random number generator
 #' @param currentYr The current (most recent) year for the simulations
+#' @param silent Hide messages?
 #'
+#' @details See the example `SLAM::LifeHistory` and `SLAM::Exploitation` objects and help
+#' documentation (`?LifeHistory` and `?Exploitation`) for examples.
+#'
+#' @return A named list of class `Simulation` containing:
+#' \itemize{
+#'   \item LifeHistory: The `LifeHistory` Object used for the simulations
+#'   \item Exploitation: The `Exploitation` Object used for the simulations, with the addition of `Sel_at_Age` (selectivity schedule)
+#'   \item At_Age_Time_Series: A data frame with the following columns
+#'     \itemize{
+#'     \item Sim: The simulation number
+#'     \item Age: The age class
+#'     \item Year: The year
+#'     \item Month: Abbreviated calendar month
+#'     \item Month_ind: Numerical index for the monthly timestep
+#'     \item N_fished: The number of fished animals in each age class for each timestep
+#'     \item N_unfished: The number of unfished animals in each age class for each timestep
+#'     \item N_unfished_eq: The equilibrium number of unfished animals in each age class for each timestep
+#'     \item B_fished: The biomass of fished animals in each age class for each timestep
+#'     \item B_unfished: The biomass of unfished animals in each age class for each timestep
+#'     \item SB_fished: The spawning biomass of fished animals in each age class for each timestep
+#'     \item SB_unfished: The spawning biomass of unfished animals in each age class for each timestep
+#'     \item Catch: The catch biomass in each age class for each timestep
+#'     \item Catch_n: The catch numbers in each age class for each timestep
+#'     }
+#'   \item Time_Series: A data frame with the following columns
+#'     \itemize{
+#'     \item Sim: The simulation number
+#'     \item Year: The year
+#'     \item Month: Abbreviated calendar month
+#'     \item Month_ind: Numerical index for the monthly timestep
+#'     \item N_fished: The total number of fished animals in each timestep
+#'     \item N_unfished: The total number of unfished animals in each timestep
+#'     \item B_fished: The biomass of fished animals in each timestep
+#'     \item B_unfished: The biomass of unfished animals in each timestep
+#'     \item SB_fished: The spawning biomass of fished animals in each timestep
+#'     \item SB_unfished: The spawning biomass of unfished animals in each timestep
+#'     \item Catch: The catch biomass in each timestep
+#'     \item Recruits: The number of recruits in each timestep
+#'     \item SPR: The equilibrium spawning potential ratio in each timestep
+#'     \item Effort: The fishing effort in each timestep
+#'     \item F_mort: The fishing mortality in each timestep
+#'     \item Rec_Devs: The recruitment deviation in each timestep
+#'     }
+#' }
 #' @export
-Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
-                     currentYr=format(Sys.Date(), "%Y")) {
+Simulate <- function(LifeHistory=NULL,
+                     Exploitation=NULL,
+                     nsim=100,
+                     seed=101,
+                     currentYr=format(Sys.Date(), "%Y"),
+                     silent=FALSE) {
 
   set.seed(seed)
 
+  # Import the parameters
+  if (is.null(LifeHistory)) {
+    if (!silent) message('Using Example Life History Parameters from `SLAM::LifeHistory`')
+    LifeHistory <- SLAM::LifeHistory
+  }
+
+  # Read in CSVs
+  if (inherits(LifeHistory, 'character')) {
+    if (!silent) message('Reading Life History Parameters from: ', LifeHistory)
+    Parameters <- Import_Parameters(LifeHistory)
+    LifeHistory <- Parameters$LifeHistory
+    Exploitation <- Parameters$Exploitation
+    if (!is.null(Exploitation))
+      if (!silent) message('Exploitation parameters also detetected and imported')
+  }
+
+  if (!is.null(Exploitation) & inherits(Exploitation, 'character')) {
+    message('Reading Exploitation Parameters from: ', Exploitation)
+    Exploitation <- Parameters$Exploitation
+  }
+
+  if (is.null(Exploitation)) {
+    if (!silent) message('Using Example Exploitation Parameters from `SLAM::Exploitation`')
+    Exploitation <- SLAM::Exploitation
+  }
+
+  # Check Objects
+  import_nms <- names(LifeHistory)
+  missing <- names(SLAM::LifeHistory)[!names(SLAM::LifeHistory) %in% import_nms]
+  if (length(missing)>0) {
+    stop('`LifeHistory` object is missing: ', paste(missing, collapse=', '))
+  }
+  import_nms <- names(Exploitation)
+  missing <- names(SLAM::Exploitation)[!names(SLAM::Exploitation) %in% import_nms]
+  if (length(missing)>0) {
+    stop('`Exploitation` object is missing: ', paste(missing, collapse=', '))
+  }
+
+
   # Import Life-History Parameters
+  Stock_Name <- LifeHistory$Stock_Name
+  Species <- LifeHistory$Species
   Ages <- LifeHistory$Ages
   maxage <- max(Ages)
   nAge <- length(Ages)
   Weight_Age_Mean <- LifeHistory$Weight_Age_Mean
   Weight_Age_SD <- LifeHistory$Weight_Age_SD
-
   M_at_Age <- LifeHistory$M_at_Age
   Maturity_at_Age <- LifeHistory$Maturity_at_Age
   Post_Spawning_Mortality <- LifeHistory$Post_Spawning_Mortality
@@ -34,46 +128,22 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   if (is.na(h)) h <- 0.999
 
   # Import Exploitation Parameters
+  Fleet_Name <- Exploitation$Fleet_Name
   SA50 <- Exploitation$SA50
   SA95 <- Exploitation$SA95
-  Effort_Annual_Mean <- Exploitation$Effort_Annual_Mean
-  Effort_Annual_SD <- Exploitation$Effort_Annual_SD
-  Effort_Month_Mean <- Exploitation$Effort_Month_Mean
-  Effort_Month_SD <- Exploitation$Effort_Month_SD
-  nyears <- Exploitation$nyears
-  nts <- nyears * 12
+  nmonths <- Exploitation$nmonths
+  Effort_pattern <- Exploitation$Effort_pattern
+  Effort_month <- Exploitation$Effort_month
+  Effort_current <- Exploitation$Effort_current
   q <- Exploitation$q
-
-  # Import Data Parameters
-  n_recent_months <- Data$n_recent_months
-  Rel_Sample_Month <- Data$Rel_Sample_Month
-  CPUE_CV <- Data$CPUE_CV
-  Catch_CV <- Data$Catch_CV
-  Effort_CV <- Data$Effort_CV
-
-  Weight_Bin_Max <- Data$Weight_Bin_Max
-  Weight_Bin_Width <- Data$Weight_Bin_Width
-  Weight_Bins <- seq(0, Weight_Bin_Max, Weight_Bin_Width)
-  nBins <- length(Weight_Bins)-1
-  Weight_Mids <- seq(0.5*Weight_Bin_Width, by=Weight_Bin_Width, length.out=nBins)
-
-  Data$Weight_Bins <- Weight_Bins
-  Data$Weight_Mids <- Weight_Mids
-
-  CAW_Annual_Sample_Size <- Data$CAW_Annual_Sample_Size
-  CAW_Annual_ESS <- Data$CAW_Annual_ESS
-
-  if (is.null(Data$CAA_Annual_Sample_Size))
-    Data$CAA_Annual_Sample_Size <- Data$CAW_Annual_Sample_Size
-  if (is.null(Data$CAA_Annual_ESS))
-    Data$CAA_Annual_ESS <- Data$CAW_Annual_ESS
-  CAA_Annual_Sample_Size <- Data$CAA_Annual_Sample_Size
-  CAA_Annual_ESS <- Data$CAA_Annual_ESS
+  q_cv <- Exploitation$q_cv
+  HARA_power <- Exploitation$HARA_power
+  nts <- nmonths
 
   # Parameter Checks
   #TODO
 
-  # ---- Model Fishery Dynamics ----
+  # Model Fishery Dynamics
 
   # Generate Monthly Recruitment Deviations
   Rec_Devs <- exp(rnorm((nts+maxage)*nsim, -0.5*sigmaR^2, sigmaR))
@@ -81,19 +151,19 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   Rec_Devs <- t(Rec_Devs)
 
   # Generate Fishing Effort and Mortality
-  Effort_Annual_Deviations <- rlnorm(nyears*nsim, -0.5*Effort_Annual_SD^2, Effort_Annual_SD)
-  Effort_Annual_Deviations <- matrix(Effort_Annual_Deviations, nrow=nyears, ncol=nsim)
-  Effort_Annual <- Effort_Annual_Mean * Effort_Annual_Deviations
+  qs <- rlnorm(nmonths*nsim, -0.5*q_cv^2, q_cv)
+  qs <- q * matrix(qs, nrow=nsim, ncol=nmonths)
 
-  Effort_Month_Deviations <- rlnorm(nts*nsim, -0.5*Effort_Month_SD^2, Effort_Month_SD)
-  Effort_Month_Deviations <- matrix(Effort_Month_Deviations, nrow=nts, ncol=nsim)
-
-  Effort_Month_Mean <- matrix(rep(Exploitation$Effort_Month_Mean, nyears),
-                              nrow=nts, ncol=nsim, byrow=FALSE)
-
-  Effort_Month <- matrix(rep(Effort_Annual, each=12), nrow=nts, ncol=nsim) * Effort_Month_Mean * Effort_Month_Deviations
-  Effort_Month <- t(Effort_Month)
-  F_Month <- Effort_Month * q
+  if (is.null(Effort_month)) {
+    Effort_month <- generate_Effort(Exploitation, LifeHistory)
+  }
+  Effort_month <- t(replicate(nsim, Effort_month))
+  F_Month <- Effort_month * qs
+  if (any(F_Month[,1]>0)) {
+    if (!silent)
+      message('`Exploitation` parameters had positive fishing effort in initial month. \nChanging so first month is unfished (F=0)')
+    F_Month[,1] <- 0
+  }
 
   # Set up Arrays
   M_at_Age <- replicate(nsim, LifeHistory$M_at_Age)
@@ -210,8 +280,167 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   N_unfished <- apply(N_Age_unfished, c(1,3), sum)
   N_fished <- apply(N_Age_fished, c(1,3), sum)
 
-  # ---- Generate Data (for all years) ----
 
+  # Return info
+  currentYr <- as.numeric(currentYr)
+  nyears <- nmonths/12
+  Years <- (currentYr-nyears+1):currentYr
+  Years <- rep(Years, each=12)
+  Months <- rep(month.abb, nyears)
+
+  Exploitation$Sel_at_Age <- Sel_at_Age
+
+  At_Age_Time_Series <- data.frame(Sim=1:nsim,
+                                   Age=rep(Ages, each=nsim),
+                                   Year=rep(Years, each=nsim*nAge),
+                                   Month=rep(Months, each=nsim*nAge),
+                                   Month_ind=rep(1:nts, each=nsim*nAge),
+                                   N_fished=as.vector(N_Age_fished),
+                                   N_unfished=as.vector(N_Age_unfished),
+                                   N_unfished_eq=as.vector(N_Age_unfished),
+                                   B_fished=as.vector(N_Age_fished * Weight_Age_Mean_array),
+                                   B_unfished=as.vector(N_Age_unfished * Weight_Age_Mean_array),
+                                   SB_fished=as.vector(SB_Age_fished),
+                                   SB_unfished=as.vector(SB_Age_unfished),
+                                   Catch=as.vector(Catch_Age* Weight_Age_Mean_array),
+                                   Catch_n=as.vector(Catch_Age)
+                                   )
+
+  Time_Series <- data.frame(Sim=1:nsim,
+                            Year=rep(Years, each=nsim),
+                            Month=rep(Months, each=nsim),
+                            Month_ind=rep(1:nts, each=nsim),
+                            N_fished=as.vector(N_fished),
+                            N_unfished=as.vector(N_unfished),
+                            B_fished=as.vector(B_Month),
+                            B_unfished=as.vector(B_unfished_Month),
+                            SB_fished=as.vector(SB_fished),
+                            SB_unfished=as.vector(SB_unfished_Month),
+                            SB_unfished_eq=as.vector(SB_unfished_eq),
+                            Catch=as.vector(Catch_B_Month),
+                            Recruits=as.vector(N_Age_fished[,1,]),
+                            SPR=as.vector(SPR),
+                            Effort=as.vector(Effort_month),
+                            F_mort=as.vector(F_Month),
+                            Rec_Devs=as.vector(Rec_Devs[,(maxage+1):ncol(Rec_Devs)]))
+
+
+  out <- list()
+  out$LifeHistory <- LifeHistory
+  out$Exploitation <- Exploitation
+  out$At_Age_Time_Series <- At_Age_Time_Series
+  out$Time_Series <- Time_Series
+  out$currentYr <- currentYr
+  class(out) <- 'Simulation'
+  out
+}
+
+generate_Effort <- function(Exploitation, LifeHistory) {
+
+  if (!Exploitation$Effort_pattern %in% c('Stable', 'Increasing', 'Decreasing')) {
+    stop("Effort not valid. Must be one of: c('Stable', 'Increasing', 'Decreasing')")
+  }
+
+  # Calculate optimal monthly seasonal fishing pattern
+  opt_F_pattern <- calculate_optimal_fishing(LifeHistory, Exploitation,
+                                             opt_type=1, utilpow=Exploitation$HARA_power)
+  month_opt_Eff <- opt_F_pattern$F_m/mean(opt_F_pattern$F_m)
+  nmonths <- Exploitation$nmonths
+  Effort_pattern <- Exploitation$Effort_pattern
+  Effort_current <- Exploitation$Effort_current
+
+  # Stable
+  if (Effort_pattern=='Stable') {
+    Effort_month <- rep(0, nmonths)
+    ramp_up <- 1/6 * nmonths
+    Effort_month[1:ramp_up] <- seq(0, Effort_current, length.out=ramp_up)
+    Effort_month[(ramp_up+1):nmonths] <- Effort_current
+    Effort_month <- Effort_month * month_opt_Eff
+  }
+
+  # Increasing
+  if (Effort_pattern=='Increasing') {
+    Effort_month <- rep(0, nmonths)
+    ramp_up <- 1/6 * nmonths
+    Effort_month[1:ramp_up] <- seq(0, Effort_current*0.4, length.out=ramp_up)
+    Effort_month[(ramp_up+1):nmonths] <- seq(Effort_current*0.4, Effort_current, length.out=nmonths-ramp_up)
+    Effort_month <- Effort_month * month_opt_Eff
+  }
+  # Decreasing
+  if (Effort_pattern=='Decreasing') {
+    Effort_month <- rep(0, nmonths)
+    ramp_up <- 1/6 * nmonths
+    Effort_month[1:ramp_up] <- seq(0, Effort_current*1.4, length.out=ramp_up)
+    Effort_month[(ramp_up+1):nmonths] <- seq(Effort_current*1.4, Effort_current, length.out=nmonths-ramp_up)
+    Effort_month <- Effort_month * month_opt_Eff
+  }
+  Effort_month
+}
+
+#' Generate Sampled Data from a Simulated Fishery
+#'
+#' @param Simulation An  object of class `Simulation` generated by `Simulate()`
+#' @param Sampling A `list` object with the parameters for generating data
+#' @param seed The seed for the random number generator
+#' @param silent Hide messages?
+#' @export
+Generate_Data <- function(Simulation=NULL, Sampling=NULL, seed=101, silent=FALSE) {
+
+  set.seed(seed)
+
+  if (!inherits(Simulation, 'Simulation'))
+    stop('`Simulation` must be class `Simulation`. Use `Simulate()`')
+
+  if (is.null(Sampling)) {
+    if (!silent) message('Using Example Sampling Parameters from `SLAM::Sampling`')
+    Sampling <- SLAM::Sampling
+  }
+  if (inherits(Sampling, 'character')) {
+    Sampling <-  Import_Sampling(Sampling)
+  }
+
+  # Import Data Sampling Parameters
+  n_recent_months <- Sampling$n_recent_months
+  Rel_Sample_Month <- Sampling$Rel_Sample_Month
+  CPUE_CV <- Sampling$CPUE_CV
+  Catch_CV <- Sampling$Catch_CV
+  Effort_CV <- Sampling$Effort_CV
+
+  Weight_Bin_Max <- Sampling$Weight_Bin_Max
+  Weight_Bin_Width <- Sampling$Weight_Bin_Width
+  Weight_Bins <- seq(0, Weight_Bin_Max, Weight_Bin_Width)
+  nBins <- length(Weight_Bins)-1
+  Weight_Mids <- seq(0.5*Weight_Bin_Width, by=Weight_Bin_Width, length.out=nBins)
+
+  Sampling$Weight_Bins <- Weight_Bins
+  Sampling$Weight_Mids <- Weight_Mids
+
+  CAW_Annual_Sample_Size <- Sampling$CAW_Annual_Sample_Size
+  CAW_Annual_ESS <- Sampling$CAW_Annual_ESS
+
+  if (is.null(Sampling$CAA_Annual_Sample_Size))
+    Sampling$CAA_Annual_Sample_Size <- Sampling$CAW_Annual_Sample_Size
+  if (is.null(Sampling$CAA_Annual_ESS))
+    Sampling$CAA_Annual_ESS <- Sampling$CAW_Annual_ESS
+  CAA_Annual_Sample_Size <- Sampling$CAA_Annual_Sample_Size
+  CAA_Annual_ESS <- Sampling$CAA_Annual_ESS
+
+  # Import Life-History Parameters
+  Stock_Name <- Simulation$LifeHistory$Stock_Name
+  Species <- Simulation$LifeHistory$Species
+  Ages <- Simulation$LifeHistory$Ages
+  maxage <- max(Ages)
+  nAge <- length(Ages)
+  Weight_Age_Mean <- Simulation$LifeHistory$Weight_Age_Mean
+  Weight_Age_SD <- Simulation$LifeHistory$Weight_Age_SD
+  M_at_Age <- Simulation$LifeHistory$M_at_Age
+  Maturity_at_Age <- Simulation$LifeHistory$Maturity_at_Age
+  Post_Spawning_Mortality <- Simulation$LifeHistory$Post_Spawning_Mortality
+
+  nsim <- length(unique(Simulation$At_Age_Time_Series$Sim))
+  nts  <- length(unique(Simulation$At_Age_Time_Series$Month_ind))
+
+  # Generate Data (for all years)
   # Calculate Age-Weight Key (assume log-normal variability in weight-at-age)
   AWK <- matrix(0, nrow=nAge, ncol=nBins)
   mu <- log(Weight_Age_Mean) -0.5*Weight_Age_SD^2
@@ -223,23 +452,30 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
   AWK[,nBins] <- 1 - plnorm(Weight_Bins[nBins], mu, Weight_Age_SD)
 
   # Catch-at-Weight - expected
+  Catch_Age <- array(NA, dim=c(nsim, nAge, nts))
+  Catch_Age[] <- Simulation$At_Age_Time_Series$Catch_n
   CAW_exp <- array(0, dim=c(nsim, nBins, nts))
   for (ts in 1:nts) {
     CAW_exp[,,ts] <- t(sapply(1:nsim, function(x)
-                 apply(AWK * Catch_Age[x,,ts], 2, sum)))
+      apply(AWK * Catch_Age[x,,ts], 2, sum)))
   }
 
   # Catch (absolute)
+  Catch_B_Month <- array(NA, dim=c(nsim, nts))
+  Catch_B_Month[] <- Simulation$Time_Series$Catch
   Catch_Sample <- Catch_B_Month * exp(rnorm(nts*nsim, -0.5*Catch_CV^2, Catch_CV))
 
   # CPUE
+  B_Month <- array(NA, dim=c(nsim, nts))
+  B_Month[] <- Simulation$Time_Series$B_fished
   CPUE_Sample <- B_Month/apply(B_Month, 1, mean) * exp(rnorm(nts*nsim, -0.5*CPUE_CV^2, CPUE_CV))
 
   # Effort (Index)
+  Effort_Month <- array(NA, dim=c(nsim, nts))
+  Effort_Month[] <- Simulation$Time_Series$Effort
   Effort_Sample <- Effort_Month/apply(Effort_Month, 1, mean) * exp(rnorm(nts*nsim, -0.5*Effort_CV^2, Effort_CV))
 
-
-  # ---- Generate Monthly Samples for n_recent_months ----
+  # Generate Monthly Samples for n_recent_months
   sample_ts <- (nts-n_recent_months+1):nts
   n_sample_ts <- length(sample_ts)
   Catch_Sample <- Catch_Sample[,sample_ts, drop=FALSE]
@@ -265,11 +501,10 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
         val <- rep(NA, nBins)
       }
     ))
+
   }
 
-
   CAA_Sample <- array(0, dim=c(nsim, nAge, n_sample_ts))
-
   for (i in seq_along(sample_ts)) {
     ts <- sample_ts[i]
     month <- ts %%12
@@ -286,47 +521,22 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
     ))
   }
 
-
-  # Return info
-  currentYr <- as.numeric(currentYr)
-  Years <- (currentYr-nyears+1):currentYr
-  Years <- rep(Years, each=12)
-  Months <- rep(month.abb, nyears)
-
-  OM_DF <- data.frame(Sim=1:nsim,
-                      Year=rep(Years, each=nsim),
-                      Month=rep(Months, each=nsim),
-                      Month_ind=rep(1:nts, each=nsim),
-                      B_unfished=as.vector(B_unfished_Month),
-                      B_fished=as.vector(B_Month),
-                      SB_unfished=as.vector(SB_unfished_Month),
-                      SB_unfished_eq=as.vector(SB_unfished_eq),
-                      SB_fished=as.vector(SB_fished),
-                      N_unfished=as.vector(N_unfished),
-                      N_fished=as.vector(N_fished),
-                      Recruits=as.vector(N_Age_fished[,1,]),
-                      Catch=as.vector(Catch_B_Month),
-                      SPR=as.vector(SPR),
-                      Effort=as.vector(Effort_Month),
-                      F_mort=as.vector(F_Month),
-                      Rec_Devs=as.vector(Rec_Devs[,(maxage+1):ncol(Rec_Devs)]))
-
   # Data
   month_ind <- sample_ts %%12
   month_ind[month_ind==0] <- 12
 
   Months <- month.abb[month_ind]
-  n_recent_years <- Months %>% table() %>% max()
-
+  n_recent_years <- max(table(Months))
+  currentYr <- Simulation$currentYr
   Years <- (currentYr-n_recent_years+1):currentYr
 
   Data_TS_DF <- data.frame(Sim=1:nsim,
-                         Year=rep(Years, each=nsim),
-                         Month=rep(Months, each=nsim),
-                         Month_ind=rep(1:n_sample_ts, each=nsim),
-                         Catch=as.vector(Catch_Sample),
-                         CPUE=as.vector(CPUE_Sample),
-                         Effort=as.vector(Effort_Sample))
+                           Year=rep(Years, each=nsim),
+                           Month=rep(Months, each=nsim),
+                           Month_ind=rep(1:n_sample_ts, each=nsim),
+                           Catch=as.vector(Catch_Sample),
+                           CPUE=as.vector(CPUE_Sample),
+                           Effort=as.vector(Effort_Sample))
 
   Data_CAW_DF <- data.frame(Sim=1:nsim,
                             Weight=rep(Weight_Mids, each=nsim),
@@ -342,16 +552,20 @@ Simulate <- function(LifeHistory, Exploitation, Data, nsim=3, seed=101,
                             Month_ind=rep(1:n_sample_ts, each=nsim*nAge),
                             Count=as.vector(CAA_Sample))
 
-  list(LifeHistory=LifeHistory,
-       Exploitation=Exploitation,
-       Data=Data,
-       OM_DF=OM_DF,
-       Data_TS_DF=Data_TS_DF,
-       Data_CAW_DF=Data_CAW_DF,
-       Data_CAA_DF=Data_CAA_DF)
 
+
+  out <- list()
+  out$Simulation <- Simulation
+  out$Sampling <- Sampling
+  out$Data <- list(TS=Data_TS_DF,
+                   CAW=Data_CAW_DF,
+                   CAA=Data_CAA_DF,
+                   Weight_Bins=Weight_Bins,
+                   Weight_Mids=Weight_Mids)
+
+  class(out) <- 'Simulated'
+  out
 }
-
 
 
 

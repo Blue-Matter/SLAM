@@ -4,12 +4,12 @@
 \name{SLAM-package}
 \alias{SLAM}
 \alias{SLAM-package}
-\title{SLAM: What the Package Does (One Line, Title Case)}
+\title{SLAM: SLAM: Short-Lived Assessment Model}
 \description{
-What the package does (one paragraph).
+A model to simulate and assess short-lived semelparous species such as octopus.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Adrian Hordyk \email{adrian@bluematterscience.com} (\href{https://orcid.org/0000-0001-5620-3446}{ORCID})
 
 }
 \keyword{internal}
