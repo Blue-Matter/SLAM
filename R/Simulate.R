@@ -135,6 +135,7 @@ Simulate <- function(LifeHistory=NULL,
   Effort_pattern <- Exploitation$Effort_pattern
   Effort_month <- Exploitation$Effort_month
   Effort_current <- Exploitation$Effort_current
+  Effort_cv <- Exploitation$Effort_cv
   q <- Exploitation$q
   q_cv <- Exploitation$q_cv
   HARA_power <- Exploitation$HARA_power
@@ -151,13 +152,12 @@ Simulate <- function(LifeHistory=NULL,
   Rec_Devs <- t(Rec_Devs)
 
   # Generate Fishing Effort and Mortality
-  qs <- rlnorm(nmonths*nsim, -0.5*q_cv^2, q_cv)
-  qs <- q * matrix(qs, nrow=nsim, ncol=nmonths)
+  qs_dev <- rlnorm(nmonths*nsim, -0.5*q_cv^2, q_cv)
+  qs <- q * matrix(qs_dev, nrow=nsim, ncol=nmonths)
 
   if (is.null(Effort_month)) {
-    Effort_month <- generate_Effort(Exploitation, LifeHistory)
+    Effort_month <- generate_Effort(Exploitation, LifeHistory, nsim)
   }
-  Effort_month <- t(replicate(nsim, Effort_month))
   F_Month <- Effort_month * qs
   if (any(F_Month[,1]>0)) {
     if (!silent)
@@ -346,7 +346,7 @@ Simulate <- function(LifeHistory=NULL,
   out
 }
 
-generate_Effort <- function(Exploitation, LifeHistory) {
+generate_Effort <- function(Exploitation, LifeHistory, nsim) {
 
   if (!Exploitation$Effort_pattern %in% c('Stable', 'Increasing', 'Decreasing')) {
     stop("Effort not valid. Must be one of: c('Stable', 'Increasing', 'Decreasing')")
@@ -359,6 +359,9 @@ generate_Effort <- function(Exploitation, LifeHistory) {
   nmonths <- Exploitation$nmonths
   Effort_pattern <- Exploitation$Effort_pattern
   Effort_current <- Exploitation$Effort_current
+  Effort_cv <- Exploitation$Effort_cv
+  Effort_dev <- rlnorm(nmonths*nsim, -0.5*Effort_cv^2, Effort_cv)
+  Effort_dev <- matrix(Effort_dev, nrow=nsim, ncol=nmonths)
 
   # Stable
   if (Effort_pattern=='Stable') {
@@ -385,7 +388,9 @@ generate_Effort <- function(Exploitation, LifeHistory) {
     Effort_month[(ramp_up+1):nmonths] <- seq(Effort_current*1.4, Effort_current, length.out=nmonths-ramp_up)
     Effort_month <- Effort_month * month_opt_Eff
   }
-  Effort_month
+
+  Effort_month <- t(replicate(nsim, Effort_month))
+  Effort_month * Effort_dev
 }
 
 #' Generate Sampled Data from a Simulated Fishery
