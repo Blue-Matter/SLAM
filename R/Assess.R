@@ -79,7 +79,7 @@ Import_Data.Simulated <- function(Sampled_Data=NULL,
   data$CPUE_SD <- rep(Sampled_Data$Sampling$CPUE_CV, nMonths)
 
   # Year and Month info
-  tt <- Sampled_Data$Simulation$Time_Series %>% filter(Sim==sim)
+  tt <- Sampled_Data$Data$TS %>% filter(Sim==sim)
   data$Month_ind <- tt$Month_ind
   data$Year <- tt$Year
   data$Month <- tt$Month
@@ -150,42 +150,26 @@ Initialize_Parameters <- function(data,
 
 
 
-#' Title
-#'
-#' @param SimMod
-#' @param log_sigmaF
-#' @param log_sigmaR0
-#' @param log_sigmaR
-#'
-#' @return
+#' @describeIn Initialize_Parameters Initialize parameters with the OM parameters
 #' @export
-Initialize_Parameters_OM <- function(SimMod,
-                                     sigmaR=0.5,
-                                     sigmaF_m=0.4,
-                                     sigmaR0=0.5) {
+Initialize_Parameters_OM <- function(Simulation, sim=1) {
+
   parameters <- list()
+  parameters$ls50 <- log(Simulation$Exploitation$SA50)
+  parameters$lsdelta <- log(Simulation$Exploitation$SA95-Simulation$Exploitation$SA50)
 
-  parameters$ls50 <- log(SimMod$Exploitation$SA50)
-  parameters$lsdelta <- log(SimMod$Exploitation$SA95-SimMod$Exploitation$SA50)
+  OM <- Simulation$Time_Series %>% filter(Sim==sim)
+  n_ts <- length(OM$Month_ind)
 
-  n_age <- SimMod$LifeHistory$maxage+1
+  parameters$logF_minit <- log(0.0000001)
+  parameters$logF_ts <- log(OM$F_mort)
 
-  Data_Y_M <- SimMod$Data_TS_DF %>% filter(Sim==1) %>% distinct(Year, Month)
-  OM_sub <- SimMod$OM_DF %>% filter(Sim==1, Year%in%Data_Y_M$Year, Month%in%Data_Y_M$Month)
+  parameters$log_sigmaF_m <- log(5)
 
-  parameters$logF_minit <- log(0.05)
-  F_mean <- mean(OM_sub$F_mort)
-  parameters$logF_mean <- log(F_mean)
-
-  nts <- SimMod$Data_TS_DF %>% filter(Sim==1) %>% nrow()
-  parameters$logF_ts_dev <- rep(log(1), nts)
-
-  parameters$log_sigmaF_m <- log(sigmaF_m)
-
-  parameters$logR0_m_est <- log(SimMod$LifeHistory$R0_m[2:12])
-  parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
-  parameters$logRec_Devs <- log(OM_sub$Rec_Devs)
-  parameters$log_sigmaR  <- log(SimMod$LifeHistory$sigmaR) # monthly rec dev sd (usually fixed)
+  parameters$logR0_m_est <- log(Simulation$LifeHistory$R0_m)
+  parameters$log_sigmaR0 <- log(5) # sd for random walk penalty for monthly recruitment
+  parameters$logRec_Devs <- log(OM$Rec_Devs)
+  parameters$log_sigmaR  <- log(Simulation$LifeHistory$sigmaR) # monthly rec dev sd (usually fixed)
   parameters
 }
 
