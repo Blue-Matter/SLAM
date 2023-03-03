@@ -165,8 +165,7 @@ Initialize_Parameters_OM <- function(Simulation, sim=1) {
   parameters$logF_ts <- log(OM$F_mort)
 
   parameters$log_sigmaF_m <- log(5)
-
-  parameters$logR0_m_est <- log(Simulation$LifeHistory$R0_m)
+  parameters$logR0_m_est <- log(Simulation$LifeHistory$R0_m[2:12]/mean(Simulation$LifeHistory$R0_m[2:12]))
   parameters$log_sigmaR0 <- log(5) # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- log(OM$Rec_Devs)
   parameters$log_sigmaR  <- log(Simulation$LifeHistory$sigmaR) # monthly rec dev sd (usually fixed)
