@@ -111,6 +111,7 @@ Import_Exploitation <- function(csv=NULL) {
   } else {
     Exploitation <- read_pars(Indata, Exploitation, 'Effort_pattern', 1, FALSE)
     Exploitation <- read_pars(Indata, Exploitation, 'Effort_current', 1)
+    Exploitation <- read_pars(Indata, Exploitation, 'Effort_cv', 1)
   }
 
   Exploitation <- read_pars(Indata, Exploitation, 'q', 1)
