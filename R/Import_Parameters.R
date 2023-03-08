@@ -46,9 +46,15 @@ read_pars <- function(Indata, list, name, ncol, is.numeric=TRUE) {
 #' @param csv The path and name of the CSV file containing the parameters
 #' @return A named list with the life-history, exploitation, and sampling parameters
 #' @export
-Import_Parameters <- function(csv=NULL) {
-  if (is.null(csv))
-    csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+Import_Parameters <- function(csv=NULL, dev=FALSE) {
+  if (is.null(csv)) {
+    if (dev) {
+      csv <- "inst/Simulation_Parameters.csv"
+    } else {
+      csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+    }
+  }
+
   out <- list()
   out$LifeHistory <- Import_LifeHistory(csv)
   out$Exploitation <- Import_Exploitation(csv)
@@ -60,9 +66,14 @@ Import_Parameters <- function(csv=NULL) {
 #' @rdname Import_Parameters
 #' @return A named list with the life history parameters
 #' @export
-Import_LifeHistory <- function(csv=NULL) {
-  if (is.null(csv))
-    csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+Import_LifeHistory <- function(csv=NULL, dev=FALSE) {
+  if (is.null(csv)) {
+    if (dev) {
+      csv <- "inst/Simulation_Parameters.csv"
+    } else {
+      csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+    }
+  }
   Indata <- read.csv(csv)
 
   LifeHistory <- list()
@@ -90,9 +101,14 @@ Import_LifeHistory <- function(csv=NULL) {
 #' @rdname Import_Parameters
 #' @return A named list with the exploitation parameters
 #' @export
-Import_Exploitation <- function(csv=NULL) {
-  if (is.null(csv))
-    csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+Import_Exploitation <- function(csv=NULL, dev=FALSE) {
+  if (is.null(csv)) {
+    if (dev) {
+      csv <- "inst/Simulation_Parameters.csv"
+    } else {
+      csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+    }
+  }
   Indata <- read.csv(csv)
 
   Exploitation  <- list()
@@ -124,9 +140,14 @@ Import_Exploitation <- function(csv=NULL) {
 #' Import the Sampling Parameters from a CSV file
 #' @rdname Import_Parameters
 #' @export
-Import_Sampling <- function(csv=NULL) {
-  if (is.null(csv))
-    csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+Import_Sampling <- function(csv=NULL, dev=FALSE) {
+  if (is.null(csv)) {
+    if (dev) {
+      csv <- "inst/Simulation_Parameters.csv"
+    } else {
+      csv <- system.file("Simulation_Parameters.csv", package="SLAM")
+    }
+  }
   Indata <- read.csv(csv)
 
   Data <- list()
