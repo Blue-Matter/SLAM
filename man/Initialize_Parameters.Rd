@@ -15,7 +15,7 @@ Initialize_Parameters(
   sigmaR0 = 0.7
 )
 
-Initialize_Parameters_OM(Simulation, sim = 1)
+Initialize_Parameters_OM(Simulation, Data, sim = 1)
 }
 \arguments{
 \item{data}{A data object}
