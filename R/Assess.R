@@ -140,7 +140,7 @@ Initialize_Parameters <- function(data,
 
   parameters$log_sigmaF_m <- log(sigmaF_m)
 
-  parameters$logR0_m_est <- rep(1/12, 11)
+  parameters$logR0_m_est <- rep(1, 11)
   parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
@@ -152,7 +152,7 @@ Initialize_Parameters <- function(data,
 
 #' @describeIn Initialize_Parameters Initialize parameters with the OM parameters
 #' @export
-Initialize_Parameters_OM <- function(Simulation, sim=1) {
+Initialize_Parameters_OM <- function(Simulation, Data, sim=1) {
 
   parameters <- list()
   parameters$ls50 <- log(Simulation$Exploitation$SA50)
@@ -160,14 +160,26 @@ Initialize_Parameters_OM <- function(Simulation, sim=1) {
 
   OM <- Simulation$Time_Series %>% filter(Sim==sim)
   n_ts <- length(OM$Month_ind)
+  n_ts_data <- Data$Effort %>% length()
+  ts <- (n_ts-n_ts_data+1):n_ts
 
-  parameters$logF_minit <- log(0.0000001)
-  parameters$logF_ts <- log(OM$F_mort)
+  # Calculate initial equilibrium F
+  OM_at_Age <- Simulation$At_Age_Time_Series  %>% filter(Sim==sim)
+  init_data_ts <- OM_at_Age %>% filter(Month_ind==ts[1])
+  init_ts <- OM_at_Age %>% filter(Month_ind==1)
+  nage <- 15
+  Zs <- -log(init_data_ts$N_fished[2:nage]/init_ts$N_unfished_eq[1:(nage-1)])
+  Zs <- c(max(Simulation$LifeHistory$M_at_Age), Zs)
+  Fs <- Zs - Simulation$LifeHistory$M_at_Age
+  Fs <- Fs[is.finite(Fs)]
+
+  parameters$logF_minit <- log(mean(Fs))
+  parameters$logF_ts <- log(OM$F_mort[ts])
 
   parameters$log_sigmaF_m <- log(5)
   parameters$logR0_m_est <- log(Simulation$LifeHistory$R0_m[2:12]/mean(Simulation$LifeHistory$R0_m[2:12]))
   parameters$log_sigmaR0 <- log(5) # sd for random walk penalty for monthly recruitment
-  parameters$logRec_Devs <- log(OM$Rec_Devs)
+  parameters$logRec_Devs <- log(OM$Rec_Devs[ts])
   parameters$log_sigmaR  <- log(Simulation$LifeHistory$sigmaR) # monthly rec dev sd (usually fixed)
   parameters
 }
@@ -313,13 +325,13 @@ Assess <- function(Data, Parameters=NULL,
 
   }
 
-  Year <- Data$Year
-  Month <- Data$Month
-
+  outData <- Data
   Data$Year <- Data$Month <- NULL
 
   do_opt <- opt_TMB_model(Data, Parameters, map, Random, control, restarts=10)
   do_opt$map <- map
+  do_opt$Data <- outData
+  do_opt$Parameters <- Parameters
   do_opt
 
 }
