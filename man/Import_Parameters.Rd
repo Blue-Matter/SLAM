@@ -7,13 +7,13 @@
 \alias{Import_Sampling}
 \title{Import the Life History, Exploitation, and Sampling Parameters}
 \usage{
-Import_Parameters(csv = NULL)
+Import_Parameters(csv = NULL, dev = FALSE)
 
-Import_LifeHistory(csv = NULL)
+Import_LifeHistory(csv = NULL, dev = FALSE)
 
-Import_Exploitation(csv = NULL)
+Import_Exploitation(csv = NULL, dev = FALSE)
 
-Import_Sampling(csv = NULL)
+Import_Sampling(csv = NULL, dev = FALSE)
 }
 \arguments{
 \item{csv}{The path and name of the CSV file containing the parameters}
