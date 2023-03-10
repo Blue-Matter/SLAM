@@ -14,10 +14,220 @@ remotes::install_github('blue-matter/SLAM')
 
 
 library(SLAM)
+library(ggplot2)
+library(purrr)
+
+
+# ---- Simple Test - Perfect Conditions ----
+Simulation <- Simulate(LifeHistory_No_Error, Exploitation_No_Error, nsim=3)
+Simulation <- Simulate(nsim=3)
+Sampling <- Perfect_Sampling
+
+Sampling$n_recent_months <- 12
+Sampled_Data <- Generate_Data(Simulation, Sampling = Sampling)
+
+i <- 3
+Data <- Import_Data(Sampled_Data, sim=i)
+Data$Fit_CAA <- 1
+Parameters <- Initialize_Parameters_OM(Simulation, Data, i)
+
+
+map=list(log_sigmaF_m=factor(NA),
+         log_sigmaR=factor(NA),
+         log_sigmaR0=factor(NA))
+
+
+
+map$logRec_Devs <- rep(factor(NA), length(Parameters$logRec_Devs))
+
+Random <- NULL
+if (!is.null(map$log_sigmaR)) {
+outData <- Data
+Data$Year <- Data$Month <- NULL
+
+do_opt <- opt_TMB_model(Data, Parameters, map, Random, control, restarts=10)
+
+
+
+assess <- Assess(Data, Parameters)
+
+plot_F(Simulation, assess$rep, i)
+
+assess$rep$logRec_Devs %>% mean()
+
+
+plot_CPUE_fit(Data, assess$rep)
+plot_Effort_fit(Data, assess$rep)
+plot_CAA_fit(Data, assess$rep, (Sampling$n_recent_months-11):Sampling$n_recent_months)
+plot_CAW_fit(Data, assess$rep, (Sampling$n_recent_months-11):Sampling$n_recent_months)
+
+
+plot_SPR(Simulation, assess$rep, i)
+plot_SB(Simulation, assess$rep, i)
+
+
+
+
+n_months_vector <- c(12, 24, 36, 60, 120)
+data_types_vector <- c('CAW', 'CAW+Effort', 'CAW+Effort+Index')
+grid <- expand.grid(n_months=n_months_vector, data_types=data_types_vector,
+                    stringsAsFactors = FALSE)
+
+# Continuous Recruitment ----
+
+# Simulate fishery
+Simulation <- Simulate()
+
+# fix estimates of rec devs
+
+## Perfect Conditions ----
+outList <- list()
+for (x in 1:nrow(grid)) {
+  message('Scenario: ', x, '/', nrow(grid))
+  outList[[x]] <- Sim_Test(x, grid=grid, Sampling=Perfect_Sampling, nsim=100)
+
+}
+
+DF <- purrr::list_rbind(outList)
+
+
+## Process and Obs Error ----
+
+
+
+Sim_Test <- function(x, grid, Sampling, nsim) {
+
+  # Generate Data
+  Sampling$n_recent_months <- grid$n_months[x]
+  Sampled_Data <- Generate_Data(Simulation, Sampling = Sampling)
+
+  # Do assessment
+  outlist <- list()
+  for (i in 1:nsim) {
+    message(i, '/', nsim)
+    Data <- Import_Data(Sampled_Data, sim=i, Data_types = grid$data_types[x])
+    Parameters <- Initialize_Parameters(Data)
+    assess <- Assess(Data, Parameters)
+    outlist[[i]] <- data.frame(Sim=i,
+               RE_F=calc_F_RE(i, assess, Simulation),
+               RE_SPR=calc_SPR_RE(i, assess, Simulation))
+  }
+
+  DF <- do.call('rbind', outlist)
+  DF$n_months <-  grid$n_months[x]
+  DF$Data_types <- grid$data_types[x]
+  DF
+}
+
+
+
+
+
+Simulation <- Simulate()
+
+
+Data$use_R0rwpen <- 1
+Data$Fit_Effort <- 1
+Data$Fit_CPUE <- 0
+Parameters$log_sigmaR <- log(1)
+assess <- Assess(Data, Parameters)
+Est <- assess$rep
+
+calc_F_RE(i, assess, Simulation)
+plot_F(Simulation, Est, sim=i)
+
+
+
+# Try 2 with correct starting
+Parameters2 <- Initialize_Parameters_OM(Simulation, Data)
+assess2 <- Assess(Data, Parameters2)
+
+plot_F(Simulation, assess2$rep, sim=i)
+
+cbind(assess$rep$nll_joint, assess2$rep$nll_joint) %>% round(2)
+
+
+rep <-obj$rep()
+rep$nll_joint
+assess$rep$nll_joint
+
+calc_F_RE(i, assess, Simulation)
+
+
+
+get_results <- function(assess) {
+  Ests_DF <- data.frame(Year=assess$Data$Year,
+                        Month=assess$Data$Month,
+                        Month_ind=assess$Data$Month_ind,
+                        F=assess$rep$F_m,
+                        Effort=assess$rep$StEffort,
+                        SPR=assess$rep$SPR,
+                        SB_SB0=assess$rep$SB_m/mean(assess$rep$SB0_m))
+
+  Ests_DF
+
+}
+
+
+calc_F_RE <- function(sim, assess, Simulation, n_months=12) {
+  OM <- Simulation$Time_Series %>%
+    filter(Sim==sim, Month_ind %in% assess$Data$Month_ind)
+  Year <- sort(Data$Year)
+  Month <- Data$Month
+  Year_Month <- paste(Year, Month, sep="_")
+
+  df <- data.frame(Year=Year,
+                   Month=Month,
+                   Year_Month=Year_Month,
+                   OM=OM$F_mort,
+                   Estimate=assess$rep$F_m)
+
+  df <- df %>% tail(n_months)
+  median((df$Estimate-df$OM)/df$OM)
+}
+
+calc_SPR_RE <- function(sim, assess, Simulation, n_months=12) {
+  OM <- Simulation$Time_Series %>%
+    filter(Sim==sim, Month_ind %in% assess$Data$Month_ind)
+  Year <- sort(Data$Year)
+  Month <- Data$Month
+  Year_Month <- paste(Year, Month, sep="_")
+
+  df <- data.frame(Year=Year,
+                   Month=Month,
+                   Year_Month=Year_Month,
+                   OM=OM$SPR,
+                   Estimate=assess$rep$SPR)
+
+  df <- df %>% tail(n_months)
+  median((df$Estimate-df$OM)/df$OM)
+}
+
+
+
+Est <- assess$rep
+plot_CAW_fit(Data, Est)
+
+plot_Effort_fit(Data, Est)
+plot_F(Simulation, Est, sim=i)
+
+plot_SB(Simulation, Est)
+
+plot_CPUE_fit(Data, Est)
+
+plot_CAA_fit(Data, Est)
+
+plot_CAW_fit(Data, Est)
+
+plot_N(Simulation, Est)
+
+plot_SPR(Simulation, Est)
+
 
 # testing under perfect conditions
 LifeHistory_No_Error <- SLAM::LifeHistory
-LifeHistory_No_Error$sigmaR <- 0.01
+LifeHistory_No_Error$sigmaR <- 0.0001
+LifeHistory_No_Error$R0_bar <- 1
 
 Exploitation_No_Error <- SLAM::Exploitation
 Exploitation_No_Error$q_cv <- 0.0001
@@ -34,16 +244,14 @@ Perfect_Sampling$CAW_Annual_ESS <- 1E6
 Perfect_Sampling$CAW_Annual_Sample_Size <- 1E6
 Perfect_Sampling$CAA_Annual_ESS <- 1E6
 Perfect_Sampling$CAA_Annual_Sample_Size <- 1E6
-Perfect_Sampling$n_recent_months <- 360
+Perfect_Sampling$n_recent_months <- 24
 
 Sampled_Data <- Generate_Data(Simulation, Perfect_Sampling)
-
-
 Data <- Import_Data(Sampled_Data)
 
-# Parameters <- Initialize_Parameters(Data)
+Parameters <- Initialize_Parameters_OM(Simulation, Data)
 
-Parameters <- Initialize_Parameters_OM(Simulation)
+
 
 # ----- Assessment ----
 control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20)
@@ -71,10 +279,12 @@ TMB_Data <- Data
 TMB_Data$Year <- TMB_Data$Month <- NULL
 
 TMB_Data$Fit_CAW <- 0
-TMB_Data$Fit_CPUE <- 0
+TMB_Data$Fit_CAA <- 1
+TMB_Data$Fit_CPUE <- 1
 
-TMB_Data$use_Frwpen <- 0
-TMB_Data$use_R0rwpen <- 0
+TMB_Data$use_Frwpen <- 1
+TMB_Data$use_R0rwpen <- 1
+Parameters$log_sigmaR0 <- log(0.4)
 
 
 obj <- TMB::MakeADFun(data=TMB_Data, parameters=Parameters, DLL="SLAM_TMBExports",
@@ -83,20 +293,71 @@ obj <- TMB::MakeADFun(data=TMB_Data, parameters=Parameters, DLL="SLAM_TMBExports
 starts <- obj$par
 opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control)),silent=TRUE)
 
+
 rep <- obj$report()
 
 Est <- rep
-Est$nll_joint
 
 plot_Effort_fit(Data, Est)
+plot_F(Simulation, Est, sim=)
+
+plot_SB(Simulation, Est)
 
 plot_CPUE_fit(Data, Est)
-plot_CAA_fit(Data, Est)
+
+plot_CAA_fit(Data, Est, 1:24)
+
 plot_CAW_fit(Data, Est)
 
-plot_F(Simulation, Est)
-plot_SB(Simulation, Est)
+plot_N(Simulation, Est)
+
 plot_SPR(Simulation, Est)
+
+
+month <- Data$Month_ind %>% min()
+tt <- Simulation$At_Age_Time_Series %>% filter(Sim==1, Month_ind==month)
+
+plot(tt$N_fished, type='l')
+lines(Est$N_m[,1], col='blue')
+
+
+Simulation <- Simulate(nsim=2)
+
+Sampled_Data <- Generate_Data(Simulation)
+Data <- Import_Data(Sampled_Data)
+Parameters <- Initialize_Parameters(Data)
+
+
+
+
+
+tt <- Simulation$Time_Series %>% filter(Sim==1)
+tt <- tt %>% filter(Month_ind %in% Data$Month_ind)
+
+plot(tt$N_fished, ylim=c(0,0.6))
+lines(colSums(Est$N_m))
+
+tt <- Simulation$At_Age_Time_Series %>% filter(Sim==1, Month_ind %in% Data$Month_ind)
+t2 <- tt %>% filter(Month_ind==min(Month_ind))
+
+plot(t2$N_unfished_eq)
+lines(Est$N_unfished[,1])
+plot(Est$R0_m, type='l', ylim=c(0,1/8))
+
+
+
+
+
+
+plot(tt$SB_fished, type='l', col='blue', ylim=c(0, 0.05))
+lines(Est$SB_m, lty=3)
+
+
+
+
+
+
+
 
 
 
@@ -112,175 +373,6 @@ lines(Assess_DF$Month_ind, Assess_DF$F_mort, col='blue')
 
 median((Assess_DF$F_mort-OM_DF$F_mort)/OM_DF$F_mort)
 median((Assess_DF$SPR-OM_DF$SPR)/OM_DF$SPR)
-
-plot_CPUE_fit <- function(Data, Est) {
-
-  Year <- sort(Data$Year)
-  Month <- Data$Month
-  Year_Month <- paste(Year, Month, sep="_")
-
-  df <- data.frame(Year=Year,
-                   Month=Month,
-                   Year_Month=Year_Month,
-                   Observed=Data$CPUE,
-                   Predicted=Est$stpredIndex)
-  df$Year_Month <- factor(df$Year_Month, ordered = TRUE, levels=unique(df$Year_Month))
-  ggplot(df, aes(x=Year_Month, group=1)) +
-    geom_line(aes(y=Observed), color='blue') +
-    geom_line(aes(y=Predicted), linetype=2) +
-    theme_bw()
-
-
-}
-
-plot_Effort_fit <- function(Data, Est) {
-  Year <- sort(Data$Year)
-  Month <- Data$Month
-  Year_Month <- paste(Year, Month, sep="_")
-
-  df <- data.frame(Year=Year,
-                   Month=Month,
-                   Year_Month=Year_Month,
-                   Observed=Data$Effort,
-                   Predicted=Est$StEffort)
-
-  df$Year_Month <- factor(df$Year_Month, ordered = TRUE, levels=unique(df$Year_Month))
-
-  ggplot(df, aes(x=Year_Month, group=1)) +
-    geom_line(aes(y=Observed), color='blue') +
-    geom_line(aes(y=Predicted), linetype=2) +
-    theme_bw()
-
-}
-
-plot_CAA_fit <- function(Data, Est, months=1:12) {
-  nmonths <- length(months)
-  nage <- length(Data$M_at_Age)
-  Ages <- 0:(nage-1)
-  obs <- Data$CAA[,months]/apply(Data$CAA[,months], 2, sum)
-  pred <- Est$predCAA[,months]
-  Year <- sort(Data$Year)[months]
-  Month <- Data$Month[months]
-  Year_Month <- paste(Year, Month, sep="_")
-
-  df <- data.frame(Year=rep(Year, each=nage),
-                   Month=rep(Month, each=nage),
-                   Year_Month=rep(Year_Month,each=nage),
-                   Age=rep(Ages, nmonths),
-                   Observed=as.vector(obs),
-                   Predicted=as.vector(pred))
-  df$Year_Month <- factor(df$Year_Month, ordered = TRUE, levels=unique(df$Year_Month))
-  df$Year <- factor(df$Year, ordered = TRUE)
-  df$Month <- factor(df$Month, ordered = TRUE, levels=month.abb)
-
-  df <- df %>% tidyr::pivot_longer(., cols=c(Observed, Predicted))
-
-  ggplot(df, aes(x=Age)) +
-    geom_line(aes(y=value, color=name)) +
-    facet_grid(Year~Month) +
-    theme_bw()
-}
-
-plot_CAW_fit <- function(Data, Est, months=1:12) {
-  nmonths <- length(months)
-  WghtMids <- Data$WghtMids
-  nbins <- length(WghtMids)
-
-  obs <- Data$CAW[,months]/apply(Data$CAW[,months], 2, sum)
-  pred <- Est$predCAW[,months]
-  Year <- sort(Data$Year)[months]
-  Month <- Data$Month[months]
-  Year_Month <- paste(Year, Month, sep="_")
-
-  df <- data.frame(Year=rep(Year, each=nbins),
-                   Month=rep(Month, each=nbins),
-                   Year_Month=rep(Year_Month,each=nbins),
-                   Weight=rep(WghtMids, nmonths),
-                   Observed=as.vector(obs),
-                   Predicted=as.vector(pred))
-
-  df$Year_Month <- factor(df$Year_Month, ordered = TRUE, levels=unique(df$Year_Month))
-
-  df$Year <- factor(df$Year, ordered = TRUE)
-  df$Month <- factor(df$Month, ordered = TRUE, levels=month.abb)
-
-  df <- df %>% tidyr::pivot_longer(., cols=c(Observed, Predicted))
-
-  ggplot(df, aes(x=Weight)) +
-    geom_line(aes(y=value, color=name)) +
-    facet_grid(Year~Month) +
-    theme_bw()
-}
-
-
-plot_F <- function(Simulation, Est) {
-  OM <- Simulation$Time_Series %>%
-    filter(Sim==sim, Month_ind %in% Data$Month_ind)
-  Year <- sort(Data$Year)
-  Month <- Data$Month
-  Year_Month <- paste(Year, Month, sep="_")
-
-  df <- data.frame(Year=Year,
-                   Month=Month,
-                   Year_Month=Year_Month,
-                   Simulated=OM$F_mort,
-                   Predicted=Est$F_m)
-  df$Year_Month <- factor(df$Year_Month, ordered = TRUE, levels=unique(df$Year_Month))
-  ggplot(df, aes(x=Year_Month, group=1)) +
-    geom_line(aes(y=Simulated), color='blue') +
-    geom_line(aes(y=Predicted), linetype=2) +
-    theme_bw()
-}
-
-plot_SB <- function(Simulation, Est) {
-  OM <- Simulation$Time_Series %>%
-    filter(Sim==sim, Month_ind %in% Data$Month_ind)
-
-
-  Year <- sort(Data$Year)
-  Month <- Data$Month
-  Year_Month <- paste(Year, Month, sep="_")
-
-  df <- data.frame(Year=Year,
-                   Month=Month,
-                   Year_Month=Year_Month,
-                   Simulated=OM$SB_fished/OM$SB_unfished_eq,
-                   Predicted=Est$SB_m/Est$SB0_m)
-  df$Year_Month <- factor(df$Year_Month, ordered = TRUE, levels=unique(df$Year_Month))
-  ggplot(df, aes(x=Year_Month, group=1)) +
-    geom_line(aes(y=Simulated), color='blue') +
-    geom_line(aes(y=Predicted), linetype=2) +
-    theme_bw()
-}
-
-plot_SPR <- function(Simulation, Est) {
-  OM <- Simulation$Time_Series %>%
-    filter(Sim==sim, Month_ind %in% Data$Month_ind)
-
-
-  Year <- sort(Data$Year)
-  Month <- Data$Month
-  Year_Month <- paste(Year, Month, sep="_")
-
-  df <- data.frame(Year=Year,
-                   Month=Month,
-                   Year_Month=Year_Month,
-                   Simulated=OM$SPR,
-                   Predicted=Est$SPR)
-  df$Year_Month <- factor(df$Year_Month, ordered = TRUE, levels=unique(df$Year_Month))
-  ggplot(df, aes(x=Year_Month, group=1)) +
-    geom_line(aes(y=Simulated), color='blue') +
-    geom_line(aes(y=Predicted), linetype=2) +
-    theme_bw()
-}
-
-
-
-
-
-
-
-
 
 
 
