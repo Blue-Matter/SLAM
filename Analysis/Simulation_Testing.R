@@ -26,7 +26,7 @@ Sampling <- Perfect_Sampling
 Sampling$n_recent_months <- 12
 Sampled_Data <- Generate_Data(Simulation, Sampling = Sampling)
 
-i <- 3
+i <- 1
 Data <- Import_Data(Sampled_Data, sim=i)
 Data$Fit_CAA <- 1
 Parameters <- Initialize_Parameters_OM(Simulation, Data, i)
@@ -41,7 +41,7 @@ map=list(log_sigmaF_m=factor(NA),
 map$logRec_Devs <- rep(factor(NA), length(Parameters$logRec_Devs))
 
 Random <- NULL
-if (!is.null(map$log_sigmaR)) {
+
 outData <- Data
 Data$Year <- Data$Month <- NULL
 

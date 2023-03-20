@@ -1,4 +1,13 @@
 
+#' Title
+#'
+#' @param Data
+#' @param Est
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_CPUE_fit <- function(Data, Est) {
 
   Year <- sort(Data$Year)
@@ -20,6 +29,15 @@ plot_CPUE_fit <- function(Data, Est) {
 
 }
 
+#' Title
+#'
+#' @param Data
+#' @param Est
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_Effort_fit <- function(Data, Est) {
   Year <- sort(Data$Year)
   Month <- Data$Month
@@ -41,6 +59,15 @@ plot_Effort_fit <- function(Data, Est) {
 
 }
 
+#' Title
+#'
+#' @param Data
+#' @param Est
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_CAA_fit <- function(Data, Est, months=1:12) {
   nmonths <- length(months)
   nage <- length(Data$M_at_Age)
@@ -70,6 +97,15 @@ plot_CAA_fit <- function(Data, Est, months=1:12) {
     theme_bw()
 }
 
+#' Title
+#'
+#' @param Data
+#' @param Est
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_CAW_fit <- function(Data, Est, months=1:12) {
   nmonths <- length(months)
   WghtMids <- Data$WghtMids
@@ -103,6 +139,16 @@ plot_CAW_fit <- function(Data, Est, months=1:12) {
 }
 
 
+#' Title
+#'
+#' @param Simulation
+#' @param Est
+#' @param sim
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_F <- function(Simulation, Est, sim=1) {
   OM <- Simulation$Time_Series %>%
     filter(Sim==sim, Month_ind %in% Data$Month_ind)
@@ -126,6 +172,16 @@ plot_F <- function(Simulation, Est, sim=1) {
     theme_bw()
 }
 
+#' Title
+#'
+#' @param Simulation
+#' @param Est
+#' @param sim
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_SB <- function(Simulation, Est, sim=1) {
   OM <- Simulation$Time_Series %>%
     filter(Sim==sim, Month_ind %in% Data$Month_ind)
@@ -148,6 +204,16 @@ plot_SB <- function(Simulation, Est, sim=1) {
     theme_bw()
 }
 
+#' Title
+#'
+#' @param Simulation
+#' @param Est
+#' @param sim
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_N <- function(Simulation, Est, sim=1) {
   OM <- Simulation$Time_Series %>%
     filter(Sim==sim, Month_ind %in% Data$Month_ind)
@@ -170,7 +236,16 @@ plot_N <- function(Simulation, Est, sim=1) {
     theme_bw()
 }
 
-
+#' Title
+#'
+#' @param Simulation
+#' @param Est
+#' @param sim
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_SPR <- function(Simulation, Est, sim=1) {
   OM <- Simulation$Time_Series %>%
     filter(Sim==sim, Month_ind %in% Data$Month_ind)
@@ -194,8 +269,16 @@ plot_SPR <- function(Simulation, Est, sim=1) {
 }
 
 
-
-
+#' Title
+#'
+#' @param Simulation
+#' @param Est
+#' @param sim
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_B <- function(Simulation, Est, sim=1) {
   OM <- Simulation$Time_Series %>%
     filter(Sim==sim, Month_ind %in% Data$Month_ind)
