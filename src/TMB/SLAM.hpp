@@ -482,6 +482,8 @@ Type SLAM(objective_function<Type>* obj) {
     for(int m=1;m<n_months;m++){
       nll_joint(5) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
     }
+    // include initial equilibrium F
+    nll_joint(5) -= dnorm(logF_minit(m), logF_ts(0), sigmaF_m, true);
   }
 
   // penalty for random walk in logR0_m (seasonal recruitment)
