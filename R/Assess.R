@@ -125,9 +125,9 @@ Import_Data.Simulated <- function(Sampled_Data=NULL,
 Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
                                   Feq_init=0.15,
-                                  sigmaR=0.5,
+                                  sigmaR=0.6,
                                   sigmaF_m=0.4,
-                                  sigmaR0=0.7) {
+                                  sigmaR0=0.6) {
 
   parameters <- list()
   parameters$ls50 <- log(as50)
