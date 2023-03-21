@@ -140,7 +140,7 @@ Initialize_Parameters <- function(data,
 
   parameters$log_sigmaF_m <- log(sigmaF_m)
 
-  parameters$logR0_m_est <- rep(1, 11)
+  parameters$logR0_m_est <- rep(0, 11)
   parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
