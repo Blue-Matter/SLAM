@@ -19,7 +19,78 @@ library(purrr)
 
 
 # ---- Simple Test - Perfect Conditions ----
-Simulation <- Simulate(LifeHistory_No_Error, Exploitation_No_Error, nsim=3)
+nsim <- 5
+Exploitation <- Exploitation_No_Error
+Exploitation$Effort_cv <- 0.00001
+
+Simulation <- Simulate(LifeHistory_No_Error, Exploitation, nsim=nsim)
+
+Sampling <- Perfect_Sampling
+Sampling$n_recent_months <- 12
+
+Sampled_Data <- Generate_Data(Simulation, Sampling = Sampling)
+i <- 1
+Data <- Import_Data(Sampled_Data, sim=i)
+Data$Fit_CAA <- 1
+Data$Fit_CPUE <- 0
+Data$Fit_Effort <- 0
+Data$Fit_CAW <- 0
+Parameters <- Initialize_Parameters(Data)
+
+assess <- Assess(Data, Parameters)
+
+Est <- assess$rep
+Est$F_minit
+Est$F_m
+Est$R0_m
+
+OM <- Simulation$Time_Series %>% filter(Sim==i)
+
+ggplot(OM, aes(x=Month_ind, y=F_mort  )) +
+  geom_line()
+
+OM %>% filter(Month_ind%in% (360-Sampling$n_recent_months+1):360)
+
+# why is F in first month too high?
+
+plot_F(Simulation, assess$rep,i)
+
+AG <- Simulation$At_Age_Time_Series %>% filter(Sim==i, Month_ind==348)
+
+plot(AG$N_fished)
+lines(Est$N_fished_eq[,12])
+
+
+
+Est$N_m %>% dim()
+
+
+
+plot_CAA_fit(Data, assess$rep)
+
+plot_CPUE_fit(Data, assess$rep)
+
+
+
+
+
+
+
+
+Data$use_Frwpen
+
+Parameters <- Initialize_Parameters(Data)
+
+plot_F(Simulation, assess$rep, i)
+
+
+plot_CAA_fit(Data, assess$rep)
+
+plot(assess$rep$R0_m, type='l', ylim=c(0,1/12))
+
+assess$rep$nll_joint
+
+
 Simulation <- Simulate(nsim=3)
 Sampling <- Perfect_Sampling
 
