@@ -81,6 +81,7 @@ Import_Data.Simulated <- function(Sampled_Data=NULL,
   # Year and Month info
   tt <- Sampled_Data$Data$TS %>% filter(Sim==sim)
   data$Month_ind <- tt$Month_ind
+  data$n_month <- length(data$Month_ind)
   data$Year <- tt$Year
   data$Month <- tt$Month
 
@@ -293,6 +294,7 @@ Construct_Data_OM <- function(sim=1,
 #'
 #' @param Data A `Data` object
 #' @param Parameters A `Parameters` object
+#' @param Est_Rec_Devs Logical. Estimate recruitment deviations (TRUE) or assume constant recruitment (FALSE)
 #' @param control Optional controls for optimizer
 #' @param ... Additional arguments pass to TMB
 #'
@@ -300,6 +302,7 @@ Construct_Data_OM <- function(sim=1,
 #' @export
 #'
 Assess <- function(Data, Parameters=NULL,
+                   Est_Rec_Devs=ifelse(Data$n_month>=24, TRUE, FALSE),
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    ...) {
 
@@ -313,9 +316,9 @@ Assess <- function(Data, Parameters=NULL,
              log_sigmaR0=factor(NA))
   }
 
-  nmonths <- length(Data$Month_ind)
-  if (nmonths<24) {
+  if (!Est_Rec_Devs) {
     map$logRec_Devs <- rep(factor(NA), length(Parameters$logRec_Devs))
+    Parameters$log_sigmaR <- log(0.001)
   }
 
   if (!is.null(map$log_sigmaR)) {
