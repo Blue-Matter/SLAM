@@ -30,7 +30,8 @@ calc_F_RE <- function(sim, assess, Simulation, n_months=12) {
                    Estimate=assess$rep$F_m)
 
   df <- df %>% tail(n_months)
-  median((df$Estimate-df$OM)/df$OM)
+  # median((df$Estimate-df$OM)/df$OM)
+  (median(df$Estimate)-median(df$OM))/median(df$OM)
 }
 
 calc_SB_SB0_RE <- function(sim, assess, Simulation, n_months=12) {
@@ -47,7 +48,9 @@ calc_SB_SB0_RE <- function(sim, assess, Simulation, n_months=12) {
                    Estimate=assess$rep$SB_m/assess$rep$SB0_m)
 
   df <- df %>% tail(n_months)
-  median((df$Estimate-df$OM)/df$OM)
+  # median((df$Estimate-df$OM)/df$OM)
+
+  (median(df$Estimate)-median(df$OM))/median(df$OM)
 }
 
 
@@ -66,7 +69,8 @@ calc_SPR_RE <- function(sim, assess, Simulation, n_months=12) {
                    Estimate=assess$rep$SPR)
 
   df <- df %>% tail(n_months)
-  median((df$Estimate-df$OM)/df$OM)
+  # median((df$Estimate-df$OM)/df$OM)
+  (median(df$Estimate)-median(df$OM))/median(df$OM)
 }
 
 
@@ -84,6 +88,10 @@ Sim_Test <- function(x, grid, Simulation, Sampling, nsim) {
     Data <- Import_Data(Sampled_Data, sim=i, Data_types = grid$data_types[x])
     Parameters <- Initialize_Parameters(Data)
     assess <- Assess(Data, Parameters)
+
+
+
+
 
     outlist[[i]] <- data.frame(Sim=i,
                                RE_F=calc_F_RE(i, assess, Simulation),
