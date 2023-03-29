@@ -11,6 +11,7 @@
 #'
 Import_Data <- function(xlfile,
                         BinWidth=NULL,
+                        BinMax=NULL,
                         use_Frwpen=1,
                         use_R0rwpen=1,
                         ...) {
@@ -30,7 +31,7 @@ Import_Data <- function(xlfile,
     data <- import_at_age(XLData, data)
 
     # Catch-at-Weight
-    data <- import_caw_data(XLData, data, BinWidth)
+    data <- import_caw_data(XLData, data, BinWidth, BinMax)
 
     # Time-Series
     data <- import_ts_data(XLData, data)
@@ -53,6 +54,7 @@ Import_Data <- function(xlfile,
     data$use_R0rwpen <- use_R0rwpen
 
     data$model <- 'SLAM'
+    class(data) <- 'Data'
     return(data)
   }
 
@@ -71,12 +73,12 @@ import_at_age <- function(XLData, data) {
     dd <- At_Age_Data[i,2:(Ncol)]
     dd <- as.matrix(dd)
     colnames(dd) <- NULL
-    data[[Names[i]]] <- dd
+    data[[Names[i]]] <- as.vector(dd)
   }
   data
 }
 
-import_caw_data <- function(XLData, data, BinWidth=NULL) {
+import_caw_data <- function(XLData, data, BinWidth=NULL, BinMax=NULL) {
   CAW_Data <- XLData$`CAW-Data`
   if (is.null(CAW_Data)) {
     stop('Could not import CAW-Data from ', xlfile, ' . Is the worksheet named `CAW-Data`?')
@@ -96,11 +98,20 @@ import_caw_data <- function(XLData, data, BinWidth=NULL) {
     data$CAW_ESS <- apply(data$CAW, 2, sum)
     data$Year_Month <- data.frame(Year=XLData$`CAW-Data`$Year, Month=XLData$`CAW-Data`$Month)
   } else {
+    message('Raw CAW data detected')
     if (is.null(BinWidth)) {
-      message('Raw CAW data detected and argument `BinWidth` not set. Using default value of 0.1')
+      message('Argument `BinWidth` not set. Using default value of 0.1')
       BinWidth <- 0.1
     }
-    maxBin <- max(XLData$`CAW-Data`$Weight)
+
+    if (!is.null(BinMax)) {
+      maxBin <- BinMax
+      XLData$`CAW-Data`$Weight[XLData$`CAW-Data`$Weight>maxBin] <- maxBin
+      message('Setting maximum bin width to: ', maxBin)
+    } else {
+      maxBin <- ceiling(max(XLData$`CAW-Data`$Weight))
+      message('Setting maximum bin width to maximum observed weight: ', maxBin)
+    }
     BinMids <- seq(0.5*BinWidth, by=BinWidth, maxBin)
     nBins <- length(BinMids)
     Bins <- seq(BinMids[1]-0.5*BinWidth, by=BinWidth, length.out=length(BinMids)+1)
