@@ -86,14 +86,17 @@ Sim_Test <- function(x, grid, Simulation, Sampling, nsim) {
   for (i in 1:nsim) {
     message(i, '/', nsim)
     Data <- Import_Data(Sampled_Data, sim=i, Data_types = grid$data_types[x])
+
     Parameters <- Initialize_Parameters(Data)
     assess <- Assess(Data, Parameters)
 
-
-
-
+    df <- Simulation$Time_Series %>% filter(Sim==i)
+    df <- df %>% tail(12)
 
     outlist[[i]] <- data.frame(Sim=i,
+                               F=median(df$F_mort),
+                               SPR= median(df$SPR),
+                               SB_SB0= median(df$SB_fished/df$SB_unfished_eq),
                                RE_F=calc_F_RE(i, assess, Simulation),
                                RE_SPR=calc_SPR_RE(i, assess, Simulation),
                                RE_SB_SB0=calc_SB_SB0_RE(i, assess, Simulation))
@@ -104,6 +107,51 @@ Sim_Test <- function(x, grid, Simulation, Sampling, nsim) {
   DF$Data_types <- grid$data_types[x]
   DF
 }
+
+library(readxl)
+library(xlsx)
+
+fl <- 'inst/Data_Example.xlsx'
+
+Write_Data2XL <- function(Data, fl, dev=F) {
+  if (dev) {
+    dir <- 'inst'
+  } else {
+    dir <- system.file(package='SLAM')
+  }
+  path <- file.path(dir, 'Data_Template.xlsx')
+  template <- path %>%
+    excel_sheets() %>%
+    set_names() %>%
+    map(read_excel, path = path)
+
+  # At-Age Schedules
+  df <- template$`At-Age-Schedules`
+
+  Vars <- df$`At-Age Schedules`
+  n_age <- length(Data$Weight_Age)
+  mat <- matrix(NA, nrow=length(Vars), ncol=n_age)
+  df_out <- data.frame(`At-Age Schedules`=Vars, mat)
+
+  ind <- match('Ages', Vars)
+  nCol <- length(Data$Weight_Age)+1
+  df_out[ind,2:nCol] <- seq(0, by=1, length.out=length(Data$Weight_Age))
+  Vars2 <- Vars[!Vars=='Ages']
+  for (v in Vars2) {
+    df_out[match(v, Vars),2:nCol] <- Data[[v]]
+  }
+
+
+
+  # CAW-Data
+
+  # Effort-Data
+
+  # Index-Data
+}
+
+
+
 
 
 # ---- Continuous Recruitment ----
@@ -171,7 +219,7 @@ pulse_DF$Scenario <- 'Pulse'
 DF <- bind_rows(continuous_DF,pulse_DF)
 
 DF$n_months <- factor(DF$n_months)
-DF <- DF %>% tidyr::pivot_longer(., cols=c(RE_F, RE_SPR))
+DF <- DF %>% tidyr::pivot_longer(., cols=c(RE_F, RE_SPR, RE_SB_SB0))
 
 ggplot(DF, aes(x=n_months, y=value, fill=Scenario)) +
   facet_grid(name~Data_types, scales='free_y') +
@@ -185,5 +233,13 @@ sd(tt$value)
 tt <- DF %>% filter(Data_types=='CAW',
                     Scenario=='Continuous', name=='RE_F', n_months==12)
 sd(tt$value)
+
+tt <- DF %>% filter(Data_types=='CAW+Effort+Index',
+              Scenario=='Continuous', name=='RE_SB_SB0', n_months==24)
+
+tt %>% filter(value==max(value))
+
+df <- readRDS('Analysis/sim_testing/results/continuous/24_CAW+Effort+Index.rda')
+df$RE_SB_SB0 %>% which.max()
 
 

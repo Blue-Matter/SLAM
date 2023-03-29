@@ -42,7 +42,7 @@ Import_Data.Simulated <- function(Sampled_Data=NULL,
   # Assumed life-history parameters
   data$Weight_Age <- Sampled_Data$Simulation$LifeHistory$Weight_Age_Mean
   data$Weight_Age_SD <- Sampled_Data$Simulation$LifeHistory$Weight_Age_SD
-  data$Mat_at_Age <- Sampled_Data$Simulation$LifeHistory$Maturity_at_Age
+  data$Maturity_at_Age <- Sampled_Data$Simulation$LifeHistory$Maturity_at_Age
   data$M_at_Age <- Sampled_Data$Simulation$LifeHistory$M_at_Age
   data$PSM_at_Age <- Sampled_Data$Simulation$LifeHistory$Post_Spawning_Mortality
   data$h <- Sampled_Data$Simulation$LifeHistory$steepness

@@ -11,7 +11,7 @@ Type SLAM(objective_function<Type>* obj) {
   // At-Age Schedules
   DATA_VECTOR(Weight_Age);  // mean weight at age
   DATA_VECTOR(Weight_Age_SD);  // standard deviation of weight at age (log-normal)
-  DATA_VECTOR(Mat_at_Age);  // maturity at age
+  DATA_VECTOR(Maturity_at_Age);  // maturity at age
   DATA_VECTOR(M_at_Age); // natural mortality at age
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
 
@@ -145,7 +145,7 @@ Type SLAM(objective_function<Type>* obj) {
     surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
   }
   for (int a=0; a<n_ages; a++) {
-    egg0(a) = surv0(a) * Weight_Age(a) * Mat_at_Age(a);
+    egg0(a) = surv0(a) * Weight_Age(a) * Maturity_at_Age(a);
   }
   Type SBpR = egg0.sum();
 
@@ -164,7 +164,7 @@ Type SLAM(objective_function<Type>* obj) {
       } else {
         survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-PSM_at_Age(a-1));
       }
-      eggFa(a) = survF(a,m) * Weight_Age(a) * Mat_at_Age(a);
+      eggFa(a) = survF(a,m) * Weight_Age(a) * Maturity_at_Age(a);
     }
     eggF(m) = eggFa.sum();
   }
@@ -202,7 +202,7 @@ Type SLAM(objective_function<Type>* obj) {
         }
       }
       B0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age(a) ;
-      SB0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age(a) * Mat_at_Age(a);
+      SB0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age(a) * Maturity_at_Age(a);
     }
     B0_m(m_ind) = B0_am.col(m_ind).sum();
     SB0_m(m_ind) = SB0_am.col(m_ind).sum();
@@ -237,7 +237,7 @@ Type SLAM(objective_function<Type>* obj) {
           N_fished_eq(a,m_ind) = N_fished_eq(a-1,m_ind-1) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
         }
       }
-      SB_am_eq(a, m_ind) =  N_fished_eq(a,m_ind) * Weight_Age(a) * Mat_at_Age(a) * exp(-Fa_init(a)/2);;
+      SB_am_eq(a, m_ind) =  N_fished_eq(a,m_ind) * Weight_Age(a) * Maturity_at_Age(a) * exp(-Fa_init(a)/2);;
     }
     SB_m_eq(m_ind) = SB_am_eq.col(m_ind).sum();
     N_fished_eq(0,m_ind) = BH_SRR(R0_m(m_ind), h, SB_m_eq(m_ind), SBpR);
@@ -257,7 +257,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   for(int a=1;a<n_ages;a++){
     N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
-    SB_am(a,0) =  N_m(a,0) * Weight_Age(a) * Mat_at_Age(a)  * exp(-Fa_init(a)/2);
+    SB_am(a,0) =  N_m(a,0) * Weight_Age(a) * Maturity_at_Age(a)  * exp(-Fa_init(a)/2);
     B_am(a,0) = N_m(a,0) * Weight_Age(a);
   }
 
@@ -271,7 +271,7 @@ Type SLAM(objective_function<Type>* obj) {
     int m_ind = m % 12; // calendar month index
     for(int a=1;a<n_ages;a++){
       N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
-      SB_am(a,m) = N_m(a,m) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_ma(a,m)/2);
+      SB_am(a,m) = N_m(a,m) * Weight_Age(a) * Maturity_at_Age(a) * exp(-F_ma(a,m)/2);
       B_am(a,m) = N_m(a,m) * Weight_Age(a);
     }
     SB_m(m) = SB_am.col(m).sum();
@@ -290,7 +290,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   for (int m=0; m<n_months; m++) {
     for(int a=0;a<n_ages;a++){
-      predC_a(a,m) = N_m(a,m)*((1-Mat_at_Age(a))*exp(-M_ma(a,m)/2)+Mat_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-F_ma(a,m)));
+      predC_a(a,m) = N_m(a,m)*((1-Maturity_at_Age(a))*exp(-M_ma(a,m)/2)+Maturity_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-F_ma(a,m)));
       predCB_a(a,m) = predC_a(a,m) * Weight_Age(a);
     }
     predCB(m) = predCB_a.col(m).sum();
