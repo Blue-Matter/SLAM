@@ -10,9 +10,9 @@ Initialize_Parameters(
   as50 = 4,
   as95 = 6,
   Feq_init = 0.15,
-  sigmaR = 0.5,
+  sigmaR = 0.6,
   sigmaF_m = 0.4,
-  sigmaR0 = 0.7
+  sigmaR0 = 0.6
 )
 
 Initialize_Parameters_OM(Simulation, Data, sim = 1)

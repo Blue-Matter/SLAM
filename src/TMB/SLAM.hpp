@@ -16,8 +16,8 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
 
   // Weight composition data
-  DATA_VECTOR(WghtBins);
-  DATA_VECTOR(WghtMids); // mid-points of the CAW bins
+  DATA_VECTOR(Weight_Bins);
+  DATA_VECTOR(Weight_Mids); // mid-points of the CAW bins
   DATA_MATRIX(CAW);    // CAW observations for each bin and month
   DATA_VECTOR(CAW_ESS); // number of independent observation of weight samples in each month
 
@@ -70,13 +70,13 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- indexing variables ----
   int n_ages = Weight_Age.size(); // number of age classes
-  int n_bins = WghtMids.size(); // number of size bins
+  int n_bins = Weight_Mids.size(); // number of size bins
   int n_months = CPUE.size(); // number of months of data
 
   // ---- Generate Age-Weight Key ----
   matrix<Type> AWK(n_ages, n_bins);
   AWK.setZero();
-  AWK = generate_AWK(WghtBins, Weight_Age, Weight_Age_SD, n_ages, n_bins);
+  AWK = generate_AWK(Weight_Bins, Weight_Age, Weight_Age_SD, n_ages, n_bins);
 
   // ---- Seasonal Recruitment ----
   vector<Type> logR0_m(12); // R0 for each calendar month

@@ -108,49 +108,28 @@ Sim_Test <- function(x, grid, Simulation, Sampling, nsim) {
   DF
 }
 
-library(readxl)
-library(xlsx)
 
-fl <- 'inst/Data_Example.xlsx'
+xlfile <- 'inst/Data_Example_Binned.xlsx'
+xlfile <- 'inst/Data_Example_Raw.xlsx'
 
-Write_Data2XL <- function(Data, fl, dev=F) {
-  if (dev) {
-    dir <- 'inst'
-  } else {
-    dir <- system.file(package='SLAM')
-  }
-  path <- file.path(dir, 'Data_Template.xlsx')
-  template <- path %>%
-    excel_sheets() %>%
-    set_names() %>%
-    map(read_excel, path = path)
+# deal with missing values
+# missing CAW, Effort, and Index data?
 
-  # At-Age Schedules
-  df <- template$`At-Age-Schedules`
-
-  Vars <- df$`At-Age Schedules`
-  n_age <- length(Data$Weight_Age)
-  mat <- matrix(NA, nrow=length(Vars), ncol=n_age)
-  df_out <- data.frame(`At-Age Schedules`=Vars, mat)
-
-  ind <- match('Ages', Vars)
-  nCol <- length(Data$Weight_Age)+1
-  df_out[ind,2:nCol] <- seq(0, by=1, length.out=length(Data$Weight_Age))
-  Vars2 <- Vars[!Vars=='Ages']
-  for (v in Vars2) {
-    df_out[match(v, Vars),2:nCol] <- Data[[v]]
-  }
+tt = Import_Data('inst/Data_Example_Binned.xlsx')
+tt = Import_Data('inst/Data_Example_Raw.xlsx')
 
 
 
-  # CAW-Data
-
-  # Effort-Data
-
-  # Index-Data
-}
+tt <- Import_Data(Sampled_Data)
 
 
+
+plot(Data)
+Report(Data)
+
+
+plot(Assess)
+Report(Assess)
 
 
 

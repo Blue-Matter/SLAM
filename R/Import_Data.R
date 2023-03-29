@@ -1,0 +1,238 @@
+#' Import and organize data for assessment model
+#'
+#' @param xlfile The full file path to an Excel file structured for SLAM data
+#' @param BinWidth The width of the bins for the catch-at-weight data. Only needed if the CAW data is raw.
+#' @param use_Frwpen Use the penalty for the random walk in fishing mortality?
+#' @param use_R0rwpen Use the penalty for the random walk in monthly seasonal recruitment pattern?
+#' @param ... Additional parameters (not currently used)
+#'
+#' @return A `Data` object for the `Assess` function
+#' @export
+#'
+Import_Data <- function(xlfile,
+                        BinWidth=NULL,
+                        use_Frwpen=1,
+                        use_R0rwpen=1,
+                        ...) {
+  if (inherits(xlfile, 'Simulated')) {
+    UseMethod('Import_Data')
+  } else {
+    # import from an excel file
+    path <- xlfile
+    suppressMessages(
+      XLData <- path %>%
+        excel_sheets() %>%
+        set_names() %>%
+        map(read_excel, path = path)
+    )
+    data <- list()
+    # At-age
+    data <- import_at_age(XLData, data)
+
+    # Catch-at-Weight
+    data <- import_caw_data(XLData, data, BinWidth)
+
+    # Time-Series
+    data <- import_ts_data(XLData, data)
+
+    # Options
+    data$n_month <- data$Year %>% length()
+    data$Fit_Effort <- ifelse(sum(is.na(data$Effort)) == data$n_month | sum(!is.na(data$Effort)) <2,
+                              0,1)
+
+    data$Fit_CPUE <- ifelse(sum(is.na(data$CPUE)) == data$n_month | sum(!is.na(data$CPUE)) <2,
+                            0,1)
+    data$Fit_CAW <- 1
+    data$Fit_CAA <- 0
+    if (all(data$CAW_ESS<1)) {
+      stop('No catch-at-weight data detected')
+    }
+
+    # Penalties
+    data$use_Frwpen <- use_Frwpen
+    data$use_R0rwpen <- use_R0rwpen
+
+    data$model <- 'SLAM'
+    return(data)
+  }
+
+}
+
+import_at_age <- function(XLData, data) {
+  At_Age_Data <- XLData$`At-Age-Schedules`
+  if (is.null(At_Age_Data)) {
+    stop('Could not import At-Age-Schedules from ', xlfile, ' . Is the worksheet named `At-Age-Schedules`?')
+  }
+  Names <- At_Age_Data$At.Age.Schedules %>% as.vector()
+  Ncol <- ncol(At_Age_Data)
+  n_age <- Ncol-1
+
+  for (i in seq_along(Names)) {
+    dd <- At_Age_Data[i,2:(Ncol)]
+    dd <- as.matrix(dd)
+    colnames(dd) <- NULL
+    data[[Names[i]]] <- dd
+  }
+  data
+}
+
+import_caw_data <- function(XLData, data, BinWidth=NULL) {
+  CAW_Data <- XLData$`CAW-Data`
+  if (is.null(CAW_Data)) {
+    stop('Could not import CAW-Data from ', xlfile, ' . Is the worksheet named `CAW-Data`?')
+  }
+  cnames <- colnames(CAW_Data)
+  if (length(cnames)>3) {
+    # binned data
+    BinMids <- as.numeric(cnames[3:length(cnames)])
+    by <- BinMids[2]-BinMids[1]
+    Bins <- seq(BinMids[1]-0.5*by, by=by, length.out=length(BinMids)+1)
+    nMonths <- nrow(CAW_Data)
+    nBins <- length(BinMids)
+    data$CAW <- as.matrix(CAW_Data[,3:length(cnames)])
+    data$Weight_Bins <- Bins
+    data$Weight_Mids <- BinMids
+    data$CAW <- t(data$CAW)
+    data$CAW_ESS <- apply(data$CAW, 2, sum)
+    data$Year_Month <- data.frame(Year=XLData$`CAW-Data`$Year, Month=XLData$`CAW-Data`$Month)
+  } else {
+    if (is.null(BinWidth)) {
+      message('Raw CAW data detected and argument `BinWidth` not set. Using default value of 0.1')
+      BinWidth <- 0.1
+    }
+    maxBin <- max(XLData$`CAW-Data`$Weight)
+    BinMids <- seq(0.5*BinWidth, by=BinWidth, maxBin)
+    nBins <- length(BinMids)
+    Bins <- seq(BinMids[1]-0.5*BinWidth, by=BinWidth, length.out=length(BinMids)+1)
+    Years <- unique(XLData$`CAW-Data`$Year)
+    CAW <- XLData$`CAW-Data`
+    Year_Month <- CAW %>% distinct(Year, Month)
+    nMonths <- Year_Month %>% nrow()
+    data$CAW <- matrix(0, nBins, nMonths)
+    for (i in 1:nMonths) {
+      ts <- Year_Month[i,]
+      caw_yr <- CAW %>% filter(Year %in% ts$Year, Month %in% ts$Month)
+      data$CAW[, i] <- as.numeric(table(cut(caw_yr$Weight, Bins)))
+    }
+    data$CAW_ESS <- apply(data$CAW, 2, sum)
+    data$Year_Month <- data.frame(Year=XLData$`CAW-Data`$Year, Month=XLData$`CAW-Data`$Month) %>%
+      distinct(Year, Month)
+  }
+
+  data
+
+}
+
+import_ts_data <- function(XLData, data) {
+  TS_data <- XLData$`Time-Series-Data`
+  TS_Year_Month <- data.frame(Year=TS_data$Year, Month=TS_data$Month)
+  CAW_Year_Month <- data$Year_Month
+
+  # match Year and Months
+  match <- FALSE
+  if (all(dim(TS_Year_Month) ==dim(CAW_Year_Month))) {
+    match <- all(TS_Year_Month == CAW_Year_Month)
+  }
+  if (!match)
+    stop('`CAW-Data` and `Time-Series-Data` must both contain all Years and Months. Use NA for missing values.')
+
+  data$Year <- data$Year_Month$Year
+  data$Month <- data$Year_Month$Month
+  data$Year_Month <- NULL
+
+  data$Effort <- TS_data$Effort_Mean
+  data$Effort_SD <- TS_data$Effort_SD
+  data$CPUE <- TS_data$Index_Mean
+  data$CPUE_SD <- TS_data$Index_SD
+  data
+}
+
+
+
+
+#' @describeIn Import_Data Import simulated data
+#' @param Sampled_Data An object of class `Simulated` generated by `Generate_Data`
+#' @param sim Simulation number
+#' @param Fit_Effort Logical. Fit effort data?
+#' @param Fit_CPUE Logical. Fit CPUE data?
+#' @param Fit_CAW Logical. Fit catch-at-weight data?
+#' @param Fit_CAA Logical. Fit catch-at-age data?
+#' @param Data_types Optional character vector specifying data types to fit to.
+#' @export
+Import_Data.Simulated <- function(Sampled_Data=NULL,
+                                  sim=1,
+                                  Fit_Effort=1,
+                                  Fit_CPUE=1,
+                                  Fit_CAW=1,
+                                  Fit_CAA=1,
+                                  use_Frwpen=1,
+                                  use_R0rwpen=1,
+                                  Data_types=NULL) {
+
+  data <- list()
+  # Assumed life-history parameters
+  data$Weight_Age <- Sampled_Data$Simulation$LifeHistory$Weight_Age_Mean
+  data$Weight_Age_SD <- Sampled_Data$Simulation$LifeHistory$Weight_Age_SD
+  data$Maturity_at_Age <- Sampled_Data$Simulation$LifeHistory$Maturity_at_Age
+  data$M_at_Age <- Sampled_Data$Simulation$LifeHistory$M_at_Age
+  data$PSM_at_Age <- Sampled_Data$Simulation$LifeHistory$Post_Spawning_Mortality
+  data$h <- Sampled_Data$Simulation$LifeHistory$steepness
+  nAges <- length(data$Weight_Age)
+
+  # CAW Data
+  data$Weight_Bins <- Sampled_Data$Data$Weight_Bins
+  data$Weight_Mids <- Sampled_Data$Data$Weight_Mids
+
+  CAW_DF <- Sampled_Data$Data$CAW %>% filter(Sim==sim) %>% select(Month_ind, Weight, Count)
+  nBins <- length(unique(CAW_DF$Weight))
+  nMonths <- length(unique(CAW_DF$Month_ind))
+
+  CAW <- matrix(CAW_DF$Count, nrow=nBins, nMonths)
+  data$CAW <- CAW
+  CAW_Monthly_ESS <- Sampled_Data$Sampling$CAW_Annual_ESS/12
+  data$CAW_ESS <- rep(CAW_Monthly_ESS, nMonths)
+
+  # CAA Data
+  CAA_DF <- Sampled_Data$Data$CAA %>% filter(Sim==sim) %>% select(Month_ind, Age, Count)
+  CAA <- matrix(CAA_DF$Count, nrow=nAges, nMonths)
+  data$CAA <- CAA
+  CAA_Monthly_ESS <- Sampled_Data$Sampling$CAA_Annual_ESS/12
+  data$CAA_ESS <- rep(CAA_Monthly_ESS, nMonths)
+
+  # Effort Index
+  Effort_DF <- Sampled_Data$Data$TS %>% filter(Sim==sim) %>% select(Effort)
+  data$Effort <- Effort_DF$Effort
+  data$Effort_SD <- rep(Sampled_Data$Sampling$Effort_CV, nMonths)
+
+  # CPUE Index
+  CPUE_DF <- Sampled_Data$Data$TS %>% filter(Sim==sim) %>% select(CPUE)
+  data$CPUE <- CPUE_DF$CPUE
+  data$CPUE_SD <- rep(Sampled_Data$Sampling$CPUE_CV, nMonths)
+
+  # Year and Month info
+  tt <- Sampled_Data$Data$TS %>% filter(Sim==sim)
+  data$Month_ind <- tt$Month_ind
+  data$n_month <- length(data$Month_ind)
+  data$Year <- tt$Year
+  data$Month <- tt$Month
+
+  # Options
+  data$Fit_Effort <- Fit_Effort
+  data$Fit_CPUE <- Fit_CPUE
+  data$Fit_CAW <- Fit_CAW
+  data$Fit_CAA <- Fit_CAA
+
+  # Penalties
+  data$use_Frwpen <- use_Frwpen
+  data$use_R0rwpen <- use_R0rwpen
+
+  data$model <- 'SLAM'
+
+  if (!is.null(Data_types)) {
+    data <- set_data_types(data, Data_types=Data_types)
+  }
+  class(data) <- 'Data'
+  data
+}
+
+
