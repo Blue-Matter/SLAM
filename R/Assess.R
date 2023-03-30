@@ -193,6 +193,7 @@ Construct_Data_OM <- function(sim=1,
 #' @export
 #'
 Assess <- function(Data, Parameters=NULL,
+                   Assumed_h=0.7,
                    Est_Rec_Devs=ifelse(Data$n_month>=24, TRUE, FALSE),
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    ...) {
@@ -202,9 +203,9 @@ Assess <- function(Data, Parameters=NULL,
   if (!is.null(dots$map)) {
     map <- dots$map
   } else {
-    map=list(log_sigmaF_m=factor(NA),
-             log_sigmaR=factor(NA),
-             log_sigmaR0=factor(NA))
+    map <- list(log_sigmaF_m=factor(NA),
+                log_sigmaR=factor(NA),
+                log_sigmaR0=factor(NA))
   }
 
   if (!Est_Rec_Devs) {
@@ -216,11 +217,13 @@ Assess <- function(Data, Parameters=NULL,
     Random <- NULL
   } else {
     Random <- 'logRec_Devs'
-
   }
 
   outData <- Data
-  Data$Year <- Data$Month <- NULL
+  Data$h <- Assumed_h
+
+  # drop
+  Data$Year <- Data$Month <- Data$Metadata <- NULL
 
   do_opt <- opt_TMB_model(Data, Parameters, map, Random, control, restarts=10)
   do_opt$map <- map
