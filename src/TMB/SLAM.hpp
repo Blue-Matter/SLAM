@@ -21,9 +21,9 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_MATRIX(CAW);    // CAW observations for each bin and month
   DATA_VECTOR(CAW_ESS); // number of independent observation of weight samples in each month
 
-  // Age composition data
-  DATA_MATRIX(CAA);    // CAA observations for each bin and month
-  DATA_VECTOR(CAA_ESS); // number of independent observation of age samples in each month
+  // // Age composition data
+  // DATA_MATRIX(CAA);    // CAA observations for each bin and month
+  // DATA_VECTOR(CAA_ESS); // number of independent observation of age samples in each month
 
   // Monthly time-series data
   DATA_VECTOR(Effort); // monthly effort - mean 1 over time-series
@@ -358,32 +358,32 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Catch-at-Age ----
-  vector<Type> CAAns(n_months);
-  CAAns.setZero();
-  vector<Type> CAAnll(n_months);
-  CAAnll.setZero();
-
-  for (int m=0; m<n_months; m++) {
-    CAAns(m) = CAA.col(m).sum(); // sum of CAA observations
-
-    if (CAAns(m)>0) {
-      // standardize observed CAA to sum 1
-      vector<Type> CAAp_obs(n_ages);
-      CAAp_obs.setZero();
-      CAAp_obs = CAA.col(m)/CAA.col(m).sum();
-
-      // scale by effective sample size
-      vector<Type> Ncaa_obs(n_ages);
-      Ncaa_obs.setZero();
-      Ncaa_obs = CAA_ESS(m) * CAAp_obs;
-
-      // multinomial likelihood
-      vector<Type> predCAA_m(n_ages);
-      predCAA_m.setZero();
-      predCAA_m = predCAA.col(m);
-      CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA_m, true);
-    }
-  }
+  // vector<Type> CAAns(n_months);
+  // CAAns.setZero();
+  // vector<Type> CAAnll(n_months);
+  // CAAnll.setZero();
+  //
+  // for (int m=0; m<n_months; m++) {
+  //   CAAns(m) = CAA.col(m).sum(); // sum of CAA observations
+  //
+  //   if (CAAns(m)>0) {
+  //     // standardize observed CAA to sum 1
+  //     vector<Type> CAAp_obs(n_ages);
+  //     CAAp_obs.setZero();
+  //     CAAp_obs = CAA.col(m)/CAA.col(m).sum();
+  //
+  //     // scale by effective sample size
+  //     vector<Type> Ncaa_obs(n_ages);
+  //     Ncaa_obs.setZero();
+  //     Ncaa_obs = CAA_ESS(m) * CAAp_obs;
+  //
+  //     // multinomial likelihood
+  //     vector<Type> predCAA_m(n_ages);
+  //     predCAA_m.setZero();
+  //     predCAA_m = predCAA.col(m);
+  //     CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA_m, true);
+  //   }
+  // }
 
 
   // ---- Relative Effort ----
@@ -457,10 +457,10 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(0) =  CAWnll.sum();
   }
 
-  // CAA
-  if (Fit_CAA>0) {
-    nll_joint(1) =  CAAnll.sum();
-  }
+  // // CAA
+  // if (Fit_CAA>0) {
+  //   nll_joint(1) =  CAAnll.sum();
+  // }
 
   // Effort
   if (Fit_Effort>0) {
@@ -546,15 +546,12 @@ Type SLAM(objective_function<Type>* obj) {
 
   // likelihoods
   REPORT(CAWnll);
-  REPORT(CAAnll);
+  // REPORT(CAAnll);
   REPORT(Effnll);
   REPORT(CPUEnll);
   REPORT(recdevnll);
   REPORT(nll_joint);
   REPORT(nll);
-
-  // other stuff
-  REPORT(CAAns);
 
   return(nll);
 }
