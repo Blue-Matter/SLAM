@@ -18,10 +18,11 @@ Report <- function(x,
                    dir = tempdir(),
                    open_file = TRUE,
                    silent = FALSE, ...) {
-  UseMethod('Report', x)
+  UseMethod('Report')
 }
 
-#' @describeIn Report Generate a Data report
+#' @export
+#' @rdname Report
 Report.Data <- function(x,
                         filename = "Report",
                         dir = tempdir(),

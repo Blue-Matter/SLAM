@@ -39,8 +39,3 @@ Report(
 \description{
 Generates a HTML report and opens it in the web browser
 }
-\section{Methods (by class)}{
-\itemize{
-\item \code{Report(Data)}: Generate a Data report
-
-}}

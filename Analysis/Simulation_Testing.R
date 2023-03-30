@@ -6,6 +6,7 @@ remotes::install_github('blue-matter/SLAM')
 # remotes::install_github("mlysy/TMBtools") # this is needed to compile the TMB code??
 
 # To do:
+# - test with a new version of R - does it install dependencies?
 # - make standard data file structure
 # - test and confirm for 12 months of data with Pulse and Constant Recruitment
 # - test under perfect conditions with 12 month CAW and CAW & Effort
@@ -13,12 +14,14 @@ remotes::install_github('blue-matter/SLAM')
 # add plot(data) function
 
 library(SLAM)
-devtools::load_all()
 Example_Data()
 
 Data <- Import_Data('C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example_Binned.xlsx')
 
+Report(Data)
 
+
+MyAssess <- Assess(Data)
 
 
 
