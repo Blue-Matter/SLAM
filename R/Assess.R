@@ -25,7 +25,7 @@ Initialize_Parameters <- function(data,
   parameters$ls50 <- log(as50)
   parameters$lsdelta <- log(as95-as50)
 
-  n_ts <- length(data$Month_ind)
+  n_ts <- ncol(data$CAW)
 
   parameters$logF_minit <- log(Feq_init)
   parameters$logF_ts <- rep(log(0.1), n_ts)
