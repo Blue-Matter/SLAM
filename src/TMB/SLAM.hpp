@@ -13,7 +13,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(Weight_Age_SD);  // standard deviation of weight at age (log-normal)
   DATA_VECTOR(Maturity_at_Age);  // maturity at age
   DATA_VECTOR(M_at_Age); // natural mortality at age
-  DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
+  DATA_VECTOR(Post_Spawning_Mortality); // probability dying at-age (after spawning)
 
   // Weight composition data
   DATA_VECTOR(Weight_Bins);
@@ -142,7 +142,7 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> egg0(n_ages);
   egg0.setZero();
   for (int a=1; a<n_ages; a++) {
-    surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
+    surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-Post_Spawning_Mortality(a-1));
   }
   for (int a=0; a<n_ages; a++) {
     egg0(a) = surv0(a) * Weight_Age_Mean(a) * Maturity_at_Age(a);
@@ -162,7 +162,7 @@ Type SLAM(objective_function<Type>* obj) {
       if (a==0) {
         survF(a,m) = 1;
       } else {
-        survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-PSM_at_Age(a-1));
+        survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-Post_Spawning_Mortality(a-1));
       }
       eggFa(a) = survF(a,m) * Weight_Age_Mean(a) * Maturity_at_Age(a);
     }
@@ -196,9 +196,9 @@ Type SLAM(objective_function<Type>* obj) {
         N_unfished(a,m_ind) = R0_m(m_ind);
       } else {
         if (m_ind==0) {
-          N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1)) * (1-PSM_at_Age(a-1));
+          N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1)) * (1-Post_Spawning_Mortality(a-1));
         } else {
-          N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-M_ma(a-1)) * (1-PSM_at_Age(a-1));
+          N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-M_ma(a-1)) * (1-Post_Spawning_Mortality(a-1));
         }
       }
       B0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age_Mean(a) ;
@@ -229,12 +229,12 @@ Type SLAM(objective_function<Type>* obj) {
     int m_ind = t % 12; // month index
     for(int a=1;a<n_ages;a++){
       if (t==0) {
-        N_fished_eq(a,m_ind) = N_unfished(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+        N_fished_eq(a,m_ind) = N_unfished(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
       } else {
         if (m_ind==0) {
-          N_fished_eq(a,m_ind) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+          N_fished_eq(a,m_ind) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
         } else {
-          N_fished_eq(a,m_ind) = N_fished_eq(a-1,m_ind-1) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+          N_fished_eq(a,m_ind) = N_fished_eq(a-1,m_ind-1) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
         }
       }
       SB_am_eq(a, m_ind) =  N_fished_eq(a,m_ind) * Weight_Age_Mean(a) * Maturity_at_Age(a) * exp(-Fa_init(a)/2);;
@@ -256,7 +256,7 @@ Type SLAM(objective_function<Type>* obj) {
   N_m.setZero();
 
   for(int a=1;a<n_ages;a++){
-    N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+    N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
     SB_am(a,0) =  N_m(a,0) * Weight_Age_Mean(a) * Maturity_at_Age(a)  * exp(-Fa_init(a)/2);
     B_am(a,0) = N_m(a,0) * Weight_Age_Mean(a);
   }
@@ -270,7 +270,7 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=1; m<n_months; m++) {
     int m_ind = m % 12; // calendar month index
     for(int a=1;a<n_ages;a++){
-      N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
+      N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-Post_Spawning_Mortality(a-1));
       SB_am(a,m) = N_m(a,m) * Weight_Age_Mean(a) * Maturity_at_Age(a) * exp(-F_ma(a,m)/2);
       B_am(a,m) = N_m(a,m) * Weight_Age_Mean(a);
     }
@@ -290,7 +290,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   for (int m=0; m<n_months; m++) {
     for(int a=0;a<n_ages;a++){
-      predC_a(a,m) = N_m(a,m)*((1-Maturity_at_Age(a))*exp(-M_ma(a,m)/2)+Maturity_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-F_ma(a,m)));
+      predC_a(a,m) = N_m(a,m)*((1-Maturity_at_Age(a))*exp(-M_ma(a,m)/2)+Maturity_at_Age(a)*exp(-Post_Spawning_Mortality(a)/2))*(1-exp(-F_ma(a,m)));
       predCB_a(a,m) = predC_a(a,m) * Weight_Age_Mean(a);
     }
     predCB(m) = predCB_a.col(m).sum();
