@@ -5,3 +5,4 @@
 #' ggplot ggplotGrob geom_rect geom_point guides guide_legend labs theme theme_bw theme_classic xlim ylim xlab ylab
 #' @importFrom graphics abline arrows axis axTicks barplot boxplot contour hist
 #' @importFrom stats dnorm
+NULL
