@@ -16,9 +16,9 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(Post_Spawning_Mortality); // probability dying at-age (after spawning)
 
   // Weight composition data
+  DATA_MATRIX(CAW);    // CAW observations for each bin and month
   DATA_VECTOR(Weight_Bins);
   DATA_VECTOR(Weight_Mids); // mid-points of the CAW bins
-  DATA_MATRIX(CAW);    // CAW observations for each bin and month
   DATA_VECTOR(CAW_ESS); // number of independent observation of weight samples in each month
 
   // // Age composition data
@@ -532,7 +532,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SPR); // SPR
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
-  REPORT(predCAA); // catch-at-age
+  // REPORT(predCAA); // catch-at-age
 
   // predicted seasonal recruitment
   REPORT(R0_m);
