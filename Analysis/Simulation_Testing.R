@@ -20,7 +20,8 @@ Data <- Import_Data('C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Exa
 
 Report(Data)
 
-
+# set max CAW_ESS
+# checks ??
 MyAssess <- Assess(Data)
 
 
