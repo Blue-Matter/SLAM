@@ -5,7 +5,14 @@
 \alias{Import_Data.Simulated}
 \title{Import and organize data for assessment model}
 \usage{
-Import_Data(xlfile, BinWidth = NULL, use_Frwpen = 1, use_R0rwpen = 1, ...)
+Import_Data(
+  xlfile,
+  BinWidth = NULL,
+  BinMax = NULL,
+  use_Frwpen = 1,
+  use_R0rwpen = 1,
+  ...
+)
 
 \method{Import_Data}{Simulated}(
   Sampled_Data = NULL,

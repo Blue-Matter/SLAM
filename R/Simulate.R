@@ -603,9 +603,17 @@ Write_Data2XL <- function(Simulation, xlfile, n_years=3, sim=1, Sampling=NULL, b
   }
   path <- file.path(dir, 'Data_Template.xlsx')
   template <- path %>%
-    excel_sheets() %>%
-    set_names() %>%
-    map(read_excel, path = path)
+    readxl::excel_sheets() %>%
+    purrr::set_names() %>%
+    purrr::map(readxl::read_excel, path = path)
+
+  # Fishery Info
+  df <- data.frame(Field=c('Fishery', 'Location', 'Species', 'Common_Name', 'Author', 'Date'),
+                   Value=c('Example Octopus Fishery', 'Indonesia', 'Octopus cyanea', 'Day octopus',
+                           'T. Author (t.author@email.com)',
+                           'March 2023'))
+
+  xlsx::write.xlsx(df, xlfile, sheetName="Metadata", row.names = FALSE)
 
   # At-Age Schedules
   df <- template$`At-Age-Schedules`
@@ -625,7 +633,7 @@ Write_Data2XL <- function(Simulation, xlfile, n_years=3, sim=1, Sampling=NULL, b
   }
   colnames(df_out)[2:nCol] <- ''
 
-  xlsx::write.xlsx(df_out, xlfile, sheetName="At-Age-Schedules", row.names = FALSE)
+  xlsx::write.xlsx(df_out, xlfile, sheetName="At-Age-Schedules", row.names = FALSE, append=TRUE)
 
   # CAW-Data
   if (is.null(Sampling)) {
@@ -671,6 +679,9 @@ Write_Data2XL <- function(Simulation, xlfile, n_years=3, sim=1, Sampling=NULL, b
     outList <- list()
     for (year_i in seq_along(samp_years)) {
       tList <- list()
+      months <- SampDF %>% filter(Year==samp_years[year_i]) %>% distinct(Month) %>%
+        as.vector()
+      months <- months$Month
       for (month_i in seq_along(months)) {
         tList[[month_i]] <- data.frame(Year=samp_years[year_i],
                                        Month=months[month_i],
@@ -688,7 +699,7 @@ Write_Data2XL <- function(Simulation, xlfile, n_years=3, sim=1, Sampling=NULL, b
     nBins <- dd[1]
     mat <- matrix(0, length(Sampled_Data$Year), nBins)
     df_out <- data.frame(Year=Sampled_Data$Year, Month=Sampled_Data$Month, t(CAW))
-    colnames(df_out) <- c('Year', 'Month', Sampled_Data$WghtMids)
+    colnames(df_out) <- c('Year', 'Month', Sampled_Data$Weight_Mids)
     xlsx::write.xlsx(df_out, xlfile, sheetName="CAW-Data", row.names = FALSE, append=TRUE)
   }
 

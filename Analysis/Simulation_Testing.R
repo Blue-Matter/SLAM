@@ -13,11 +13,14 @@ remotes::install_github('blue-matter/SLAM')
 # add plot(data) function
 
 library(SLAM)
-library(ggplot2)
-library(purrr)
+devtools::load_all()
+Example_Data()
 
-library(readxl)
-library(xlsx)
+Data <- Import_Data('C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example_Binned.xlsx')
+
+
+
+
 
 xlfile <- 'inst/Data_Example_Binned.xlsx'
 xlfile <- 'inst/Data_Example_Raw.xlsx'
@@ -33,126 +36,32 @@ devtools::load_all()
 data <- Import_Data('inst/Data_Example_Binned.xlsx')
 data <- Import_Data('inst/Data_Example_Raw.xlsx', BinWidth = 1, BinMax=5)
 
+x <- data
+
+
+Data <- Import_Data()
+
+plot(Data)
+
+MyAssess <- Assess(Data)
+
+Report(Assess)
+
+library(ggplot2)
+library(purrr)
+
+library(readxl)
+library(xlsx)
+
 
 class(data)
-Report <- function(x, ...) {
-  UseMethod('Report', x)
-}
 
 library(cowplot)
 library(ggplot2)
 
-Report.Data <- function(x, ...) {
- data <- x
-
- # Plot Age Schedules
- # Weight-at-Age
- weight_at_age <- report_weight_at_age(data)
-
- # Maturity-at-Age
- maturity_at_age <- report_maturity_at_age(data)
-
- # M-at-Age
- M_at_age <- report_M_at_age(data)
-
- # PSM-at-Age
- PSM <- report_PSM_at_age(data)
-
- at_age_p <- cowplot::plot_grid(weight_at_age$p,
-                                maturity_at_age$p,
-                                M_at_age$p,
-                                PSM$p)
-
-
- # Plot CAW
- CAW <- report_CAW(data)
- CAW$p
-
-
- # Plot time-series
 
 
 
-}
-
-
-
-
-report_CAW <- function(data) {
-  df_list <- list()
-  for (i in 1:data$n_month) {
-    df_list[[i]] <- data.frame(Year=data$Year[i],
-                               Month=data$Month[i],
-                               Weight=data$Weight_Mids,
-                               Count=data$CAW[,i])
-  }
-  df <- do.call('rbind', df_list)
-  df$Month <- factor(df$Month, ordered = TRUE, levels=month.abb)
-  p <- ggplot(df, aes(x=Weight, y=Count)) +
-    facet_grid(Year~Month) +
-    geom_bar(stat='identity')  +
-    expand_limits(y=0) +
-    theme_bw()
-  list(df=df, p=p)
-
-}
-
-report_weight_at_age <- function(data) {
-
-  # Weight-at-Age
-  mu <- log(data$Weight_Age_Mean) -0.5*data$Weight_Age_SD^2
-  Lower <- qlnorm(0.1, mu,data$Weight_Age_SD )
-  Upper <- qlnorm(0.9, mu,data$Weight_Age_SD )
-  df <- data.frame(Age=data$Ages, Mean_Weight=data$Weight_Age_Mean, Lower=Lower, Upper=Upper)
-
-  p <- ggplot(df, aes(x=Age, y=Mean_Weight, ymin=Lower, ymax=Upper)) +
-           geom_ribbon(fill='lightgray') +
-           geom_line() +
-    labs(x='Age (months)', y='Weight',
-         title='Mean Weight-at-Age with 10th and 90th percentiles') +
-    expand_limits(y=0) +
-    theme_bw()
-
-  list(df=df, p=p)
-}
-
-report_maturity_at_age <- function(data) {
-  df <- data.frame(Age=data$Ages, Maturity=data$Maturity_at_Age)
-
-  p <- ggplot(df, aes(x=Age, y=Maturity)) +
-    geom_line(linewidth=1.2) +
-    labs(x='Age (months)', y='Probability Mature',
-         title='Maturity-at-Age') +
-    expand_limits(y=0) +
-    theme_bw()
-  list(df=df, p=p)
-}
-
-report_M_at_age <- function(data) {
-  df <- data.frame(Age=data$Ages, M=data$M_at_Age)
-
-  p <- ggplot(df, aes(x=Age, y=M)) +
-    geom_line(linewidth=1.2) +
-    labs(x='Age (months)', y='Natural Mortality',
-         title='Natural Mortality-at-Age') +
-    expand_limits(y=0) +
-    theme_bw()
-
-  list(df=df, p=p)
-}
-
-report_PSM_at_age <- function(data) {
-  df <- data.frame(Age=data$Ages, PSM=data$Post_Spawning_Mortality)
-  p <- ggplot(df, aes(x=Age, y=PSM)) +
-    geom_line(linewidth=1.2) +
-    labs(x='Age (months)', y='Post-Spawning Mortality',
-         title='Post-Spawning Mortality-at-Age',
-         linetype='') +
-    theme_bw() +
-    expand_limits(y=0)
-
-  list(df=df, p=p)
-}
 
 
 

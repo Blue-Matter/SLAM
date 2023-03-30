@@ -1,3 +1,16 @@
+
+#' Print the file path for example data sets included in SLAM
+#'
+#' @return The file paths for the example data
+#' @export
+#'
+#' @examples
+#' Example_Data()
+Example_Data <- function() {
+  dir <- system.file(package='SLAM')
+  file.path(dir, list.files(dir, pattern='xlsx'))
+}
+
 #' Import and organize data for assessment model
 #'
 #' @param xlfile The full file path to an Excel file structured for SLAM data
@@ -22,11 +35,15 @@ Import_Data <- function(xlfile,
     path <- xlfile
     suppressMessages(
       XLData <- path %>%
-        excel_sheets() %>%
-        set_names() %>%
-        map(read_excel, path = path)
+        readxl::excel_sheets() %>%
+        purrr::set_names() %>%
+        purrr::map(readxl::read_excel, path = path)
     )
     data <- list()
+
+    # Meta-data
+    data$Metadata <- XLData$Metadata
+
     # At-age
     data <- import_at_age(XLData, data)
 
