@@ -49,6 +49,7 @@ Make_Data <- function(silent=FALSE) {
 }
 
 #' @rdname Make_Data
+#' @export
 Make <- function(type='Data') {
   if (type=='Data') {
     return(Make_Data())
@@ -62,8 +63,8 @@ Make <- function(type='Data') {
 New_Parameters <- function() {
 
   parameters <- list()
-  parameters$as50 <- numeric()
-  parameters$asdelta <- numeric()
+  parameters$ls50 <- numeric()
+  parameters$lsdelta <- numeric()
   parameters$logF_minit <- numeric()
   parameters$logF_ts <- numeric()
 
@@ -98,10 +99,10 @@ Check <- function(Data=NULL) {
 }
 
 Update <- function(Data) {
-  Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == Data$n_month | sum(!is.na(Data$Effort_Mean)) <2,
+  Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == length(Data$Year) | sum(!is.na(Data$Effort_Mean)) <2,
                             0,1)
 
-  Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == Data$n_month | sum(!is.na(Data$Index_Mean)) <2,
+  Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
                            0,1)
   Data$Fit_CAW <- 1
   Data$Fit_CAA <- 0
