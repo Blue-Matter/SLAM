@@ -28,7 +28,7 @@ Report.Data <- function(x,
                         dir = tempdir(),
                         open_file = TRUE,
                         silent = FALSE,...) {
-  data <- Update(x)
+  data <- x
 
   data$type <- 'Data Report'
 
@@ -113,7 +113,7 @@ report_TS <- function(data) {
 
 report_CAW <- function(data) {
   df_list <- list()
-  for (i in 1:data$n_month) {
+  for (i in 1:length(data$Year)) {
     df_list[[i]] <- data.frame(Year=data$Year[i],
                                Month=data$Month[i],
                                Weight=data$Weight_Mids,
