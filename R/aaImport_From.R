@@ -110,17 +110,17 @@ Update <- function(Data) {
 }
 
 
-check_numeric <- function(sl) {
+check_numeric <- function(sl, Parameters) {
   if(!is.numeric(Parameters[[sl]]))
     stop(paste0('Parameters$', sl), ' is not a numeric value')
 }
 
-check_NA <- function(sl) {
+check_NA <- function(sl, Parameters) {
   if(any(is.na(Parameters[[sl]])))
     stop(paste0('Parameters$', sl), ' is not a numeric value')
 }
 
-check_length <- function(sl, len=1) {
+check_length <- function(sl, len=1, Parameters) {
   if (!(length(Parameters[[sl]])==len))
     stop(paste0('Parameters$', sl), ' is not a length ', len)
 }
@@ -139,9 +139,9 @@ Check_Parameters <- function(Parameters, Data, silent=FALSE) {
 
 
   for (i in 1:nrow(df)) {
-    check_numeric(df$Name[i])
-    check_NA(df$Name[i])
-    check_length(df$Name[i], df$Length[i])
+    check_numeric(df$Name[i], Parameters)
+    check_NA(df$Name[i], Parameters)
+    check_length(df$Name[i], df$Length[i], Parameters)
   }
 
   if (!silent)
