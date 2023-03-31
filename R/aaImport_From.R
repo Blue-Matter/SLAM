@@ -126,6 +126,16 @@ check_length <- function(sl, len=1, Parameters) {
     stop(paste0('Parameters$', sl), ' is not a length ', len)
 }
 
+#' Check Parameters
+#'
+#' @param Parameters
+#' @param Data
+#' @param silent
+#'
+#' @return
+#' @export
+#'
+#' @examples
 Check_Parameters <- function(Parameters, Data, silent=FALSE) {
 
   if(!inherits(Parameters, 'Parameters'))
