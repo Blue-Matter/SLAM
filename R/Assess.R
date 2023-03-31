@@ -23,8 +23,8 @@ Initialize_Parameters <- function(data,
                                   sigmaR0=0.6) {
 
   parameters <- New_Parameters()
-  parameters$as50 <- log(as50)
-  parameters$asdelta <- log(as95-as50)
+  parameters$ls50 <- log(as50)
+  parameters$lsdelta <- log(as95-as50)
 
   n_ts <- ncol(data$CAW)
 
@@ -229,6 +229,7 @@ Assess <- function(Data, Parameters=NULL,
   Data$h <- Assumed_h
   message('Assuming a BH-SRR steepness of ', Assumed_h)
 
+  Data <- Update(Data)
   # drop
   Data$Year <- Data$Month <- Data$Metadata <- NULL
 
