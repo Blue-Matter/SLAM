@@ -84,7 +84,7 @@ New_Parameters <- function() {
 #'
 #' @return Nothing
 #' @export
-Check <- function(Data=NULL) {
+Check <- function(Data=NULL, silent=FALSE) {
   if (!inherits(Data, 'Data'))
     stop('Object must be class `Data`')
 
@@ -93,8 +93,9 @@ Check <- function(Data=NULL) {
   if (all(Data$CAW_ESS<1)) {
     stop('No catch-at-weight Data detected')
   }
-
-  message('Data passes all checks')
+  if (!silent)
+    message('Data passes all checks')
+  invisible(Data)
 
 }
 
