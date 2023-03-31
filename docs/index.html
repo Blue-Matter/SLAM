@@ -76,10 +76,27 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of SLAM from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"Blue-Matter/SLAM"</span><span class="op">)</span></span></code></pre></div>
+<p>The <code>SLAM</code> package can be installed directly from GitHub. A couple of prerequisites are required to install <code>SLAM</code> from GitHub. RTools is required because the package uses <a href="https://cran.r-project.org/package=TMB" class="external-link">TMB</a>. The <code>devtools</code> package can check if RTools is installed on your system:</p>
+<pre><code><span><span class="co"># Load `devtools` if it's installed</span></span>
+<span><span class="va">chk</span> <span class="op">&lt;-</span> <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://devtools.r-lib.org/" class="external-link">'devtools'</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># install `devtools` if necessary</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="va">chk</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'devtools'</span><span class="op">)</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://devtools.r-lib.org/" class="external-link">'devtools'</a></span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre>
+<pre><code><span><span class="co"># Check if RTools is installed</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://r-lib.github.io/pkgbuild/reference/has_rtools.html" class="external-link">find_rtools</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">'RTools needs to be installed'</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre>
+<p>If you get an error message after running the code above, you need to install RTools. Instructions for installing RTools for Windows machines are available <a href="https://cran.r-project.org/bin/windows/Rtools/rtools40.html" class="external-link">here</a>. A quick web search will find similar instructions for installing RTools on OS machines.</p>
+<div class="section level3">
+<h3 id="installing-slam">Installing <code>SLAM</code>
+<a class="anchor" aria-label="anchor" href="#installing-slam"></a>
+</h3>
+<p>Once RTools is installed, <code>SLAM</code> can be installed with:</p>
+<pre><code><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">'blue-matter/SLAM'</span><span class="op">)</span></span></code></pre>
+</div>
 </div>
 <div class="section level2">
 <h2 id="help-documentation-and-user-guide">Help Documentation and User Guide<a class="anchor" aria-label="anchor" href="#help-documentation-and-user-guide"></a>

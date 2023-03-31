@@ -54,17 +54,17 @@ Report.Assess <- function(x,
                         dir = tempdir(),
                         open_file = TRUE,
                         silent = FALSE,...) {
-  params <- list()
-  params$data <- x$Data
+  data <- list()
+  data$Data <- x$Data
 
-  params$type <- 'Assessment Report'
+  data$type <- 'Assessment Report'
 
   rmd_file <- file.path(system.file(package = "SLAM"), "Report.Rmd")
   rmd <- readLines(rmd_file)
 
   write(rmd, file = file.path(dir, paste0(filename, ".rmd")))
 
-  if(!silent) message("Creating ", params$type, ": ", file.path(dir, paste0(filename, ".html")))
+  if(!silent) message("Creating ", data$type, ": ", file.path(dir, paste0(filename, ".html")))
 
   out <- rmarkdown::render(file.path(dir, paste0(filename, ".rmd")), "html_document", paste0(filename, ".html"), dir,
                            output_options = list(df_print = "paged"), quiet = TRUE)

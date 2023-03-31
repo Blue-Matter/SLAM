@@ -86,7 +86,7 @@ MyData <- Import(Example_Data()[1])
 Once you've imported a `Data` object, use the `Check` function to check that everything is structured correctly:
 
 ```{r}
-Check(Data)
+Check(MyData)
 ```
 
 ### Create a Data object in R 
