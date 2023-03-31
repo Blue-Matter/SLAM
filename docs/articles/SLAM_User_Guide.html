@@ -179,6 +179,12 @@ using the <code>Import</code> function:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">MyData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Import.html">Import</a></span><span class="op">(</span><span class="fu"><a href="../reference/Example_Data.html">Example_Data</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Successfully imported `Data` object from: C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example_Binned.xlsx</span></span></code></pre></div>
+<p>Once you’ve imported a <code>Data</code> object, use the
+<code>Check</code> function to check that everything is structured
+correctly:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/Check.html">Check</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Data passes all checks</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="create-a-data-object-in-r">Create a Data object in R<a class="anchor" aria-label="anchor" href="#create-a-data-object-in-r"></a>
@@ -186,7 +192,7 @@ using the <code>Import</code> function:</p>
 <p>Another option is to create an empty <code>Data</code> object and
 populate it in R. This can be done with the <code>Make</code>
 command:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">MyData2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Make_Data.html">Make</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Creating an empty `Data` object</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">MyData2</span><span class="op">)</span></span>
@@ -216,7 +222,7 @@ command:</p>
 <p>As you can see, the <code>Make</code> function returns an empty
 <code>Data</code> object, which can then be populated manually in R.</p>
 <p>For example, the metadata (used for reporting):</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">MyData2</span><span class="op">$</span><span class="va">Metadata</span><span class="op">$</span><span class="va">Value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'My Fishery'</span>, <span class="st">'My Location'</span>, <span class="st">'My Species'</span>, <span class="st">'My Species Name'</span>, <span class="st">'Me'</span>, <span class="st">'Today'</span><span class="op">)</span></span>
 <span><span class="va">MyData2</span><span class="op">$</span><span class="va">Metadata</span></span>
 <span><span class="co">#&gt;         Field           Value</span></span>
@@ -227,65 +233,116 @@ command:</p>
 <span><span class="co">#&gt; 5      Author              Me</span></span>
 <span><span class="co">#&gt; 6        Date           Today</span></span></code></pre></div>
 <p>The at-age schedules:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">MyData2</span><span class="op">$</span><span class="va">Ages</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">:</span><span class="fl">14</span></span>
 <span><span class="va">MyData2</span><span class="op">$</span><span class="va">Weight_Age_Mean</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.12</span>, <span class="fl">0.23</span>, <span class="fl">0.40</span>, <span class="fl">0.60</span>, </span>
 <span>                             <span class="fl">0.86</span>, <span class="fl">1.17</span>, <span class="fl">1.54</span>, <span class="fl">1.96</span>, <span class="fl">2.44</span>, <span class="fl">2.99</span>, <span class="fl">3.60</span>, <span class="fl">4.27</span><span class="op">)</span></span>
 <span><span class="co"># ...</span></span></code></pre></div>
 <p>And so on for all the other available data.</p>
+<p>As above, once you’re finished populating your <code>Data</code>
+object, it’s worth checking to make sure everything is ok:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/Check.html">Check</a></span><span class="op">(</span><span class="va">MyData2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Error in Check(MyData2): No catch-at-weight Data detected</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="data-report">Data Report<a class="anchor" aria-label="anchor" href="#data-report"></a>
 </h4>
 <p>Once a <code>Data</code> object is complete, a Data Report can be
 generated with the <code>Report</code> function:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/Report.html">Report</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span></code></pre></div>
 <p>This will compile a HTML report with figures and tables summarizing
 your fishery data, and open the HTML file in your web browser.</p>
-<p>See <a href="Data_Report.html">here</a> for the example Data Report
-created above.</p>
+<p>See <a href="Data_Report.html" target="_blank">here</a> for the
+example Data Report created above.</p>
 </div>
 </div>
 <div class="section level3">
 <h3 id="running-assessment">Running Assessment<a class="anchor" aria-label="anchor" href="#running-assessment"></a>
 </h3>
+<p>Now that the Data is imported and checked, we are ready to run the
+<code>SLAM</code> assessment model. This is done with the
+<code>Assess</code> function:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">MyAssess</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Assess.html">Assess</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Parameters pass all checks</span></span>
+<span><span class="co">#&gt; Assuming a BH-SRR steepness of 0.7</span></span></code></pre></div>
+<p>You will note that the <code>Assess</code> function prints out a
+message with an assumed value for the steepness parameter in the
+Beverton-Holt stock-recruitment function. This is an argument to the
+<code>Assess</code> function. You can see the details for the arguments
+for the <code>Assess</code> function in the help documentation. This is
+available with <code><a href="../reference/Assess.html">?Assess</a></code>. Help documentation is available for
+all functions in this same manner <code>?Function_Name</code>.</p>
+<p>The help documentation for <code>Assess</code> shows that the
+function requires an object of class <code>Data</code> as the first
+argument, and optionally a second argument with an object of class
+<code>Parameters</code>.</p>
+<p>The <code>Parameters</code> object contains the initial starting
+parameters for the assessment model. By default, these are set with the
+<code>Initialize_Parameters</code> function:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">myParameters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Initialize_Parameters.html">Initialize_Parameters</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span>
+<span><span class="va">myParameters</span></span>
+<span><span class="co">#&gt; $ls50</span></span>
+<span><span class="co">#&gt; [1] 1.386294</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $lsdelta</span></span>
+<span><span class="co">#&gt; [1] 0.6931472</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $logF_minit</span></span>
+<span><span class="co">#&gt; [1] -1.89712</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $logF_ts</span></span>
+<span><span class="co">#&gt;  [1] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
+<span><span class="co">#&gt;  [8] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
+<span><span class="co">#&gt; [15] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
+<span><span class="co">#&gt; [22] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
+<span><span class="co">#&gt; [29] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
+<span><span class="co">#&gt; [36] -2.302585</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $log_sigmaF_m</span></span>
+<span><span class="co">#&gt; [1] -0.9162907</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $logR0_m_est</span></span>
+<span><span class="co">#&gt;  [1] 0 0 0 0 0 0 0 0 0 0 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $log_sigmaR0</span></span>
+<span><span class="co">#&gt; [1] -0.5108256</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $logRec_Devs</span></span>
+<span><span class="co">#&gt;  [1] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $log_sigmaR</span></span>
+<span><span class="co">#&gt; [1] -0.5108256</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attr(,"class")</span></span>
+<span><span class="co">#&gt; [1] "Parameters"</span></span></code></pre></div>
+<p>If you wish, you can change the starting parameters in this object
+and provide them to the <code>Assess</code> function. If you do define
+your own starting parameters, it’s worth checking them with
+<code>Check_Parameters</code> function:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/Check_Parameters.html">Check_Parameters</a></span><span class="op">(</span><span class="va">myParameters</span>, <span class="va">MyData</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Parameters pass all checks</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="assessment-report">Assessment Report<a class="anchor" aria-label="anchor" href="#assessment-report"></a>
+</h4>
+<p>Once the assessment is complete, the <code>Report</code> function can
+be used to generate an Assessment Report:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/Report.html">Report</a></span><span class="op">(</span><span class="va">MyAssess</span><span class="op">)</span></span></code></pre></div>
+<p>The example assessment report can be found <a href="Assessment_Report.html" target="_blank">here</a>.</p>
 </div>
-<div class="section level3">
-<h3 id="examine-results">Examine Results<a class="anchor" aria-label="anchor" href="#examine-results"></a>
-</h3>
 </div>
 </div>
 <div class="section level2">
 <h2 id="simulating-fishery-data">Simulating Fishery Data<a class="anchor" aria-label="anchor" href="#simulating-fishery-data"></a>
 </h2>
-<div class="section level3">
-<h3 id="simulation">Simulation<a class="anchor" aria-label="anchor" href="#simulation"></a>
-</h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Import_LifeHistory()</span></span>
-<span><span class="co"># Simulate()</span></span></code></pre></div>
-<div class="section level4">
-<h4 id="simulating-fishery-dynamics">Simulating Fishery Dynamics<a class="anchor" aria-label="anchor" href="#simulating-fishery-dynamics"></a>
-</h4>
-</div>
-<div class="section level4">
-<h4 id="generating-fishery-data">Generating Fishery Data<a class="anchor" aria-label="anchor" href="#generating-fishery-data"></a>
-</h4>
-</div>
-</div>
-<div class="section level3">
-<h3 id="estimation">Estimation<a class="anchor" aria-label="anchor" href="#estimation"></a>
-</h3>
-<div class="section level4">
-<h4 id="applying-assessment-model-to-simulated-data">Applying Assessment Model to Simulated Data<a class="anchor" aria-label="anchor" href="#applying-assessment-model-to-simulated-data"></a>
-</h4>
-</div>
-<div class="section level4">
-<h4 id="applying-assessment-model-to-case-study-data">Applying Assessment Model to Case Study Data<a class="anchor" aria-label="anchor" href="#applying-assessment-model-to-case-study-data"></a>
-</h4>
-</div>
-</div>
+<p>The <code>SLAM</code> package also contains functions to simulate
+fishery dynamics for an octopus fishery. Additional information will be
+added to this user manual at a later date.</p>
 </div>
   </div>
 

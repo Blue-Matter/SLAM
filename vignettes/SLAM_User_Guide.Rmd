@@ -9,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r initial_stuff, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -54,7 +54,7 @@ devtools::install_github('blue-matter/SLAM')
 # Applying `SLAM` to Fishery Data
 
 In each new R session, the `SLAM` package must first be loaded into memory:
-```{r }
+```{r load_library}
 library(SLAM)
 ```
 
@@ -85,7 +85,7 @@ MyData <- Import(Example_Data()[1])
 
 Once you've imported a `Data` object, use the `Check` function to check that everything is structured correctly:
 
-```{r}
+```{r check_data}
 Check(MyData)
 ```
 
@@ -100,13 +100,13 @@ As you can see, the `Make` function returns an empty `Data` object, which can th
 
 For example, the metadata (used for reporting):
 
-```{r}
+```{r metadata}
 MyData2$Metadata$Value <- c('My Fishery', 'My Location', 'My Species', 'My Species Name', 'Me', 'Today')
 MyData2$Metadata
 ```
 
 The at-age schedules:
-```{r}
+```{r atage}
 MyData2$Ages <- 0:14
 MyData2$Weight_Age_Mean <- c(0, 0.01, 0.05, 0.12, 0.23, 0.40, 0.60, 
                              0.86, 1.17, 1.54, 1.96, 2.44, 2.99, 3.60, 4.27)
@@ -117,7 +117,7 @@ And so on for all the other available data.
 
 As above, once you're finished populating your `Data` object, it's worth checking to make sure everything is ok:
 
-```{r,error=TRUE}
+```{r check2,error=TRUE}
 Check(MyData2)
 ```
 
@@ -132,7 +132,7 @@ This will compile a HTML report with figures and tables summarizing your fishery
 
 See [here](Data_Report.html){target="_blank"} for the example Data Report created above. 
 
-```{r include=FALSE}
+```{r report_data2, include=FALSE}
 Report(MyData, dir='../docs/articles', open_file = FALSE)
 ```
 
@@ -140,7 +140,7 @@ Report(MyData, dir='../docs/articles', open_file = FALSE)
 
 Now that the Data is imported and checked, we are ready to run the `SLAM` assessment model. This is done with the `Assess` function:
 
-```{r}
+```{r assess}
 MyAssess <- Assess(MyData)
 ```
 
@@ -150,14 +150,14 @@ The help documentation for `Assess` shows that the function requires an object o
 
 The `Parameters` object contains the initial starting parameters for the assessment model. By default, these are set with the `Initialize_Parameters` function:
 
-```{r}
+```{r parameters}
 myParameters <- Initialize_Parameters(MyData)
 myParameters
 ```
 
 If you wish, you can change the starting parameters in this object and provide them to the `Assess` function. If you do define your own starting parameters, it's worth checking them with `Check_Parameters` function:
 
-```{r}
+```{r check_pars}
 Check_Parameters(myParameters, MyData)
 ```
 
@@ -171,7 +171,7 @@ Report(MyAssess)
 
 The example assessment report can be found [here](Assessment_Report.html){target="_blank"}. 
 
-```{r include=FALSE}
+```{r report_assessment2, include=FALSE}
 Report(MyAssess, dir='../docs/articles', open_file = FALSE)
 ```
 

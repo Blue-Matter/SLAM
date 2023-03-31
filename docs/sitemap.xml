@@ -4,6 +4,9 @@
     <loc>/404.html</loc>
   </url>
   <url>
+    <loc>/articles/Assessment_Report.html</loc>
+  </url>
+  <url>
     <loc>/articles/Data_Report.html</loc>
   </url>
   <url>
@@ -35,6 +38,9 @@
   </url>
   <url>
     <loc>/reference/Check.html</loc>
+  </url>
+  <url>
+    <loc>/reference/Check_Parameters.html</loc>
   </url>
   <url>
     <loc>/reference/Compare_OM_Assess.html</loc>
