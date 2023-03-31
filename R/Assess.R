@@ -201,7 +201,7 @@ Assess <- function(Data, Parameters=NULL,
                    ...) {
 
   if (is.null(Parameters)) {
-    Parameters <-  Initialize_Parameters(Data)
+    Parameters <- Initialize_Parameters(Data)
   }
   Check_Parameters(Parameters, Data)
 
