@@ -1,7 +1,7 @@
 ---
 title: "`r data$type`"
 subtitle: "`r data$Metadata$Value[data$Metadata$Field=='Author']`"
-date: "`r ifelse(is.null(data$Metadata$Value[data$Metadata$Field=='Date']), Sys.Date(), data$Metadata$Value[data$Metadata$Field=='Date'])`"
+date: "`r ifelse(is.null(data$Metadata$Value[data$Metadata$Field=='Date']) | is.na(data$Metadata$Value[data$Metadata$Field=='Date']), Sys.Date(), data$Metadata$Value[data$Metadata$Field=='Date'])`"
 ---
 <style type="text/css">
 h1 { /* Header 1 */
