@@ -4,7 +4,7 @@
 \alias{Check}
 \title{Check a \code{Data} object}
 \usage{
-Check(Data = NULL)
+Check(Data = NULL, silent = FALSE)
 }
 \arguments{
 \item{Data}{An object of class \code{Data}}
