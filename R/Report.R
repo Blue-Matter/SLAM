@@ -28,7 +28,7 @@ Report.Data <- function(x,
                         open_file = TRUE,
                         silent = FALSE,...) {
   data <- list()
-  data$Data <- x
+  data$Data <- Check(x, silent=TRUE)
 
   data$type <- 'Data Report'
 
@@ -49,7 +49,7 @@ Report.Data <- function(x,
 
 #' @export
 #' @rdname Report
-Report.Assessment <- function(x,
+Report.Assess <- function(x,
                         filename = "Assessment_Report",
                         dir = tempdir(),
                         open_file = TRUE,
