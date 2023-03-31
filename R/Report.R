@@ -56,6 +56,7 @@ Report.Assess <- function(x,
                         silent = FALSE,...) {
   data <- list()
   data$Data <- x$Data
+  data$rep <- x$rep
 
   data$type <- 'Assessment Report'
 
