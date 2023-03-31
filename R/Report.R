@@ -28,7 +28,8 @@ Report.Data <- function(x,
                         dir = tempdir(),
                         open_file = TRUE,
                         silent = FALSE,...) {
-  data <- x
+  data <- Update(x)
+
   data$type <- 'Data Report'
 
   rmd_file <- file.path(system.file(package = "SLAM"), "Report.Rmd")
@@ -36,7 +37,7 @@ Report.Data <- function(x,
 
   write(rmd, file = file.path(dir, paste0(filename, ".rmd")))
 
-  if(!silent) message("Rendering markdown file to HTML: ", file.path(dir, paste0(filename, ".html")))
+  if(!silent) message("Creating ", data$type, ": ", file.path(dir, paste0(filename, ".html")))
 
   out <- rmarkdown::render(file.path(dir, paste0(filename, ".rmd")), "html_document", paste0(filename, ".html"), dir,
                            output_options = list(df_print = "paged"), quiet = TRUE)
@@ -51,23 +52,23 @@ Report.Data <- function(x,
 report_TS <- function(data) {
   df <- data.frame(Year=data$Year,
                    Month=data$Month,
-                   Effort=data$Effort,
+                   Effort_Mean=data$Effort_Mean,
                    Effort_SD=data$Effort_SD,
-                   Index=data$CPUE,
-                   Index_SD=data$CPUE_SD
+                   Index_Mean=data$Index_Mean,
+                   Index_SD=data$Index_SD
   )
   df$Month_n <- match(df$Month, month.abb)
   df$Date <- as.Date(paste(df$Year, df$Month_n, 01, sep='-'))
 
   # Effort
-  mu <- log(df$Effort) -0.5*df$Effort_SD^2
+  mu <- log(df$Effort_Mean) -0.5*df$Effort_SD^2
   Lower <- qlnorm(0.1, mu,df$Effort_SD)
   Upper <- qlnorm(0.9, mu,df$Effort_SD)
-  dfE <- df %>% select(Year,Month, Effort, Effort_SD, Date)
+  dfE <- df %>% select(Year,Month, Effort_Mean, Effort_SD, Date)
   dfE$ymin <- Lower
   dfE$ymax <- Upper
 
-  p1 <- ggplot(dfE, aes(x=Date, y=Effort, ymin=ymin, ymax=ymax)) +
+  p1 <- ggplot(dfE, aes(x=Date, y=Effort_Mean, ymin=ymin, ymax=ymax)) +
     geom_ribbon(fill='lightgray') +
     geom_line() +
     labs(x='Date',
@@ -83,14 +84,14 @@ report_TS <- function(data) {
           axis.text.x=element_blank())
 
   # Index
-  mu <- log(df$Index) -0.5*df$Index_SD^2
+  mu <- log(df$Index_Mean) -0.5*df$Index_SD^2
   Lower <- qlnorm(0.1, mu,df$Index_SD)
   Upper <- qlnorm(0.9, mu,df$Index_SD)
-  dfI <- df %>% select(Year,Month, Index, Index_SD, Date)
+  dfI <- df %>% select(Year,Month, Index_Mean, Index_SD, Date)
   dfI$ymin <- Lower
   dfI$ymax <- Upper
 
-  p2 <- ggplot(dfI, aes(x=Date, y=Index, ymin=ymin, ymax=ymax)) +
+  p2 <- ggplot(dfI, aes(x=Date, y=Index_Mean, ymin=ymin, ymax=ymax)) +
     geom_ribbon(fill='lightgray') +
     geom_line() +
     labs(x='Date',

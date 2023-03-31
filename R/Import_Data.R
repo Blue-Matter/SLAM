@@ -15,19 +15,16 @@ Example_Data <- function() {
 #'
 #' @param xlfile The full file path to an Excel file structured for SLAM data
 #' @param BinWidth The width of the bins for the catch-at-weight data. Only needed if the CAW data is raw.
-#' @param use_Frwpen Use the penalty for the random walk in fishing mortality?
-#' @param use_R0rwpen Use the penalty for the random walk in monthly seasonal recruitment pattern?
 #' @param ... Additional parameters (not currently used)
 #'
 #' @return A `Data` object for the `Assess` function
 #' @export
 #'
-Import_Data <- function(xlfile,
-                        BinWidth=NULL,
-                        BinMax=NULL,
-                        use_Frwpen=1,
-                        use_R0rwpen=1,
-                        ...) {
+Import <- function(xlfile,
+                   BinWidth=NULL,
+                   BinMax=NULL,
+                   silent=FALSE,
+                   ...) {
   if (inherits(xlfile, 'Simulated')) {
     UseMethod('Import_Data')
   } else {
@@ -39,7 +36,7 @@ Import_Data <- function(xlfile,
         purrr::set_names() %>%
         purrr::map(readxl::read_excel, path = path)
     )
-    data <- list()
+    data <- Make_Data(TRUE)
 
     # Meta-data
     data$Metadata <- XLData$Metadata
@@ -52,29 +49,10 @@ Import_Data <- function(xlfile,
 
     # Time-Series
     data <- import_ts_data(XLData, data)
-
-    # Options
-    data$n_month <- data$Year %>% length()
-    data$Fit_Effort <- ifelse(sum(is.na(data$Effort)) == data$n_month | sum(!is.na(data$Effort)) <2,
-                              0,1)
-
-    data$Fit_CPUE <- ifelse(sum(is.na(data$CPUE)) == data$n_month | sum(!is.na(data$CPUE)) <2,
-                            0,1)
-    data$Fit_CAW <- 1
-    data$Fit_CAA <- 0
-    if (all(data$CAW_ESS<1)) {
-      stop('No catch-at-weight data detected')
-    }
-
-    # Penalties
-    data$use_Frwpen <- use_Frwpen
-    data$use_R0rwpen <- use_R0rwpen
-
-    data$model <- 'SLAM'
-    class(data) <- 'Data'
+    if (!silent)
+      message('Successfully imported `Data` object from: ', xlfile)
     return(data)
   }
-
 }
 
 import_at_age <- function(XLData, data) {
@@ -92,6 +70,7 @@ import_at_age <- function(XLData, data) {
     colnames(dd) <- NULL
     data[[Names[i]]] <- as.vector(dd)
   }
+
   data
 }
 
@@ -113,7 +92,9 @@ import_caw_data <- function(XLData, data, BinWidth=NULL, BinMax=NULL) {
     data$Weight_Mids <- BinMids
     data$CAW <- t(data$CAW)
     data$CAW_ESS <- apply(data$CAW, 2, sum)
-    data$Year_Month <- data.frame(Year=XLData$`CAW-Data`$Year, Month=XLData$`CAW-Data`$Month)
+    data$Year <- XLData$`CAW-Data`$Year
+    data$Month <- XLData$`CAW-Data`$Month
+
   } else {
     message('Raw CAW data detected')
     if (is.null(BinWidth)) {
@@ -143,18 +124,18 @@ import_caw_data <- function(XLData, data, BinWidth=NULL, BinMax=NULL) {
       data$CAW[, i] <- as.numeric(table(cut(caw_yr$Weight, Bins)))
     }
     data$CAW_ESS <- apply(data$CAW, 2, sum)
-    data$Year_Month <- data.frame(Year=XLData$`CAW-Data`$Year, Month=XLData$`CAW-Data`$Month) %>%
+    Year_Month <- data.frame(Year=XLData$`CAW-Data`$Year, Month=XLData$`CAW-Data`$Month) %>%
       distinct(Year, Month)
+    data$Year <- Year_Month$Year
+    data$Month <- Year_Month$Month
   }
-
   data
-
 }
 
 import_ts_data <- function(XLData, data) {
   TS_data <- XLData$`Time-Series-Data`
   TS_Year_Month <- data.frame(Year=TS_data$Year, Month=TS_data$Month)
-  CAW_Year_Month <- data$Year_Month
+  CAW_Year_Month <- data.frame(Year=data$Year, Month=data$Month)
 
   # match Year and Months
   match <- FALSE
@@ -164,14 +145,10 @@ import_ts_data <- function(XLData, data) {
   if (!match)
     stop('`CAW-Data` and `Time-Series-Data` must both contain all Years and Months. Use NA for missing values.')
 
-  data$Year <- data$Year_Month$Year
-  data$Month <- data$Year_Month$Month
-  data$Year_Month <- NULL
-
-  data$Effort <- TS_data$Effort_Mean
+  data$Effort_Mean <- TS_data$Effort_Mean
   data$Effort_SD <- TS_data$Effort_SD
-  data$CPUE <- TS_data$Index_Mean
-  data$CPUE_SD <- TS_data$Index_SD
+  data$Index_Mean <- TS_data$Index_Mean
+  data$Index_SD <- TS_data$Index_SD
   data
 }
 

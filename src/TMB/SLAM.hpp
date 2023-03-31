@@ -26,11 +26,11 @@ Type SLAM(objective_function<Type>* obj) {
   // DATA_VECTOR(CAA_ESS); // number of independent observation of age samples in each month
 
   // Monthly time-series data
-  DATA_VECTOR(Effort); // monthly effort - mean 1 over time-series
+  DATA_VECTOR(Effort_Mean); // monthly effort - mean 1 over time-series
   DATA_VECTOR(Effort_SD); // monthly effort SD (log-space)
 
-  DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
-  DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
+  DATA_VECTOR(Index_Mean); // monthly cpue - mean 1 over time-series
+  DATA_VECTOR(Index_SD); // monthly cpue SD (log-space)
 
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
@@ -71,7 +71,7 @@ Type SLAM(objective_function<Type>* obj) {
   // ---- indexing variables ----
   int n_ages = Weight_Age_Mean.size(); // number of age classes
   int n_bins = Weight_Mids.size(); // number of size bins
-  int n_months = CPUE.size(); // number of months of data
+  int n_months = Index_Mean.size(); // number of months of data
 
   // ---- Generate Age-Weight Key ----
   matrix<Type> AWK(n_ages, n_bins);
@@ -392,7 +392,7 @@ Type SLAM(objective_function<Type>* obj) {
   Type Effsum = 0;
   Type Effn = 0;
   for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
+    if (!R_IsNA(asDouble(Effort_Mean(m)))) {
       Effsum += Effort_m(m);
       Effn += 1;
     }
@@ -407,8 +407,8 @@ Type SLAM(objective_function<Type>* obj) {
 
   for (int m=0; m<n_months; m++) {
     StEffort(m) = Effort_m(m)/Effmean;
-    if ((!R_IsNA(asDouble(Effort(m)))) & (Effort(m)!=0)) {
-      Effnll(m)  -= dnorm_(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+    if ((!R_IsNA(asDouble(Effort_Mean(m)))) & (Effort_Mean(m)!=0)) {
+      Effnll(m)  -= dnorm_(log(StEffort(m)), log(Effort_Mean(m)), Effort_SD(m), true);
     }
   }
 
@@ -419,12 +419,12 @@ Type SLAM(objective_function<Type>* obj) {
   // Calculate predicted Index
   predIndex = B_m;
 
-  // mean 1 over time-steps where CPUE data exists
+  // mean 1 over time-steps where Index_Mean data exists
   Type CPUEmean = 0;
   Type CPUEsum = 0;
   Type CPUEn = 0;
   for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(CPUE(m)))) {
+    if (!R_IsNA(asDouble(Index_Mean(m)))) {
       CPUEsum += predIndex(m);
       CPUEn += 1;
     }
@@ -437,8 +437,8 @@ Type SLAM(objective_function<Type>* obj) {
   stpredIndex.setZero();
   for (int m=0; m<n_months; m++) {
     stpredIndex(m) = predIndex(m)/CPUEmean;
-    if (!R_IsNA(asDouble(CPUE(m)))) {
-      CPUEnll(m) -= dnorm_(log(stpredIndex(m)), log(CPUE(m)), CPUE_SD(m), true);
+    if (!R_IsNA(asDouble(Index_Mean(m)))) {
+      CPUEnll(m) -= dnorm_(log(stpredIndex(m)), log(Index_Mean(m)), Index_SD(m), true);
     }
   }
 
@@ -467,8 +467,8 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(2) =  Effnll.sum();
   }
 
-  // CPUE
-  if (Fit_CPUE>0) {
+  // Index
+  if (Fit_Index>0) {
     nll_joint(3) =  CPUEnll.sum();
   }
 

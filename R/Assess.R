@@ -17,18 +17,19 @@
 Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
                                   Feq_init=0.15,
+                                  F_ts=0.1,
                                   sigmaR=0.6,
                                   sigmaF_m=0.4,
                                   sigmaR0=0.6) {
 
-  parameters <- list()
-  parameters$ls50 <- log(as50)
-  parameters$lsdelta <- log(as95-as50)
+  parameters <- New_Parameters()
+  parameters$as50 <- log(as50)
+  parameters$asdelta <- log(as95-as50)
 
   n_ts <- ncol(data$CAW)
 
   parameters$logF_minit <- log(Feq_init)
-  parameters$logF_ts <- rep(log(0.1), n_ts)
+  parameters$logF_ts <- rep(log(F_ts), n_ts)
 
   parameters$log_sigmaF_m <- log(sigmaF_m)
 
@@ -36,6 +37,7 @@ Initialize_Parameters <- function(data,
   parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
+  class(parameters) <- 'Parameters'
   parameters
 }
 
@@ -194,10 +196,14 @@ Construct_Data_OM <- function(sim=1,
 #'
 Assess <- function(Data, Parameters=NULL,
                    Assumed_h=0.7,
-                   Est_Rec_Devs=ifelse(Data$n_month>=24, TRUE, FALSE),
+                   Est_Rec_Devs=ifelse(length(Data$Year)>=24, TRUE, FALSE),
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    ...) {
 
+  if (is.null(Parameters)) {
+    Parameters <-  Initialize_Parameters(Data)
+  }
+  Check_Parameters(Parameters, Data)
 
   dots <- list(...)
   if (!is.null(dots$map)) {
@@ -221,6 +227,7 @@ Assess <- function(Data, Parameters=NULL,
 
   outData <- Data
   Data$h <- Assumed_h
+  message('Assuming a BH-SRR steepness of ', Assumed_h)
 
   # drop
   Data$Year <- Data$Month <- Data$Metadata <- NULL
@@ -229,6 +236,7 @@ Assess <- function(Data, Parameters=NULL,
   do_opt$map <- map
   do_opt$Data <- outData
   do_opt$Parameters <- Parameters
+  class(do_opt) <- 'Assess'
   do_opt
 
 }
