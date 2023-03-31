@@ -3,6 +3,7 @@
 \name{Report}
 \alias{Report}
 \alias{Report.Data}
+\alias{Report.Assessment}
 \title{Generate Data and Assessment Reports}
 \usage{
 Report(
@@ -16,7 +17,16 @@ Report(
 
 \method{Report}{Data}(
   x,
-  filename = "Report",
+  filename = "Data_Report",
+  dir = tempdir(),
+  open_file = TRUE,
+  silent = FALSE,
+  ...
+)
+
+\method{Report}{Assessment}(
+  x,
+  filename = "Assessment_Report",
   dir = tempdir(),
   open_file = TRUE,
   silent = FALSE,
