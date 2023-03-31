@@ -7,6 +7,7 @@
 Assess(
   Data,
   Parameters = NULL,
+  Assumed_h = 0.7,
   Est_Rec_Devs = ifelse(Data$n_month >= 24, TRUE, FALSE),
   control = list(eval.max = 20000, iter.max = 20000, abs.tol = 1e-20),
   ...
