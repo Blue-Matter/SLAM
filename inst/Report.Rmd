@@ -1,7 +1,7 @@
 ---
 title: "`r data$type`"
-subtitle: "`r data$Metadata$Value[data$Metadata$Field=='Author']`"
-date: "`r ifelse(is.null(data$Metadata$Value[data$Metadata$Field=='Date']) | is.na(data$Metadata$Value[data$Metadata$Field=='Date']), Sys.Date(), data$Metadata$Value[data$Metadata$Field=='Date'])`"
+subtitle: "`r data$Data$Metadata$Value[data$Data$Metadata$Field=='Author']`"
+date: "`r ifelse(is.null(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']) | is.na(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']), Sys.Date(), data$Data$Metadata$Value[data$Data$Metadata$Field=='Date'])`"
 ---
 <style type="text/css">
 h1 { /* Header 1 */
@@ -10,6 +10,7 @@ h1 { /* Header 1 */
 </style>
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+
 ```
 
 
@@ -18,23 +19,23 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 ```{r}
-knitr::kable(data$Metadata)
+knitr::kable(data$Data$Metadata)
 ```
 
 ## At-Age Schedules 
 
 ```{r}
- weight_at_age <- report_weight_at_age(data)
+ weight_at_age <- report_weight_at_age(data$Data)
  colnames(weight_at_age$df)[3:4] <- c('10th', '90th')
 
  # Maturity-at-Age
- maturity_at_age <- report_maturity_at_age(data)
+ maturity_at_age <- report_maturity_at_age(data$Data)
 
  # M-at-Age
- M_at_age <- report_M_at_age(data)
+ M_at_age <- report_M_at_age(data$Data)
 
  # PSM-at-Age
- PSM <- report_PSM_at_age(data)
+ PSM <- report_PSM_at_age(data$Data)
 
  at_age_p <- cowplot::plot_grid(weight_at_age$p,
                                 maturity_at_age$p,
