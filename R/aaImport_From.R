@@ -98,12 +98,11 @@ Check <- function(Data=NULL) {
 }
 
 Update <- function(Data) {
-  Data$n_month <- Data$Year %>% length()
-  Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort)) == Data$n_month | sum(!is.na(Data$Effort)) <2,
+  Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == Data$n_month | sum(!is.na(Data$Effort_Mean)) <2,
                             0,1)
 
-  Data$Fit_CPUE <- ifelse(sum(is.na(Data$CPUE)) == Data$n_month | sum(!is.na(Data$CPUE)) <2,
-                          0,1)
+  Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == Data$n_month | sum(!is.na(Data$Index_Mean)) <2,
+                           0,1)
   Data$Fit_CAW <- 1
   Data$Fit_CAA <- 0
   Data
