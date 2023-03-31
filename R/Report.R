@@ -12,7 +12,6 @@
 #'
 #' @return
 #' @export
-#'
 Report <- function(x,
                    filename = "Report",
                    dir = tempdir(),
@@ -24,11 +23,12 @@ Report <- function(x,
 #' @export
 #' @rdname Report
 Report.Data <- function(x,
-                        filename = "Report",
+                        filename = "Data_Report",
                         dir = tempdir(),
                         open_file = TRUE,
                         silent = FALSE,...) {
-  data <- x
+  data <- list()
+  data$Data <- x
 
   data$type <- 'Data Report'
 
@@ -47,9 +47,37 @@ Report.Data <- function(x,
   return(invisible(out))
 }
 
+#' @export
+#' @rdname Report
+Report.Assessment <- function(x,
+                        filename = "Assessment_Report",
+                        dir = tempdir(),
+                        open_file = TRUE,
+                        silent = FALSE,...) {
+  params <- list()
+  params$data <- x$Data
+
+  params$type <- 'Assessment Report'
+
+  rmd_file <- file.path(system.file(package = "SLAM"), "Report.Rmd")
+  rmd <- readLines(rmd_file)
+
+  write(rmd, file = file.path(dir, paste0(filename, ".rmd")))
+
+  if(!silent) message("Creating ", params$type, ": ", file.path(dir, paste0(filename, ".html")))
+
+  out <- rmarkdown::render(file.path(dir, paste0(filename, ".rmd")), "html_document", paste0(filename, ".html"), dir,
+                           output_options = list(df_print = "paged"), quiet = TRUE)
+  if(!silent) message("Rendering complete.")
+
+  if(open_file) browseURL(out)
+  return(invisible(out))
+}
 
 
 report_TS <- function(data) {
+  rep <- data$rep
+  data <- data$Data
   df <- data.frame(Year=data$Year,
                    Month=data$Month,
                    Effort_Mean=data$Effort_Mean,
@@ -68,6 +96,12 @@ report_TS <- function(data) {
   dfE$ymin <- Lower
   dfE$ymax <- Upper
 
+  if (!is.null(rep)) {
+    dfE$predE <- rep$StEffort
+    mu <- mean(dfE$Effort_Mean, na.rm=T)
+    dfE$predE <- dfE$predE/mean(dfE$predE[!is.na(dfE$Effort_Mean)]) * mu
+  }
+
   p1 <- ggplot(dfE, aes(x=Date, y=Effort_Mean, ymin=ymin, ymax=ymax)) +
     geom_ribbon(fill='lightgray') +
     geom_line() +
@@ -83,6 +117,11 @@ report_TS <- function(data) {
     theme(axis.title.x=element_blank(),
           axis.text.x=element_blank())
 
+
+  if (!is.null(rep)) {
+    p1 <- p1 + geom_line(aes(y=predE), color='blue', linetype=2)
+  }
+
   # Index
   mu <- log(df$Index_Mean) -0.5*df$Index_SD^2
   Lower <- qlnorm(0.1, mu,df$Index_SD)
@@ -90,6 +129,12 @@ report_TS <- function(data) {
   dfI <- df %>% select(Year,Month, Index_Mean, Index_SD, Date)
   dfI$ymin <- Lower
   dfI$ymax <- Upper
+
+  if (!is.null(rep)) {
+    dfI$predI <- rep$stpredIndex
+    mu <- mean(dfI$Index_Mean, na.rm=T)
+    dfI$predE <- dfI$predI/mean(dfI$predI[!is.na(dfI$Index_Mean)]) * mu
+  }
 
   p2 <- ggplot(dfI, aes(x=Date, y=Index_Mean, ymin=ymin, ymax=ymax)) +
     geom_ribbon(fill='lightgray') +
@@ -104,6 +149,10 @@ report_TS <- function(data) {
                  limits = c(min(dfI$Date), max = max(dfI$Date)),
                  expand=c(0.01,0))
 
+  if (!is.null(rep)) {
+    p2 <- p2 + geom_line(aes(y=predI), color='blue', linetype=2)
+  }
+
   p <- cowplot::plot_grid(p1,p2, nrow=2, labels=c('a)', 'b)'),
                           rel_heights = c(0.85,1))
   list(df=df, p=p)
@@ -112,6 +161,9 @@ report_TS <- function(data) {
 
 
 report_CAW <- function(data) {
+  rep <- data$rep
+  data <- data$Data
+
   df_list <- list()
   for (i in 1:length(data$Year)) {
     df_list[[i]] <- data.frame(Year=data$Year[i],
@@ -121,11 +173,25 @@ report_CAW <- function(data) {
   }
   df <- do.call('rbind', df_list)
   df$Month <- factor(df$Month, ordered = TRUE, levels=month.abb)
+
+  if (!is.null(rep$predCAW)) {
+    df$predCAW <- as.vector(rep$predCAW)
+
+    df <- df %>% group_by(Year, Month) %>%
+      mutate(n_sample=sum(Count)) %>%
+      mutate(predCAW=predCAW*n_sample)
+  }
+
   p <- ggplot(df, aes(x=Weight, y=Count)) +
     facet_grid(Month~Year) +
     geom_bar(stat='identity')  +
     expand_limits(y=0) +
     theme_bw()
+
+  if (!is.null(rep$predCAW)) {
+    p <- p + geom_line(aes(y=predCAW), color='blue', linetype=1)
+  }
+
   list(df=df, p=p)
 
 }
