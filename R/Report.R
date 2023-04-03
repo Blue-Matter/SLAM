@@ -76,7 +76,7 @@ Report.Assess <- function(x,
 }
 
 
-report_TS <- function(data) {
+report_Effort_TS <- function(data) {
   rep <- data$rep
   data <- data$Data
   df <- data.frame(Year=data$Year,
@@ -117,14 +117,30 @@ report_TS <- function(data) {
     theme(axis.text.x = element_text(angle = 90)) +
     scale_x_date(date_breaks = '1 month', date_labels = "%b-%Y",
                  limits = c(min(dfE$Date), max = max(dfE$Date)),
-                 expand=c(0.01,0)) +
-    theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank())
+                 expand=c(0.01,0))
 
 
   if (!is.null(rep)) {
     p1 <- p1 + geom_line(aes(y=predE), color='blue', linetype=2)
   }
+  p1
+}
+
+report_Index_TS <- function(data) {
+  rep <- data$rep
+  data <- data$Data
+  df <- data.frame(Year=data$Year,
+                   Month=data$Month,
+                   Effort_Mean=data$Effort_Mean,
+                   Effort_SD=data$Effort_SD,
+                   Index_Mean=data$Index_Mean,
+                   Index_SD=data$Index_SD
+  )
+  if (is.numeric(df$Month)) {
+    df$Month <- month.abb[df$Month]
+  }
+  df$Month_n <- match(df$Month, month.abb)
+  df$Date <- as.Date(paste(df$Year, df$Month_n, 01, sep='-'))
 
   # Index
   mu <- log(df$Index_Mean) -0.5*df$Index_SD^2
@@ -157,9 +173,7 @@ report_TS <- function(data) {
     p2 <- p2 + geom_line(aes(y=predI), color='blue', linetype=2)
   }
 
-  p <- cowplot::plot_grid(p1,p2, nrow=2, labels=c('a)', 'b)'),
-                          rel_heights = c(0.85,1))
-  list(df=df, p=p)
+  p2
 }
 
 

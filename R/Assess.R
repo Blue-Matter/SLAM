@@ -185,7 +185,7 @@ Assess <- function(Data, Parameters=NULL,
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    ...) {
 
-  if (!inherits(data, 'Data'))
+  if (!inherits(Data, 'Data'))
     stop('First argument must be object of class `Data`')
 
   if (is.null(Parameters)) {

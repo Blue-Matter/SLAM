@@ -17,10 +17,10 @@ knitr::opts_chunk$set(echo = FALSE)
 # {.tabset}
 ## Fishery Information
 
-
 ```{r}
 knitr::kable(data$Data$Metadata)
 ```
+
 
 ## At-Age Schedules 
 
@@ -49,24 +49,18 @@ knitr::kable(data$Data$Metadata)
 ```
 
 ### {.tabset}
-####  Table  
-
-```{r}
- knitr::kable(df)
-```
 
 ####  Figures  
 ```{r, fig.width=8, }
 at_age_p
 ```
 
-## Indices of Effort and Abundance
 
-```{r, fig.width=8, fig.height=10}
- TS <- report_TS(data)
- TS$p
+####  Table  
+
+```{r}
+ knitr::kable(df)
 ```
-
 
 ## Catch-at-Weight
 
@@ -74,6 +68,22 @@ at_age_p
  CAW <- report_CAW(data)
  CAW$p
 ```
+
+
+
+## Index of Effort
+```{r}
+report_Effort_TS(data)
+
+```
+
+## Index of Abundance
+
+```{r}
+report_Index_TS(data)
+```
+
+
 
 
 
