@@ -8,6 +8,7 @@ Assess(
   Data,
   Parameters = NULL,
   Assumed_h = 0.7,
+  max_ESS = 50,
   Est_Rec_Devs = ifelse(length(Data$Year) >= 24, TRUE, FALSE),
   control = list(eval.max = 20000, iter.max = 20000, abs.tol = 1e-20),
   ...
@@ -17,6 +18,10 @@ Assess(
 \item{Data}{A \code{Data} object}
 
 \item{Parameters}{A \code{Parameters} object}
+
+\item{Assumed_h}{Assumed value of steepness for the stock-recruitment relationship}
+
+\item{max_ESS}{Maximum effective sample size for the catch-at-weight data}
 
 \item{Est_Rec_Devs}{Logical. Estimate recruitment deviations (TRUE) or assume constant recruitment (FALSE)}
 
