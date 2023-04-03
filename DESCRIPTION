@@ -1,6 +1,6 @@
 Package: SLAM
 Title: SLAM: Short-Lived Assessment Model
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R: 
     person("Adrian", "Hordyk", , "adrian@bluematterscience.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-5620-3446"))
