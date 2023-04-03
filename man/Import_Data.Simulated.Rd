@@ -35,6 +35,9 @@ Import_Data.Simulated(
 
 \item{Data_types}{Optional character vector specifying data types to fit to.}
 }
+\value{
+A \code{Data} object
+}
 \description{
 Import Simulated Data
 }

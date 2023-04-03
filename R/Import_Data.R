@@ -173,8 +173,8 @@ import_ts_data <- function(XLData, data) {
 #' @param use_R0rwpen Logical. Use the random walk penalty for seasonal recruitment?
 #' @param Data_types Optional character vector specifying data types to fit to.
 #'
-#' @return
-#' @export A `Data` object
+#' @return A `Data` object
+#' @export
 Import_Data.Simulated <- function(Sampled_Data=NULL,
                                   sim=1,
                                   Fit_Effort=1,
