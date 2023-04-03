@@ -32,7 +32,7 @@ Report.Data <- function(x,
 
   data$type <- 'Data Report'
 
-  rmd_file <- file.path(system.file(package = "SLAM"), "Report.Rmd")
+  rmd_file <- file.path(system.file(package = "SLAM"), "Report_Data.Rmd")
   rmd <- readLines(rmd_file)
 
   write(rmd, file = file.path(dir, paste0(filename, ".rmd")))
@@ -60,7 +60,7 @@ Report.Assess <- function(x,
 
   data$type <- 'Assessment Report'
 
-  rmd_file <- file.path(system.file(package = "SLAM"), "Report.Rmd")
+  rmd_file <- file.path(system.file(package = "SLAM"), "Report_Assessment.Rmd")
   rmd <- readLines(rmd_file)
 
   write(rmd, file = file.path(dir, paste0(filename, ".rmd")))
