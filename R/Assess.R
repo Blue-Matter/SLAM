@@ -20,7 +20,7 @@ Initialize_Parameters <- function(data,
                                   F_ts=0.1,
                                   sigmaR=0.6,
                                   sigmaF_m=0.4,
-                                  sigmaR0=0.6) {
+                                  sigmaR0=0.4) {
 
   if (!inherits(data, 'Data'))
     stop('First argument must be object of class `Data`')
@@ -172,6 +172,8 @@ Construct_Data_OM <- function(sim=1,
 #'
 #' @param Data A `Data` object
 #' @param Parameters A `Parameters` object
+#' @param Assumed_h Assumed value of steepness for the stock-recruitment relationship
+#' @param max_ESS Maximum effective sample size for the catch-at-weight data
 #' @param Est_Rec_Devs Logical. Estimate recruitment deviations (TRUE) or assume constant recruitment (FALSE)
 #' @param control Optional controls for optimizer
 #' @param ... Additional arguments pass to TMB
@@ -181,6 +183,7 @@ Construct_Data_OM <- function(sim=1,
 #'
 Assess <- function(Data, Parameters=NULL,
                    Assumed_h=0.7,
+                   max_ESS=50,
                    Est_Rec_Devs=ifelse(length(Data$Year)>=24, TRUE, FALSE),
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    ...) {
@@ -216,6 +219,8 @@ Assess <- function(Data, Parameters=NULL,
 
   Data$h <- Assumed_h
   message('Assuming a BH-SRR steepness of ', Assumed_h)
+
+  Data$CAW_ESS[Data$CAW_ESS>max_ESS] <- max_ESS
   outData <- Data
 
   Data <- Update(Data)

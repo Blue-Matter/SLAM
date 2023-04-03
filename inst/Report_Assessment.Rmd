@@ -104,13 +104,20 @@ knitr::kable(assumed_pars(data),  caption=paste(tab.number(), 'Assumed parameter
 ```
 
 ```{r}
-knitr::kable(nll_vals(data),  caption=paste(tab.number(), 'Negative log-likelihood values.'))
+DT::datatable(nll_vals(data),  caption=paste(tab.number(), 'Negative log-likelihood values.'),
+                options = list(
+    info = FALSE,
+    paging = FALSE,
+    searching = FALSE
+  ))
 ```
 
 ### Seasonal Recruitment Pattern 
-```{r, fig.cap='The estimated seasonal recruitment pattern.'}
+```{r, fig.cap=paste(fig.number(), 'The estimated seasonal recruitment pattern.')}
 p <- report_seasonal_rec(data)
 p$p
+
+knitr::kable(p$df, caption=paste(tab.number(), 'The estimated seasonal recruitment pattern.'))
 ```
 
 ### Spawning Potential Ratio

@@ -316,7 +316,8 @@ nll_vals <- function(data) {
                         'Index of Abundance',
                         'Recruitment deviations',
                         'Random Walk F',
-                        'Random Walk Seasonal Recruitment'),
-             Value=data$rep$nll_joint)
+                        'Random Walk Seasonal Recruitment',
+                        'Total'),
+             Value=c(data$rep$nll_joint, sum(data$rep$nll_joint)))
 
 }
