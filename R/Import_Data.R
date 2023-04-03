@@ -27,7 +27,7 @@ Import <- function(xlfile,
                    silent=FALSE,
                    ...) {
   if (inherits(xlfile, 'Simulated')) {
-    UseMethod('Import_Data')
+    UseMethod('Import')
   } else {
     # import from an excel file
     path <- xlfile
@@ -175,7 +175,7 @@ import_ts_data <- function(XLData, data) {
 #'
 #' @return A `Data` object
 #' @export
-Import_Data.Simulated <- function(Sampled_Data=NULL,
+Import.Simulated <- function(Sampled_Data=NULL,
                                   sim=1,
                                   Fit_Effort=1,
                                   Fit_CPUE=1,
