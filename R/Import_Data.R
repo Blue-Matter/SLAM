@@ -191,7 +191,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
   data$Weight_Age_SD <- Sampled_Data$Simulation$LifeHistory$Weight_Age_SD
   data$Maturity_at_Age <- Sampled_Data$Simulation$LifeHistory$Maturity_at_Age
   data$M_at_Age <- Sampled_Data$Simulation$LifeHistory$M_at_Age
-  data$PSM_at_Age <- Sampled_Data$Simulation$LifeHistory$Post_Spawning_Mortality
+  data$Post_Spawning_Mortality <- Sampled_Data$Simulation$LifeHistory$Post_Spawning_Mortality
   data$h <- Sampled_Data$Simulation$LifeHistory$steepness
   nAges <- length(data$Weight_Age_Mean)
 
