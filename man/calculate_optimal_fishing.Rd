@@ -5,20 +5,35 @@
 \title{Calculate the optimal pattern in fishing mortality}
 \usage{
 calculate_optimal_fishing(
-  LifeHistory,
-  Exploitation,
+  R0_m,
+  steepness,
+  Weight_Age_Mean,
+  Maturity_at_Age,
+  M_at_Age,
+  Post_Spawning_Mortality,
+  sel_at_age,
   opt_type = 1,
   utilpow = 0.3
 )
 }
 \arguments{
-\item{LifeHistory}{A \code{LifeHistory} object}
+\item{R0_m}{The expected fraction of recruitment in each calendar month}
 
-\item{Exploitation}{An \code{Exploitation} object}
+\item{steepness}{The assumed steepness of the Beverton-Holt stock-recruitment function}
+
+\item{Weight_Age_Mean}{The mean weight-at-age}
+
+\item{M_at_Age}{The natural mortality-at-age schedule}
+
+\item{sel_at_age}{The selectivity-at-age schedule}
 
 \item{opt_type}{0 to maximize yield, 1 to maximize HARA utility}
 
 \item{utilpow}{Exponent of the HARA model}
+
+\item{Maturit_at_Age}{The maturity-at-age schedule}
+
+\item{Post_Spawing_Mortality}{The post-spawning mortality at age schedule}
 }
 \value{
 A list

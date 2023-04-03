@@ -50,11 +50,6 @@ knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Informatio
  # PSM-at-Age
  PSM <- report_PSM_at_age(data$Data)
 
- at_age_p <- cowplot::plot_grid(weight_at_age$p,
-                                maturity_at_age$p,
-                                M_at_age$p,
-                                PSM$p)
- 
  df <- dplyr::left_join(weight_at_age$df, maturity_at_age$df, by='Age')
  df <- dplyr::left_join(df, M_at_age$df, by='Age')
  df <- dplyr::left_join(df, PSM$df, by='Age')
@@ -63,9 +58,22 @@ knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Informatio
 
 
 ####  Figures  
-```{r, fig.width=8, }
-at_age_p
+```{r, fig.cap=paste(fig.number(), 'The mean weight-at-age, with 10th and 90th percentiles.')}
+weight_at_age$p
 ```
+
+```{r, fig.cap=paste(fig.number(), 'The maturity-at-age schedule.')}
+maturity_at_age$p
+```
+
+```{r, fig.cap=paste(fig.number(), 'The natural mortality-at-age schedule.')}
+M_at_age$p
+```
+
+```{r, fig.cap=paste(fig.number(), 'The post-spawning mortality-at-age schedule.')}
+PSM$p
+```
+
 
 
 ####  Table  
@@ -76,7 +84,7 @@ at_age_p
 
 ### Catch-at-Weight
 
-```{r, fig.width=8,fig.height=16}
+```{r, fig.width=8,fig.height=16, fig.cap=paste(fig.number(), 'The catch-at-weight data. The blue line shows the predictions from the assessment model.')}
  CAW <- report_CAW(data)
  CAW$p
 ```
@@ -84,14 +92,14 @@ at_age_p
 
 
 ### Index of Effort
-```{r}
+```{r fig.cap=paste(fig.number(), 'The index of effort data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.'}
 report_Effort_TS(data)
 
 ```
 
 ### Index of Abundance
 
-```{r}
+```{rfig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.}
 report_Index_TS(data)
 ```
 
@@ -117,11 +125,36 @@ DT::datatable(nll_vals(data),  caption=paste(tab.number(), 'Negative log-likelih
 p <- report_seasonal_rec(data)
 p$p
 
-knitr::kable(p$df, caption=paste(tab.number(), 'The estimated seasonal recruitment pattern.'))
 ```
 
-### Spawning Potential Ratio
-### Estimated Parameters  
+### Selectivity
+
+```{r, fig.cap=paste(fig.number(), 'The estimated selectivity pattern.')}
+p <- report_selectivity(data)
+p$p
+```
+
+
+### Time-Series
+
+```{r, fig.cap=paste(fig.number(), 'The estimated spawning potential ratio.')}
+report_SPR(data)
+```
+
+```{r, fig.cap=paste(fig.number(), 'The estimated fishing mortality.')}
+report_F(data)
+```
+
+```{r, fig.cap=paste(fig.number(), 'The estimated relative spawning biomass.')}
+report_SB_SB0(data)
+```
+
+```{r, fig.cap=paste(fig.number(), 'The estimated log recruitment deviations.')}
+report_rec_devs(data)
+```
+
+
+### Predicted Optimal Exploitation
 
 
 

@@ -226,9 +226,7 @@ report_weight_at_age <- function(data) {
   p <- ggplot(df, aes(x=Age, y=Mean_Weight, ymin=Lower, ymax=Upper)) +
     geom_ribbon(fill='lightgray') +
     geom_line() +
-    labs(x='Age (months)', y='Weight',
-         title='Mean Weight-at-Age',
-         subtitle = ' 10th and 90th percentiles') +
+    labs(x='Age (months)', y='Weight') +
     expand_limits(y=0) +
     theme_bw()
 
@@ -240,8 +238,7 @@ report_maturity_at_age <- function(data) {
 
   p <- ggplot(df, aes(x=Age, y=Maturity)) +
     geom_line(linewidth=1.2) +
-    labs(x='Age (months)', y='Probability Mature',
-         title='Maturity-at-Age') +
+    labs(x='Age (months)', y='Probability Mature') +
     expand_limits(y=0) +
     theme_bw()
   list(df=df, p=p)
@@ -252,8 +249,7 @@ report_M_at_age <- function(data) {
 
   p <- ggplot(df, aes(x=Age, y=M)) +
     geom_line(linewidth=1.2) +
-    labs(x='Age (months)', y='Natural Mortality',
-         title='Natural Mortality-at-Age') +
+    labs(x='Age (months)', y='Natural Mortality') +
     expand_limits(y=0) +
     theme_bw()
 
@@ -265,7 +261,6 @@ report_PSM_at_age <- function(data) {
   p <- ggplot(df, aes(x=Age, y=PSM)) +
     geom_line(linewidth=1.2) +
     labs(x='Age (months)', y='Post-Spawning Mortality',
-         title='Post-Spawning Mortality-at-Age',
          linetype='') +
     theme_bw() +
     expand_limits(y=0)
@@ -321,3 +316,92 @@ nll_vals <- function(data) {
              Value=c(data$rep$nll_joint, sum(data$rep$nll_joint)))
 
 }
+
+report_selectivity <- function(data) {
+  df <- data.frame(Age=data$Data$Ages, Selectivity=data$rep$selA)
+
+  p1 <- ggplot(df, aes(x=Age, y=Selectivity)) +
+    geom_line() +
+    theme_bw()
+
+  list(p=p1, df=df)
+}
+
+make_df <- function(data) {
+
+  df <- data.frame(Year=data$Data$Year,
+                   Month=data$Data$Month,
+                   SPR=data$rep$SPR,
+                   F=data$rep$F_m,
+                   log_rec_devs=data$rep$logRec_Devs,
+                   SB_SB0=data$rep$SB_m/data$rep$SB0_m
+  )
+
+  if (is.numeric(df$Month)) {
+    df$Month <- month.abb[df$Month]
+  }
+  df$Month_n <- match(df$Month, month.abb)
+  df$Date <- as.Date(paste(df$Year, df$Month_n, 01, sep='-'))
+  df
+}
+
+report_SPR <- function(data) {
+  df <- make_df(data)
+  ggplot(df, aes(x=Date, y=SPR)) +
+    geom_line() +
+    labs(x='Date',
+         y='Spawning Potential Ratio (SPR)') +
+    expand_limits(y=c(0,1)) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90)) +
+    scale_x_date(date_breaks = '1 month', date_labels = "%b-%Y",
+                 limits = c(min(df$Date), max = max(df$Date)),
+                 expand=c(0.01,0))
+
+}
+
+report_SB_SB0 <- function(data) {
+  df <- make_df(data)
+  ggplot(df, aes(x=Date, y=SB_SB0)) +
+    geom_line() +
+    labs(x='Date',
+         y='Relative Spawning Biomass (SB/SB0)') +
+    expand_limits(y=c(0)) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90)) +
+    scale_x_date(date_breaks = '1 month', date_labels = "%b-%Y",
+                 limits = c(min(df$Date), max = max(df$Date)),
+                 expand=c(0.01,0))
+}
+
+report_F <- function(data) {
+  df <- make_df(data)
+  ggplot(df, aes(x=Date, y=F)) +
+    geom_line() +
+    labs(x='Date',
+         y='Fishing Mortality') +
+    expand_limits(y=c(0)) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90)) +
+    scale_x_date(date_breaks = '1 month', date_labels = "%b-%Y",
+                 limits = c(min(df$Date), max = max(df$Date)),
+                 expand=c(0.01,0))
+}
+
+
+report_rec_devs <- function(data) {
+  df <- make_df(data)
+  ggplot(df, aes(x=Date, y=log_rec_devs )) +
+    geom_line() +
+    labs(x='Date',
+         y='Log recruitment deviations') +
+    expand_limits(y=c(0)) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90)) +
+    scale_x_date(date_breaks = '1 month', date_labels = "%b-%Y",
+                 limits = c(min(df$Date), max = max(df$Date)),
+                 expand=c(0.01,0)) +
+    geom_hline(yintercept = 0, linetype=2)
+}
+
+
