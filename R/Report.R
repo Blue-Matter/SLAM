@@ -176,6 +176,10 @@ report_CAW <- function(data) {
                                Count=data$CAW[,i])
   }
   df <- do.call('rbind', df_list)
+
+  if (is.numeric(df$Month)) {
+    df$Month <- month.abb[df$Month]
+  }
   df$Month <- factor(df$Month, ordered = TRUE, levels=month.abb)
 
   if (!is.null(rep$predCAW)) {
