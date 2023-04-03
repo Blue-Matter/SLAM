@@ -449,7 +449,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Joint likelihood ----
-  vector<Type> nll_joint(8);
+  vector<Type> nll_joint(6);
   nll_joint.setZero();
 
   // CAW
@@ -464,34 +464,34 @@ Type SLAM(objective_function<Type>* obj) {
 
   // Effort
   if (Fit_Effort>0) {
-    nll_joint(2) =  Effnll.sum();
+    nll_joint(1) =  Effnll.sum();
   }
 
   // Index
   if (Fit_Index>0) {
-    nll_joint(3) =  CPUEnll.sum();
+    nll_joint(2) =  CPUEnll.sum();
   }
 
 
   // Recruitment deviations
-  nll_joint(4) =  recdevnll;
+  nll_joint(3) =  recdevnll;
 
   // ---- Penalties ----
   // penalty for random walk in F
   if (use_Frwpen>0) {
     for(int m=1;m<n_months;m++){
-      nll_joint(5) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
+      nll_joint(4) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
     }
     // include initial equilibrium F
-    nll_joint(5) -= dnorm(logF_minit, logF_ts(0), sigmaF_m, true);
+    nll_joint(4) -= dnorm(logF_minit, logF_ts(0), sigmaF_m, true);
   }
 
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(6) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(5) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(6) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
 

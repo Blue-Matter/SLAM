@@ -54,10 +54,7 @@ Report.Assess <- function(x,
                         dir = tempdir(),
                         open_file = TRUE,
                         silent = FALSE,...) {
-  data <- list()
-  data$Data <- x$Data
-  data$rep <- x$rep
-
+  data <- x
   data$type <- 'Assessment Report'
 
   rmd_file <- file.path(system.file(package = "SLAM"), "Report_Assessment.Rmd")
@@ -276,3 +273,50 @@ report_PSM_at_age <- function(data) {
   list(df=df, p=p)
 }
 
+report_seasonal_rec <- function(data) {
+  rep <- data$rep
+  df <- data.frame(Month=month.abb, Rec=rep$R0_m)
+  df$Month <- factor(df$Month, levels=month.abb, ordered = TRUE)
+  p1 <- ggplot(df, aes(x=Month, y=Rec, group=1)) +
+    expand_limits(y=0) +
+    geom_line() +
+    theme_bw() +
+    labs(y='Relative Recruitment')
+
+  list(df=df, p=p1)
+}
+
+assumed_pars <- function(data) {
+
+  df <- data.frame(Parameter=c('h',
+                               'sigmaR',
+                               'use_F_pen',
+                               'sigmaF_m',
+                               'use_R0_pen',
+                               'sigmaR0'),
+                   Value=c(data$Data$h,
+                           exp(data$Parameters$log_sigmaR),
+                           as.logical(data$Data$use_Frwpen),
+                           exp(data$Parameters$log_sigmaF_m),
+                           as.logical(data$Data$use_R0rwpen),
+                           exp(data$Parameters$log_sigmaR0)),
+                   Description=c('Assumed steepness of stock-recruit curve',
+                                 'Standard deviation of log-normal recruitment deviations',
+                                 'Use the penalty for random walk in F?',
+                                 'Standard deviation for random walk penalty for F',
+                                 'Use the penalty for random walk in seasonal recruitment?',
+                                 'Standard deviation for random walk penalty for seasonal recruitment')
+  )
+  df
+}
+
+nll_vals <- function(data) {
+  data.frame(Component=c('Catch-at-Weight',
+                        'Index of Effort',
+                        'Index of Abundance',
+                        'Recruitment deviations',
+                        'Random Walk F',
+                        'Random Walk Seasonal Recruitment'),
+             Value=data$rep$nll_joint)
+
+}

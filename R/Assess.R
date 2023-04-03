@@ -214,9 +214,9 @@ Assess <- function(Data, Parameters=NULL,
     Random <- 'logRec_Devs'
   }
 
-  outData <- Data
   Data$h <- Assumed_h
   message('Assuming a BH-SRR steepness of ', Assumed_h)
+  outData <- Data
 
   Data <- Update(Data)
   # drop

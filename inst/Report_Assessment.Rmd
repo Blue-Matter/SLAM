@@ -11,6 +11,19 @@ h1 { /* Header 1 */
 ```{r setup2, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
+tab.num <<- fig.num <<- 0
+
+fig.number <- function() {
+  fig.num <<- fig.num + 1
+  paste0('Figure ', fig.num, '.')
+}
+  
+tab.number <- function() {
+  tab.num <<- tab.num + 1
+  paste0('Table ', tab.num , '.')
+}
+  
+
 ```
 
 
@@ -18,7 +31,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ## Fishery Information
 
 ```{r}
-knitr::kable(data$Data$Metadata)
+knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Information.'))
 ```
 
 ## Data {.tabset}
@@ -58,7 +71,7 @@ at_age_p
 ####  Table  
 
 ```{r}
- knitr::kable(df)
+ knitr::kable(df, caption=paste(tab.number(), 'At-Age schedules.'))
 ```
 
 ### Catch-at-Weight
@@ -82,8 +95,26 @@ report_Effort_TS(data)
 report_Index_TS(data)
 ```
 
-## Assessment Results
+## Assessment Results {.tabset}
 
+### Tables 
+
+```{r}
+knitr::kable(assumed_pars(data),  caption=paste(tab.number(), 'Assumed parameters used in the assessment.'))
+```
+
+```{r}
+knitr::kable(nll_vals(data),  caption=paste(tab.number(), 'Negative log-likelihood values.'))
+```
+
+### Seasonal Recruitment Pattern 
+```{r, fig.cap='The estimated seasonal recruitment pattern.'}
+p <- report_seasonal_rec(data)
+p$p
+```
+
+### Spawning Potential Ratio
+### Estimated Parameters  
 
 
 
