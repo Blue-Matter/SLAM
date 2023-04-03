@@ -187,13 +187,13 @@ Import.Simulated <- function(Sampled_Data=NULL,
 
   data <- list()
   # Assumed life-history parameters
-  data$Weight_Age <- Sampled_Data$Simulation$LifeHistory$Weight_Age_Mean
+  data$Weight_Age_Mean <- Sampled_Data$Simulation$LifeHistory$Weight_Age_Mean
   data$Weight_Age_SD <- Sampled_Data$Simulation$LifeHistory$Weight_Age_SD
   data$Maturity_at_Age <- Sampled_Data$Simulation$LifeHistory$Maturity_at_Age
   data$M_at_Age <- Sampled_Data$Simulation$LifeHistory$M_at_Age
   data$PSM_at_Age <- Sampled_Data$Simulation$LifeHistory$Post_Spawning_Mortality
   data$h <- Sampled_Data$Simulation$LifeHistory$steepness
-  nAges <- length(data$Weight_Age)
+  nAges <- length(data$Weight_Age_Mean)
 
   # CAW Data
   data$Weight_Bins <- Sampled_Data$Data$Weight_Bins
@@ -217,13 +217,13 @@ Import.Simulated <- function(Sampled_Data=NULL,
 
   # Effort Index
   Effort_DF <- Sampled_Data$Data$TS %>% filter(Sim==sim) %>% select(Effort)
-  data$Effort <- Effort_DF$Effort
+  data$Effort_Mean <- Effort_DF$Effort
   data$Effort_SD <- rep(Sampled_Data$Sampling$Effort_CV, nMonths)
 
   # CPUE Index
   CPUE_DF <- Sampled_Data$Data$TS %>% filter(Sim==sim) %>% select(CPUE)
-  data$CPUE <- CPUE_DF$CPUE
-  data$CPUE_SD <- rep(Sampled_Data$Sampling$CPUE_CV, nMonths)
+  data$Index_Mean <- CPUE_DF$CPUE
+  data$Index_SD <- rep(Sampled_Data$Sampling$CPUE_CV, nMonths)
 
   # Year and Month info
   tt <- Sampled_Data$Data$TS %>% filter(Sim==sim)
@@ -234,7 +234,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
 
   # Options
   data$Fit_Effort <- Fit_Effort
-  data$Fit_CPUE <- Fit_CPUE
+  data$Index <- Fit_CPUE
   data$Fit_CAW <- Fit_CAW
   data$Fit_CAA <- Fit_CAA
 
