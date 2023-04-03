@@ -353,7 +353,15 @@ generate_Effort <- function(Exploitation, LifeHistory, nsim) {
   }
 
   # Calculate optimal monthly seasonal fishing pattern
-  opt_F_pattern <- calculate_optimal_fishing(LifeHistory, Exploitation,
+  sel_at_age <-  1/(1+exp(-log(19)*((LifeHistory$Ages-Exploitation$SA50)/(Exploitation$SA95-Exploitation$SA50))))
+
+  opt_F_pattern <- calculate_optimal_fishing(LifeHistory$R0_m,
+                                             LifeHistory$steepness,
+                                             LifeHistory$Weight_Age_Mean,
+                                             LifeHistory$Maturity_at_Age,
+                                             LifeHistory$M_at_Age,
+                                             LifeHistory$Post_Spawning_Mortality,
+                                             sel_at_age,
                                              opt_type=1, utilpow=Exploitation$HARA_power)
   month_opt_Eff <- opt_F_pattern$F_m/mean(opt_F_pattern$F_m)
   nmonths <- Exploitation$nmonths
