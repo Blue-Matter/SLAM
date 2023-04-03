@@ -92,14 +92,14 @@ PSM$p
 
 
 ### Index of Effort
-```{r fig.cap=paste(fig.number(), 'The index of effort data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.'}
+```{r fig.cap=paste(fig.number(), 'The index of effort data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.')}
 report_Effort_TS(data)
 
 ```
 
 ### Index of Abundance
 
-```{rfig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.}
+```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.')}
 report_Index_TS(data)
 ```
 
@@ -118,6 +118,19 @@ DT::datatable(nll_vals(data),  caption=paste(tab.number(), 'Negative log-likelih
     paging = FALSE,
     searching = FALSE
   ))
+```
+
+```{r}
+df <- make_df(data) %>% select(Year, Month, SPR, F, log_rec_devs, SB_SB0) %>% 
+  dplyr::mutate(dplyr::across(3:6, \(x) round(x,3)))
+
+DT::datatable(df,  caption=paste(tab.number(), 'Estimated values.'),
+                options = list(
+    info = FALSE,
+    paging = FALSE,
+    searching = FALSE
+  ))
+
 ```
 
 ### Seasonal Recruitment Pattern 
@@ -152,10 +165,6 @@ report_SB_SB0(data)
 ```{r, fig.cap=paste(fig.number(), 'The estimated log recruitment deviations.')}
 report_rec_devs(data)
 ```
-
-
-### Predicted Optimal Exploitation
-
 
 
 

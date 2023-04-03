@@ -11,6 +11,20 @@ h1 { /* Header 1 */
 ```{r setup2, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
+tab.num <<- fig.num <<- 0
+
+fig.number <- function() {
+  fig.num <<- fig.num + 1
+  paste0('Figure ', fig.num, '.')
+}
+  
+tab.number <- function() {
+  tab.num <<- tab.num + 1
+  paste0('Table ', tab.num , '.')
+}
+  
+
+
 ```
 
 
@@ -18,7 +32,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ## Fishery Information
 
 ```{r}
-knitr::kable(data$Data$Metadata)
+knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Information.'))
 ```
 
 ## Data {.tabset}
@@ -37,11 +51,6 @@ knitr::kable(data$Data$Metadata)
  # PSM-at-Age
  PSM <- report_PSM_at_age(data$Data)
 
- at_age_p <- cowplot::plot_grid(weight_at_age$p,
-                                maturity_at_age$p,
-                                M_at_age$p,
-                                PSM$p)
- 
  df <- dplyr::left_join(weight_at_age$df, maturity_at_age$df, by='Age')
  df <- dplyr::left_join(df, M_at_age$df, by='Age')
  df <- dplyr::left_join(df, PSM$df, by='Age')
@@ -50,20 +59,33 @@ knitr::kable(data$Data$Metadata)
 
 
 ####  Figures  
-```{r, fig.width=8, }
-at_age_p
+```{r, fig.cap=paste(fig.number(), 'The mean weight-at-age, with 10th and 90th percentiles.')}
+weight_at_age$p
 ```
+
+```{r, fig.cap=paste(fig.number(), 'The maturity-at-age schedule.')}
+maturity_at_age$p
+```
+
+```{r, fig.cap=paste(fig.number(), 'The natural mortality-at-age schedule.')}
+M_at_age$p
+```
+
+```{r, fig.cap=paste(fig.number(), 'The post-spawning mortality-at-age schedule.')}
+PSM$p
+```
+
 
 
 ####  Table  
 
 ```{r}
- knitr::kable(df)
+ knitr::kable(df, caption=paste(tab.number(), 'At-Age schedules.'))
 ```
 
 ### Catch-at-Weight
 
-```{r, fig.width=8,fig.height=16}
+```{r, fig.width=8,fig.height=16, fig.cap=paste(fig.number(), 'The catch-at-weight data.')}
  CAW <- report_CAW(data)
  CAW$p
 ```
@@ -71,19 +93,13 @@ at_age_p
 
 
 ### Index of Effort
-```{r}
+```{r fig.cap=paste(fig.number(), 'The index of effort data, with 10 and 90th percentiles. ')}
 report_Effort_TS(data)
 
 ```
 
 ### Index of Abundance
 
-```{r}
+```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. ')}
 report_Index_TS(data)
 ```
-
-
-
-
-
-
