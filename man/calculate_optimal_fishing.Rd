@@ -2,7 +2,7 @@
 % Please edit documentation in R/Optimize_F_Pattern.R
 \name{calculate_optimal_fishing}
 \alias{calculate_optimal_fishing}
-\title{Title}
+\title{Calculate the optimal pattern in fishing mortality}
 \usage{
 calculate_optimal_fishing(
   LifeHistory,
@@ -12,8 +12,17 @@ calculate_optimal_fishing(
 )
 }
 \arguments{
-\item{utilpow}{}
+\item{LifeHistory}{A \code{LifeHistory} object}
+
+\item{Exploitation}{An \code{Exploitation} object}
+
+\item{opt_type}{0 to maximize yield, 1 to maximize HARA utility}
+
+\item{utilpow}{Exponent of the HARA model}
+}
+\value{
+A list
 }
 \description{
-Title
+Uses a HARA model to calculate the optimal exploitation pattern
 }

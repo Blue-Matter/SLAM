@@ -46,6 +46,9 @@ Report(
 
 \item{...}{Other arguments (currently not used)}
 }
+\value{
+Generates a HTML report
+}
 \description{
 Generates a HTML report and opens it in the web browser
 }

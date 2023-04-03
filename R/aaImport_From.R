@@ -56,9 +56,9 @@ Make <- function(type='Data') {
   }
 }
 
-#' Title
+#' Create new Parameters list
 #'
-#' @return
+#' @return A list of class `Parameters`
 #' @export
 New_Parameters <- function() {
 
@@ -128,14 +128,13 @@ check_length <- function(sl, len=1, Parameters) {
 
 #' Check Parameters
 #'
-#' @param Parameters
-#' @param Data
-#' @param silent
+#' @param Parameters A `Parameters` object
+#' @param Data A `Data` object
+#' @param silent Logical. Hide the messages?
 #'
-#' @return
+#' @return Nothing. Returns an error if there is a problem with the Parameters
 #' @export
 #'
-#' @examples
 Check_Parameters <- function(Parameters, Data, silent=FALSE) {
 
   if(!inherits(Parameters, 'Parameters'))

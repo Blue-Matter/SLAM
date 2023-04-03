@@ -1,19 +1,19 @@
 
 
 
-#' Iniitialize Parameters for SLAM Estimation
+#' Initialize Parameters for SLAM Estimation
 #'
-#' @param data A data object
+#' @param data An object of class `Data`
 #' @param as50 initial value for age at 50% selection
 #' @param as95 initial value for age at 95% selection
-#' @param Feq_init
-#' @param sigmaR
-#' @param log_sigmaF
-#' @param log_sigmaR0
+#' @param Feq_init initial value for initial equilibrium fishing mortality
+#' @param F_ts initial values for monthly fishing mortality. Must be length `length(Data$Years)`
+#' @param sigmaR standard deviation of log-normal recruitment deviations
+#' @param sigmaF_m standard deviation of random-walk penalty for monthly fishing mortality
+#' @param sigmaR0 standard deviation of random-walk penalty for monthly (seasonal) recruitment
 #'
-#' @return
+#' @return A list of class `Parameters`
 #' @export
-#'
 Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
                                   Feq_init=0.15,
@@ -21,6 +21,9 @@ Initialize_Parameters <- function(data,
                                   sigmaR=0.6,
                                   sigmaF_m=0.4,
                                   sigmaR0=0.6) {
+
+  if (!inherits(data, 'Data'))
+    stop('First argument must be object of class `Data`')
 
   parameters <- New_Parameters()
   parameters$ls50 <- log(as50)
@@ -43,9 +46,6 @@ Initialize_Parameters <- function(data,
 
 
 
-
-#' @describeIn Initialize_Parameters Initialize parameters with the OM parameters
-#' @export
 Initialize_Parameters_OM <- function(Simulation, Data, sim=1) {
 
   parameters <- list()
@@ -90,22 +90,7 @@ set_data_types <- function(data, Data_types) {
 }
 
 
-#' Title
-#'
-#' @param sim
-#' @param SimMod
-#' @param CAW_Monthly_ESS
-#' @param Effort_CV
-#' @param CPUE_CV
-#' @param Fit_Effort
-#' @param Fit_CPUE
-#' @param Fit_CAW
-#' @param use_Frwpen
-#' @param use_R0rwpen
-#' @param use_Fmeanprior
-#'
-#' @return
-#' @export
+
 Construct_Data_OM <- function(sim=1,
                               SimMod,
                               CAW_Monthly_ESS=100,
@@ -183,7 +168,7 @@ Construct_Data_OM <- function(sim=1,
 
 
 
-#' Title
+#' Conduct an Assessment
 #'
 #' @param Data A `Data` object
 #' @param Parameters A `Parameters` object
@@ -191,7 +176,7 @@ Construct_Data_OM <- function(sim=1,
 #' @param control Optional controls for optimizer
 #' @param ... Additional arguments pass to TMB
 #'
-#' @return
+#' @return A list of class `Assess`
 #' @export
 #'
 Assess <- function(Data, Parameters=NULL,
@@ -200,9 +185,13 @@ Assess <- function(Data, Parameters=NULL,
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    ...) {
 
+  if (!inherits(data, 'Data'))
+    stop('First argument must be object of class `Data`')
+
   if (is.null(Parameters)) {
     Parameters <- Initialize_Parameters(Data)
   }
+
   Check_Parameters(Parameters, Data)
 
   dots <- list(...)
@@ -244,18 +233,6 @@ Assess <- function(Data, Parameters=NULL,
 
 
 
-#' Title
-#'
-#' @param data
-#' @param parameters
-#' @param map
-#' @param Random
-#' @param control
-#' @param restarts
-#'
-#' @return
-#' @export
-#'
 opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
 
   obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
@@ -291,18 +268,7 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
   list(opt=opt, obj=obj, rep=rep, sdreport=sdreport, chk=chk)
 }
 
-#' Title
-#'
-#' @param data
-#' @param parameters
-#' @param map
-#' @param Random
-#' @param control
-#' @param restarts
-#'
-#' @return
-#' @export
-#'
+
 Compare_OM_Assess <- function(x, SimMod, Assessment) {
 
   # OM

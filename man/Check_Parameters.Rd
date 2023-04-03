@@ -7,7 +7,14 @@
 Check_Parameters(Parameters, Data, silent = FALSE)
 }
 \arguments{
-\item{silent}{}
+\item{Parameters}{A \code{Parameters} object}
+
+\item{Data}{A \code{Data} object}
+
+\item{silent}{Logical. Hide the messages?}
+}
+\value{
+Nothing. Returns an error if there is a problem with the Parameters
 }
 \description{
 Check Parameters

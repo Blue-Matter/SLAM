@@ -11,6 +11,10 @@ Import(xlfile, BinWidth = NULL, BinMax = NULL, silent = FALSE, ...)
 
 \item{BinWidth}{The width of the bins for the catch-at-weight data. Only needed if the CAW data is raw.}
 
+\item{BinMax}{The maximum bin for the catch-at-weight data. Only needed if the CAW data is raw.}
+
+\item{silent}{Logical. Hide the messages?}
+
 \item{...}{Additional parameters (not currently used)}
 }
 \value{

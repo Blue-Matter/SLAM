@@ -10,7 +10,7 @@
 #' @param silent Logical. Hide messages?
 #' @param ... Other arguments (currently not used)
 #'
-#' @return
+#' @return Generates a HTML report
 #' @export
 Report <- function(x,
                    filename = "Report",
@@ -86,6 +86,9 @@ report_TS <- function(data) {
                    Index_Mean=data$Index_Mean,
                    Index_SD=data$Index_SD
   )
+  if (is.numeric(df$Month)) {
+    df$Month <- month.abb[df$Month]
+  }
   df$Month_n <- match(df$Month, month.abb)
   df$Date <- as.Date(paste(df$Year, df$Month_n, 01, sep='-'))
 

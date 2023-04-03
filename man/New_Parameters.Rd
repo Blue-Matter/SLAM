@@ -2,10 +2,13 @@
 % Please edit documentation in R/aaImport_From.R
 \name{New_Parameters}
 \alias{New_Parameters}
-\title{Title}
+\title{Create new Parameters list}
 \usage{
 New_Parameters()
 }
+\value{
+A list of class \code{Parameters}
+}
 \description{
-Title
+Create new Parameters list
 }

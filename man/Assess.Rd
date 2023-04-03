@@ -2,7 +2,7 @@
 % Please edit documentation in R/Assess.R
 \name{Assess}
 \alias{Assess}
-\title{Title}
+\title{Conduct an Assessment}
 \usage{
 Assess(
   Data,
@@ -24,6 +24,9 @@ Assess(
 
 \item{...}{Additional arguments pass to TMB}
 }
+\value{
+A list of class \code{Assess}
+}
 \description{
-Title
+Conduct an Assessment
 }

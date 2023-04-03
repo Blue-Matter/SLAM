@@ -1,11 +1,13 @@
-#' Title
+#' Calculate the optimal pattern in fishing mortality
 #'
-#' @param LifeHistory
-#' @param Exploitation
-#' @param opt_type
-#' @param utilpow
+#' Uses a HARA model to calculate the optimal exploitation pattern
 #'
-#' @return
+#' @param LifeHistory A `LifeHistory` object
+#' @param Exploitation An `Exploitation` object
+#' @param opt_type 0 to maximize yield, 1 to maximize HARA utility
+#' @param utilpow Exponent of the HARA model
+#'
+#' @return A list
 #' @export
 #'
 calculate_optimal_fishing <- function(LifeHistory, Exploitation, opt_type=1, utilpow=0.3) {

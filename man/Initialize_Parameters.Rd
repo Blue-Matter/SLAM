@@ -2,8 +2,7 @@
 % Please edit documentation in R/Assess.R
 \name{Initialize_Parameters}
 \alias{Initialize_Parameters}
-\alias{Initialize_Parameters_OM}
-\title{Iniitialize Parameters for SLAM Estimation}
+\title{Initialize Parameters for SLAM Estimation}
 \usage{
 Initialize_Parameters(
   data,
@@ -15,23 +14,27 @@ Initialize_Parameters(
   sigmaF_m = 0.4,
   sigmaR0 = 0.6
 )
-
-Initialize_Parameters_OM(Simulation, Data, sim = 1)
 }
 \arguments{
-\item{data}{A data object}
+\item{data}{An object of class \code{Data}}
 
 \item{as50}{initial value for age at 50\% selection}
 
 \item{as95}{initial value for age at 95\% selection}
 
-\item{log_sigmaR0}{}
+\item{Feq_init}{initial value for initial equilibrium fishing mortality}
+
+\item{F_ts}{initial values for monthly fishing mortality. Must be length \code{length(Data$Years)}}
+
+\item{sigmaR}{standard deviation of log-normal recruitment deviations}
+
+\item{sigmaF_m}{standard deviation of random-walk penalty for monthly fishing mortality}
+
+\item{sigmaR0}{standard deviation of random-walk penalty for monthly (seasonal) recruitment}
+}
+\value{
+A list of class \code{Parameters}
 }
 \description{
-Iniitialize Parameters for SLAM Estimation
+Initialize Parameters for SLAM Estimation
 }
-\section{Functions}{
-\itemize{
-\item \code{Initialize_Parameters_OM()}: Initialize parameters with the OM parameters
-
-}}
