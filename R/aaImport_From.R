@@ -107,6 +107,8 @@ Update <- function(Data) {
                            0,1)
   Data$Fit_CAW <- 1
   Data$Fit_CAA <- 0
+  maxge <- length(Data$Weight_Age_Mean)-1
+  if (is.null(Data$Ages)) Data$Ages <- 0:maxage
   Data
 }
 
