@@ -20,7 +20,7 @@ Initialize_Parameters <- function(data,
                                   F_ts=0.1,
                                   sigmaR=0.6,
                                   sigmaF_m=0.4,
-                                  sigmaR0=0.4) {
+                                  sigmaR0=0.1) {
 
   if (!inherits(data, 'Data'))
     stop('First argument must be object of class `Data`')
@@ -183,7 +183,7 @@ Construct_Data_OM <- function(sim=1,
 #'
 Assess <- function(Data, Parameters=NULL,
                    Assumed_h=0.7,
-                   max_ESS=50,
+                   max_ESS=200,
                    Est_Rec_Devs=ifelse(length(Data$Year)>=24, TRUE, FALSE),
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    ...) {
