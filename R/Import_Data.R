@@ -234,7 +234,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
 
   # Options
   data$Fit_Effort <- Fit_Effort
-  data$Index <- Fit_CPUE
+  data$Fit_Index <- Fit_CPUE
   data$Fit_CAW <- Fit_CAW
   data$Fit_CAA <- Fit_CAA
 
