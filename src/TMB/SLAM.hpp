@@ -474,7 +474,10 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // Recruitment deviations
-  nll_joint(3) =  recdevnll;
+  if (sigmaR> 0.01) {
+    nll_joint(3) =  recdevnll;
+  }
+
 
   // ---- Penalties ----
   // penalty for random walk in F
