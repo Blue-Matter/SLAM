@@ -84,7 +84,7 @@ set_data_types <- function(data, Data_types) {
   Data_types <- strsplit(Data_types, "\\+")[[1]]
   if (!'CAW' %in% Data_types) data$Fit_CAW <-0
   if (!'CAA' %in% Data_types) data$Fit_CAA <-0
-  if (!'Index' %in% Data_types) data$Fit_CPUE <-0
+  if (!'Index' %in% Data_types) data$Fit_Index <-0
   if (!'Effort' %in% Data_types) data$Fit_Effort <-0
   data
 }
