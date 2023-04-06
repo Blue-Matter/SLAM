@@ -221,9 +221,19 @@ Assess <- function(Data, Parameters=NULL,
   message('Assuming a BH-SRR steepness of ', Assumed_h)
 
   Data$CAW_ESS[Data$CAW_ESS>max_ESS] <- max_ESS
-  outData <- Data
+  Data$Fit_CAW <- 1
+  Data$Fit_CAA <- 0
+  maxage <- length(Data$Weight_Age_Mean)-1
+  if (is.null(Data$Ages)) Data$Ages <- 0:maxage
 
-  Data <- Update(Data)
+  if (Data$Fit_Effort)
+    Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == length(Data$Year) | sum(!is.na(Data$Effort_Mean)) <2,
+                              0,1)
+  if (Data$Fit_Index)
+    Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
+                             0,1)
+  outData <- Data
+  tt <<- Data
   # drop
   Data$Year <- Data$Month <- Data$Metadata <- NULL
 
