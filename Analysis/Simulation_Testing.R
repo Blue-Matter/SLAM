@@ -6,6 +6,7 @@ remotes::install_github('blue-matter/SLAM')
 # remotes::install_github("mlysy/TMBtools") # this is needed to compile the TMB code??
 
 # To do:
+# - test with a new version of R - does it install dependencies?
 # - make standard data file structure
 # - test and confirm for 12 months of data with Pulse and Constant Recruitment
 # - test under perfect conditions with 12 month CAW and CAW & Effort
@@ -13,8 +14,78 @@ remotes::install_github('blue-matter/SLAM')
 # add plot(data) function
 
 library(SLAM)
+Example_Data()
+
+Data <- Import_Data('C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example_Binned.xlsx')
+
+Report(Data)
+
+# set max CAW_ESS
+# checks ??
+MyAssess <- Assess(Data)
+
+
+
+xlfile <- 'inst/Data_Example_Binned.xlsx'
+xlfile <- 'inst/Data_Example_Raw.xlsx'
+
+# deal with missing values
+# missing CAW, Effort, and Index data?
+
+# add weight units?
+# add effort units?
+
+devtools::load_all()
+
+data <- Import_Data('inst/Data_Example_Binned.xlsx')
+data <- Import_Data('inst/Data_Example_Raw.xlsx', BinWidth = 1, BinMax=5)
+
+x <- data
+
+
+Data <- Import_Data()
+
+plot(Data)
+
+MyAssess <- Assess(Data)
+
+Report(Assess)
+
 library(ggplot2)
 library(purrr)
+
+library(readxl)
+library(xlsx)
+
+
+class(data)
+
+library(cowplot)
+library(ggplot2)
+
+
+
+
+
+
+
+mu <- log(Simulation$LifeHistory$Weight_Age_Mean) -0.5*Simulation$LifeHistory$Weight_Age_SD^2
+AWK[,1] <- plnorm(Weight_Bins[2], mu, Simulation$LifeHistory$Weight_Age_SD)
+
+
+tt <- Import_Data(Sampled_Data)
+
+
+
+plot(Data)
+Report(Data)
+
+
+plot(Assess)
+Report(Assess)
+
+
+
 
 calc_F_RE <- function(sim, assess, Simulation, n_months=12) {
   OM <- Simulation$Time_Series %>%
@@ -86,14 +157,17 @@ Sim_Test <- function(x, grid, Simulation, Sampling, nsim) {
   for (i in 1:nsim) {
     message(i, '/', nsim)
     Data <- Import_Data(Sampled_Data, sim=i, Data_types = grid$data_types[x])
+
     Parameters <- Initialize_Parameters(Data)
     assess <- Assess(Data, Parameters)
 
-
-
-
+    df <- Simulation$Time_Series %>% filter(Sim==i)
+    df <- df %>% tail(12)
 
     outlist[[i]] <- data.frame(Sim=i,
+                               F=median(df$F_mort),
+                               SPR= median(df$SPR),
+                               SB_SB0= median(df$SB_fished/df$SB_unfished_eq),
                                RE_F=calc_F_RE(i, assess, Simulation),
                                RE_SPR=calc_SPR_RE(i, assess, Simulation),
                                RE_SB_SB0=calc_SB_SB0_RE(i, assess, Simulation))
@@ -104,6 +178,8 @@ Sim_Test <- function(x, grid, Simulation, Sampling, nsim) {
   DF$Data_types <- grid$data_types[x]
   DF
 }
+
+
 
 
 # ---- Continuous Recruitment ----
@@ -171,7 +247,7 @@ pulse_DF$Scenario <- 'Pulse'
 DF <- bind_rows(continuous_DF,pulse_DF)
 
 DF$n_months <- factor(DF$n_months)
-DF <- DF %>% tidyr::pivot_longer(., cols=c(RE_F, RE_SPR))
+DF <- DF %>% tidyr::pivot_longer(., cols=c(RE_F, RE_SPR, RE_SB_SB0))
 
 ggplot(DF, aes(x=n_months, y=value, fill=Scenario)) +
   facet_grid(name~Data_types, scales='free_y') +
@@ -185,5 +261,13 @@ sd(tt$value)
 tt <- DF %>% filter(Data_types=='CAW',
                     Scenario=='Continuous', name=='RE_F', n_months==12)
 sd(tt$value)
+
+tt <- DF %>% filter(Data_types=='CAW+Effort+Index',
+              Scenario=='Continuous', name=='RE_SB_SB0', n_months==24)
+
+tt %>% filter(value==max(value))
+
+df <- readRDS('Analysis/sim_testing/results/continuous/24_CAW+Effort+Index.rda')
+df$RE_SB_SB0 %>% which.max()
 
 

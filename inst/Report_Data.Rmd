@@ -1,0 +1,105 @@
+---
+title: "`r data$type`"
+subtitle: "`r data$Data$Metadata$Value[data$Data$Metadata$Field=='Author']`"
+date: "`r ifelse(is.null(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']) | is.na(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']), Sys.Date(), data$Data$Metadata$Value[data$Data$Metadata$Field=='Date'])`"
+---
+<style type="text/css">
+h1 { /* Header 1 */
+  font-size: 24px;
+}
+</style>
+```{r setup2, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+tab.num <<- fig.num <<- 0
+
+fig.number <- function() {
+  fig.num <<- fig.num + 1
+  paste0('Figure ', fig.num, '.')
+}
+  
+tab.number <- function() {
+  tab.num <<- tab.num + 1
+  paste0('Table ', tab.num , '.')
+}
+  
+
+
+```
+
+
+# {.tabset}
+## Fishery Information
+
+```{r}
+knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Information.'))
+```
+
+## Data {.tabset}
+### At-Age Schedules  {.tabset}
+
+```{r}
+ weight_at_age <- report_weight_at_age(data$Data)
+ colnames(weight_at_age$df)[3:4] <- c('10th', '90th')
+
+ # Maturity-at-Age
+ maturity_at_age <- report_maturity_at_age(data$Data)
+
+ # M-at-Age
+ M_at_age <- report_M_at_age(data$Data)
+
+ # PSM-at-Age
+ PSM <- report_PSM_at_age(data$Data)
+
+ df <- dplyr::left_join(weight_at_age$df, maturity_at_age$df, by='Age')
+ df <- dplyr::left_join(df, M_at_age$df, by='Age')
+ df <- dplyr::left_join(df, PSM$df, by='Age')
+ 
+```
+
+
+####  Figures  
+```{r, fig.cap=paste(fig.number(), 'The mean weight-at-age, with 10th and 90th percentiles.')}
+weight_at_age$p
+```
+
+```{r, fig.cap=paste(fig.number(), 'The maturity-at-age schedule.')}
+maturity_at_age$p
+```
+
+```{r, fig.cap=paste(fig.number(), 'The natural mortality-at-age schedule.')}
+M_at_age$p
+```
+
+```{r, fig.cap=paste(fig.number(), 'The post-spawning mortality-at-age schedule.')}
+PSM$p
+```
+
+
+
+####  Table  
+
+```{r}
+ knitr::kable(df, caption=paste(tab.number(), 'At-Age schedules.'))
+```
+
+### Catch-at-Weight
+
+```{r, fig.width=8,fig.height=16, fig.cap=paste(fig.number(), 'The catch-at-weight data.')}
+ CAW <- report_CAW(data)
+ CAW$p
+```
+
+
+
+### Index of Effort
+```{r fig.cap=paste(fig.number(), 'The index of effort data, with 10 and 90th percentiles. ')}
+report_Effort_TS(data)
+
+```
+
+### Index of Abundance
+
+```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. ')}
+report_Index_TS(data)
+```

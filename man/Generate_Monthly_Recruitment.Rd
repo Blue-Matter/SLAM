@@ -2,13 +2,23 @@
 % Please edit documentation in R/Generate_Monthly_Recruitment.R
 \name{Generate_Monthly_Recruitment}
 \alias{Generate_Monthly_Recruitment}
-\title{Title}
+\title{Generate Seasonal Recruitment Pattern}
 \usage{
-Generate_Monthly_Recruitment(mu = 4, sigma = 2)
+Generate_Monthly_Recruitment(mu = 6, sigma = 2)
 }
 \arguments{
-\item{sigma}{}
+\item{mu}{Mean calendar month for peak recruitment}
+
+\item{sigma}{Standard deviation}
+}
+\value{
+A numeric vector of seasonal recruitment
 }
 \description{
-Title
+Generate Seasonal Recruitment Pattern
+}
+\examples{
+# Pulse recruitment in the beginning of the year
+plot(1:12, Generate_Monthly_Recruitment(), type='l')
+
 }

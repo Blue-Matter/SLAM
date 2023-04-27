@@ -9,37 +9,37 @@ Type SLAM(objective_function<Type>* obj) {
 
   // ---- Data ----
   // At-Age Schedules
-  DATA_VECTOR(Weight_Age);  // mean weight at age
+  DATA_VECTOR(Weight_Age_Mean);  // mean weight at age
   DATA_VECTOR(Weight_Age_SD);  // standard deviation of weight at age (log-normal)
-  DATA_VECTOR(Mat_at_Age);  // maturity at age
+  DATA_VECTOR(Maturity_at_Age);  // maturity at age
   DATA_VECTOR(M_at_Age); // natural mortality at age
-  DATA_VECTOR(PSM_at_Age); // probability dying at-age (after spawning)
+  DATA_VECTOR(Post_Spawning_Mortality); // probability dying at-age (after spawning)
 
   // Weight composition data
-  DATA_VECTOR(WghtBins);
-  DATA_VECTOR(WghtMids); // mid-points of the CAW bins
   DATA_MATRIX(CAW);    // CAW observations for each bin and month
+  DATA_VECTOR(Weight_Bins);
+  DATA_VECTOR(Weight_Mids); // mid-points of the CAW bins
   DATA_VECTOR(CAW_ESS); // number of independent observation of weight samples in each month
 
-  // Age composition data
-  DATA_MATRIX(CAA);    // CAA observations for each bin and month
-  DATA_VECTOR(CAA_ESS); // number of independent observation of age samples in each month
+  // // Age composition data
+  // DATA_MATRIX(CAA);    // CAA observations for each bin and month
+  // DATA_VECTOR(CAA_ESS); // number of independent observation of age samples in each month
 
   // Monthly time-series data
-  DATA_VECTOR(Effort); // monthly effort - mean 1 over time-series
+  DATA_VECTOR(Effort_Mean); // monthly effort - mean 1 over time-series
   DATA_VECTOR(Effort_SD); // monthly effort SD (log-space)
 
-  DATA_VECTOR(CPUE); // monthly cpue - mean 1 over time-series
-  DATA_VECTOR(CPUE_SD); // monthly cpue SD (log-space)
+  DATA_VECTOR(Index_Mean); // monthly cpue - mean 1 over time-series
+  DATA_VECTOR(Index_SD); // monthly cpue SD (log-space)
 
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
 
   // options
   DATA_INTEGER(Fit_Effort);
-  DATA_INTEGER(Fit_CPUE);
+  DATA_INTEGER(Fit_Index);
   DATA_INTEGER(Fit_CAW);
-  DATA_INTEGER(Fit_CAA);
+  // DATA_INTEGER(Fit_CAA);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
 
@@ -69,14 +69,14 @@ Type SLAM(objective_function<Type>* obj) {
   Type S95 = S50 + Sdelta;
 
   // ---- indexing variables ----
-  int n_ages = Weight_Age.size(); // number of age classes
-  int n_bins = WghtMids.size(); // number of size bins
-  int n_months = CPUE.size(); // number of months of data
+  int n_ages = Weight_Age_Mean.size(); // number of age classes
+  int n_bins = Weight_Mids.size(); // number of size bins
+  int n_months = Index_Mean.size(); // number of months of data
 
   // ---- Generate Age-Weight Key ----
   matrix<Type> AWK(n_ages, n_bins);
   AWK.setZero();
-  AWK = generate_AWK(WghtBins, Weight_Age, Weight_Age_SD, n_ages, n_bins);
+  AWK = generate_AWK(Weight_Bins, Weight_Age_Mean, Weight_Age_SD, n_ages, n_bins);
 
   // ---- Seasonal Recruitment ----
   vector<Type> logR0_m(12); // R0 for each calendar month
@@ -142,10 +142,10 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> egg0(n_ages);
   egg0.setZero();
   for (int a=1; a<n_ages; a++) {
-    surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-PSM_at_Age(a-1));
+    surv0(a) = surv0(a-1)*exp(-M_ma(a-1,0))*(1-Post_Spawning_Mortality(a-1));
   }
   for (int a=0; a<n_ages; a++) {
-    egg0(a) = surv0(a) * Weight_Age(a) * Mat_at_Age(a);
+    egg0(a) = surv0(a) * Weight_Age_Mean(a) * Maturity_at_Age(a);
   }
   Type SBpR = egg0.sum();
 
@@ -162,9 +162,9 @@ Type SLAM(objective_function<Type>* obj) {
       if (a==0) {
         survF(a,m) = 1;
       } else {
-        survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-PSM_at_Age(a-1));
+        survF(a,m) = survF(a-1,m)*exp(-Z_ma(a-1, m)) * (1-Post_Spawning_Mortality(a-1));
       }
-      eggFa(a) = survF(a,m) * Weight_Age(a) * Mat_at_Age(a);
+      eggFa(a) = survF(a,m) * Weight_Age_Mean(a) * Maturity_at_Age(a);
     }
     eggF(m) = eggFa.sum();
   }
@@ -196,13 +196,13 @@ Type SLAM(objective_function<Type>* obj) {
         N_unfished(a,m_ind) = R0_m(m_ind);
       } else {
         if (m_ind==0) {
-          N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1)) * (1-PSM_at_Age(a-1));
+          N_unfished(a,m_ind) = N_unfished(a-1,11) * exp(-M_ma(a-1)) * (1-Post_Spawning_Mortality(a-1));
         } else {
-          N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-M_ma(a-1)) * (1-PSM_at_Age(a-1));
+          N_unfished(a,m_ind) = N_unfished(a-1,m_ind-1) * exp(-M_ma(a-1)) * (1-Post_Spawning_Mortality(a-1));
         }
       }
-      B0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age(a) ;
-      SB0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age(a) * Mat_at_Age(a);
+      B0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age_Mean(a) ;
+      SB0_am(a, m_ind) =  N_unfished(a,m_ind) * Weight_Age_Mean(a) * Maturity_at_Age(a);
     }
     B0_m(m_ind) = B0_am.col(m_ind).sum();
     SB0_m(m_ind) = SB0_am.col(m_ind).sum();
@@ -229,15 +229,15 @@ Type SLAM(objective_function<Type>* obj) {
     int m_ind = t % 12; // month index
     for(int a=1;a<n_ages;a++){
       if (t==0) {
-        N_fished_eq(a,m_ind) = N_unfished(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+        N_fished_eq(a,m_ind) = N_unfished(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
       } else {
         if (m_ind==0) {
-          N_fished_eq(a,m_ind) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+          N_fished_eq(a,m_ind) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
         } else {
-          N_fished_eq(a,m_ind) = N_fished_eq(a-1,m_ind-1) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
+          N_fished_eq(a,m_ind) = N_fished_eq(a-1,m_ind-1) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
         }
       }
-      SB_am_eq(a, m_ind) =  N_fished_eq(a,m_ind) * Weight_Age(a) * Mat_at_Age(a) * exp(-Fa_init(a)/2);;
+      SB_am_eq(a, m_ind) =  N_fished_eq(a,m_ind) * Weight_Age_Mean(a) * Maturity_at_Age(a) * exp(-Fa_init(a)/2);;
     }
     SB_m_eq(m_ind) = SB_am_eq.col(m_ind).sum();
     N_fished_eq(0,m_ind) = BH_SRR(R0_m(m_ind), h, SB_m_eq(m_ind), SBpR);
@@ -256,9 +256,9 @@ Type SLAM(objective_function<Type>* obj) {
   N_m.setZero();
 
   for(int a=1;a<n_ages;a++){
-    N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-PSM_at_Age(a-1));
-    SB_am(a,0) =  N_m(a,0) * Weight_Age(a) * Mat_at_Age(a)  * exp(-Fa_init(a)/2);
-    B_am(a,0) = N_m(a,0) * Weight_Age(a);
+    N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
+    SB_am(a,0) =  N_m(a,0) * Weight_Age_Mean(a) * Maturity_at_Age(a)  * exp(-Fa_init(a)/2);
+    B_am(a,0) = N_m(a,0) * Weight_Age_Mean(a);
   }
 
   // recruitment in initial month
@@ -270,9 +270,9 @@ Type SLAM(objective_function<Type>* obj) {
   for (int m=1; m<n_months; m++) {
     int m_ind = m % 12; // calendar month index
     for(int a=1;a<n_ages;a++){
-      N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-PSM_at_Age(a-1));
-      SB_am(a,m) = N_m(a,m) * Weight_Age(a) * Mat_at_Age(a) * exp(-F_ma(a,m)/2);
-      B_am(a,m) = N_m(a,m) * Weight_Age(a);
+      N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-Post_Spawning_Mortality(a-1));
+      SB_am(a,m) = N_m(a,m) * Weight_Age_Mean(a) * Maturity_at_Age(a) * exp(-F_ma(a,m)/2);
+      B_am(a,m) = N_m(a,m) * Weight_Age_Mean(a);
     }
     SB_m(m) = SB_am.col(m).sum();
     B_m(m) = B_am.col(m).sum();
@@ -290,8 +290,8 @@ Type SLAM(objective_function<Type>* obj) {
 
   for (int m=0; m<n_months; m++) {
     for(int a=0;a<n_ages;a++){
-      predC_a(a,m) = N_m(a,m)*((1-Mat_at_Age(a))*exp(-M_ma(a,m)/2)+Mat_at_Age(a)*exp(-PSM_at_Age(a)/2))*(1-exp(-F_ma(a,m)));
-      predCB_a(a,m) = predC_a(a,m) * Weight_Age(a);
+      predC_a(a,m) = N_m(a,m)*((1-Maturity_at_Age(a))*exp(-M_ma(a,m)/2)+Maturity_at_Age(a)*exp(-Post_Spawning_Mortality(a)/2))*(1-exp(-F_ma(a,m)));
+      predCB_a(a,m) = predC_a(a,m) * Weight_Age_Mean(a);
     }
     predCB(m) = predCB_a.col(m).sum();
   }
@@ -358,32 +358,32 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Catch-at-Age ----
-  vector<Type> CAAns(n_months);
-  CAAns.setZero();
-  vector<Type> CAAnll(n_months);
-  CAAnll.setZero();
-
-  for (int m=0; m<n_months; m++) {
-    CAAns(m) = CAA.col(m).sum(); // sum of CAA observations
-
-    if (CAAns(m)>0) {
-      // standardize observed CAA to sum 1
-      vector<Type> CAAp_obs(n_ages);
-      CAAp_obs.setZero();
-      CAAp_obs = CAA.col(m)/CAA.col(m).sum();
-
-      // scale by effective sample size
-      vector<Type> Ncaa_obs(n_ages);
-      Ncaa_obs.setZero();
-      Ncaa_obs = CAA_ESS(m) * CAAp_obs;
-
-      // multinomial likelihood
-      vector<Type> predCAA_m(n_ages);
-      predCAA_m.setZero();
-      predCAA_m = predCAA.col(m);
-      CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA_m, true);
-    }
-  }
+  // vector<Type> CAAns(n_months);
+  // CAAns.setZero();
+  // vector<Type> CAAnll(n_months);
+  // CAAnll.setZero();
+  //
+  // for (int m=0; m<n_months; m++) {
+  //   CAAns(m) = CAA.col(m).sum(); // sum of CAA observations
+  //
+  //   if (CAAns(m)>0) {
+  //     // standardize observed CAA to sum 1
+  //     vector<Type> CAAp_obs(n_ages);
+  //     CAAp_obs.setZero();
+  //     CAAp_obs = CAA.col(m)/CAA.col(m).sum();
+  //
+  //     // scale by effective sample size
+  //     vector<Type> Ncaa_obs(n_ages);
+  //     Ncaa_obs.setZero();
+  //     Ncaa_obs = CAA_ESS(m) * CAAp_obs;
+  //
+  //     // multinomial likelihood
+  //     vector<Type> predCAA_m(n_ages);
+  //     predCAA_m.setZero();
+  //     predCAA_m = predCAA.col(m);
+  //     CAAnll(m) -= dmultinom_(Ncaa_obs, predCAA_m, true);
+  //   }
+  // }
 
 
   // ---- Relative Effort ----
@@ -392,7 +392,7 @@ Type SLAM(objective_function<Type>* obj) {
   Type Effsum = 0;
   Type Effn = 0;
   for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(Effort(m)))) {
+    if (!R_IsNA(asDouble(Effort_Mean(m)))) {
       Effsum += Effort_m(m);
       Effn += 1;
     }
@@ -407,8 +407,8 @@ Type SLAM(objective_function<Type>* obj) {
 
   for (int m=0; m<n_months; m++) {
     StEffort(m) = Effort_m(m)/Effmean;
-    if ((!R_IsNA(asDouble(Effort(m)))) & (Effort(m)!=0)) {
-      Effnll(m)  -= dnorm_(log(StEffort(m)), log(Effort(m)), Effort_SD(m), true);
+    if ((!R_IsNA(asDouble(Effort_Mean(m)))) & (Effort_Mean(m)!=0)) {
+      Effnll(m)  -= dnorm_(log(StEffort(m)), log(Effort_Mean(m)), Effort_SD(m), true);
     }
   }
 
@@ -419,12 +419,12 @@ Type SLAM(objective_function<Type>* obj) {
   // Calculate predicted Index
   predIndex = B_m;
 
-  // mean 1 over time-steps where CPUE data exists
+  // mean 1 over time-steps where Index_Mean data exists
   Type CPUEmean = 0;
   Type CPUEsum = 0;
   Type CPUEn = 0;
   for (int m=0; m<n_months; m++) {
-    if (!R_IsNA(asDouble(CPUE(m)))) {
+    if (!R_IsNA(asDouble(Index_Mean(m)))) {
       CPUEsum += predIndex(m);
       CPUEn += 1;
     }
@@ -437,8 +437,8 @@ Type SLAM(objective_function<Type>* obj) {
   stpredIndex.setZero();
   for (int m=0; m<n_months; m++) {
     stpredIndex(m) = predIndex(m)/CPUEmean;
-    if (!R_IsNA(asDouble(CPUE(m)))) {
-      CPUEnll(m) -= dnorm_(log(stpredIndex(m)), log(CPUE(m)), CPUE_SD(m), true);
+    if (!R_IsNA(asDouble(Index_Mean(m)))) {
+      CPUEnll(m) -= dnorm_(log(stpredIndex(m)), log(Index_Mean(m)), Index_SD(m), true);
     }
   }
 
@@ -449,7 +449,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Joint likelihood ----
-  vector<Type> nll_joint(8);
+  vector<Type> nll_joint(6);
   nll_joint.setZero();
 
   // CAW
@@ -457,41 +457,44 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(0) =  CAWnll.sum();
   }
 
-  // CAA
-  if (Fit_CAA>0) {
-    nll_joint(1) =  CAAnll.sum();
-  }
+  // // CAA
+  // if (Fit_CAA>0) {
+  //   nll_joint(1) =  CAAnll.sum();
+  // }
 
   // Effort
   if (Fit_Effort>0) {
-    nll_joint(2) =  Effnll.sum();
+    nll_joint(1) =  Effnll.sum();
   }
 
-  // CPUE
-  if (Fit_CPUE>0) {
-    nll_joint(3) =  CPUEnll.sum();
+  // Index
+  if (Fit_Index>0) {
+    nll_joint(2) =  CPUEnll.sum();
   }
 
 
   // Recruitment deviations
-  nll_joint(4) =  recdevnll;
+  if (sigmaR> 0.01) {
+    nll_joint(3) =  recdevnll;
+  }
+
 
   // ---- Penalties ----
   // penalty for random walk in F
   if (use_Frwpen>0) {
     for(int m=1;m<n_months;m++){
-      nll_joint(5) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
+      nll_joint(4) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
     }
     // include initial equilibrium F
-    nll_joint(5) -= dnorm(logF_minit, logF_ts(0), sigmaF_m, true);
+    nll_joint(4) -= dnorm(logF_minit, logF_ts(0), sigmaF_m, true);
   }
 
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(6) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(5) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(6) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
 
@@ -532,7 +535,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(SPR); // SPR
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
-  REPORT(predCAA); // catch-at-age
+  // REPORT(predCAA); // catch-at-age
 
   // predicted seasonal recruitment
   REPORT(R0_m);
@@ -546,15 +549,12 @@ Type SLAM(objective_function<Type>* obj) {
 
   // likelihoods
   REPORT(CAWnll);
-  REPORT(CAAnll);
+  // REPORT(CAAnll);
   REPORT(Effnll);
   REPORT(CPUEnll);
   REPORT(recdevnll);
   REPORT(nll_joint);
   REPORT(nll);
-
-  // other stuff
-  REPORT(CAAns);
 
   return(nll);
 }

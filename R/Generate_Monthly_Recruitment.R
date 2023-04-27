@@ -1,12 +1,16 @@
-#' Title
+#' Generate Seasonal Recruitment Pattern
 #'
-#' @param mu
-#' @param sigma
+#' @param mu Mean calendar month for peak recruitment
+#' @param sigma Standard deviation
 #'
-#' @return
+#' @return A numeric vector of seasonal recruitment
+#' @examples
+#' # Pulse recruitment in the beginning of the year
+#' plot(1:12, Generate_Monthly_Recruitment(), type='l')
+#'
 #' @export
 #'
-Generate_Monthly_Recruitment <- function(mu=4, sigma=2) {
+Generate_Monthly_Recruitment <- function(mu=6, sigma=2) {
   n <- length(mu)
   rec <- list()
   for (i in 1:n) {

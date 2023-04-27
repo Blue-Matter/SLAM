@@ -2,45 +2,183 @@
 title: "SLAM User Guide"
 output: rmarkdown::html_vignette
 author: Adrian Hordyk <adrian@bluematterscience.com>
-date: 
+date: "`r Sys.Date()`"
 vignette: >
   %\VignetteIndexEntry{SLAM_User_Guide}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r initial_stuff, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 ```
 
-## Introduction 
-The `SLAM` package is designed to simulate fishery dynamics and data, and to apply an age-structured assessment model to simulated or real fishery data, for a short-lived semelparous species such as octopus.
+# Introduction 
+The `SLAM` package is designed to simulate fishery dynamics and data, and to apply an age-structured assessment model to fishery data for a short-lived semelparous species such as octopus.
 
+`SLAM` is designed with a monthly time-step and to fit to catch-at-weight data. If available, it will also fit to an index of fishing effort and an index of abundance. `SLAM` estimates the selectivity pattern, fishing mortality (F), the spawning potential ratio (SPR), and the relative spawning biomass (SB/SB0) for each month.
 
+## Installation
+The `SLAM` package can be installed directly from GitHub. A couple of prerequisites are required to install `SLAM` from GitHub. RTools is required because the package uses [TMB](https://cran.r-project.org/package=TMB). The `devtools` package can check if RTools is installed on your system:
 
-```{r setup}
+```{r install_devtools}
+# Load `devtools` if it's installed
+chk <- require('devtools')
+
+# install `devtools` if necessary
+if (!chk) {
+  install.packages('devtools')
+  library('devtools')
+}
+```
+
+```{r, check_rtools}
+# Check if RTools is installed
+if (!devtools::find_rtools()) {
+  stop('RTools needs to be installed')
+}
+```
+If you get an error message after running the code above, you need to install RTools. Instructions for installing RTools for Windows machines are available [here](https://cran.r-project.org/bin/windows/Rtools/rtools40.html). A quick web search will find similar instructions for  installing RTools on OS machines.
+
+### Installing `SLAM`
+
+Once RTools is installed, `SLAM` can be installed with:
+
+```{r, installSLAM, eval=FALSE} 
+devtools::install_github('blue-matter/SLAM')
+```
+
+# Applying `SLAM` to Fishery Data
+
+In each new R session, the `SLAM` package must first be loaded into memory:
+```{r load_library}
 library(SLAM)
 ```
 
+## The Data object
+Fishery data is loaded into an object of class `Data`. 
 
-## Simulation
+There are two ways to create a `Data` object: Importing from Excel and Creating in R
 
-```{r Simulate}
-Import_LifeHistory()
-Simulate()
+### Import a Data object from Excel
+The `Import` function can be used to import fishery data from a correctly formatted Excel Workbook. 
 
+The `SLAM` package includes a few example Excel files with example data. The `Example_Data` function will 
+print out the full file paths to these example files:
+
+```{r example}
+Example_Data()
 ```
-### Simulating Fishery Dynamics 
+
+You can examine the example files to see the specific format of the Excel workbooks containing the example data. Data files must follow this same structure with the same names for the Worksheets (tabs) and same names for the column headings in Row 1, and the text in Column A. 
+
+"Data_Template.xlsx" is an empty data file that can be used as a template for your data.
+
+The data can be imported from the specially formatted Excel workbooks using the `Import` function:
+
+```{r import}
+MyData <- Import(Example_Data()[1])
+```
+
+Once you've imported a `Data` object, use the `Check` function to check that everything is structured correctly:
+
+```{r check_data}
+Check(MyData)
+```
+
+### Create a Data object in R 
+Another option is to create an empty `Data` object and populate it in R. This can be done with the `Make` command:
+
+```{r make}
+MyData2 <- Make()
+head(MyData2)
+```
+As you can see, the `Make` function returns an empty `Data` object, which can then be populated manually in R. 
+
+For example, the metadata (used for reporting):
+
+```{r metadata}
+MyData2$Metadata$Value <- c('My Fishery', 'My Location', 'My Species', 'My Species Name', 'Me', 'Today')
+MyData2$Metadata
+```
+
+The at-age schedules:
+```{r atage}
+MyData2$Ages <- 0:14
+MyData2$Weight_Age_Mean <- c(0, 0.01, 0.05, 0.12, 0.23, 0.40, 0.60, 
+                             0.86, 1.17, 1.54, 1.96, 2.44, 2.99, 3.60, 4.27)
+# ...
+```
+
+And so on for all the other available data.
+
+As above, once you're finished populating your `Data` object, it's worth checking to make sure everything is ok:
+
+```{r check2,error=TRUE}
+Check(MyData2)
+```
+
+### Data Report
+Once a `Data` object is complete, a Data Report can be generated with the `Report` function:
+
+```{r report_data, eval=FALSE}
+Report(MyData)
+```
+
+This will compile a HTML report with figures and tables summarizing your fishery data, and open the HTML file in your web browser.
+
+See [here](Data_Report.html){target="_blank"} for the example Data Report created above. 
+
+```{r report_data2, include=FALSE}
+Report(MyData, dir='../docs/articles', open_file = FALSE)
+```
+
+## Running Assessment
+
+Now that the Data is imported and checked, we are ready to run the `SLAM` assessment model. This is done with the `Assess` function:
+
+```{r assess}
+MyAssess <- Assess(MyData)
+```
+
+You will note that the `Assess` function prints out a message with an assumed value for the steepness parameter in the Beverton-Holt stock-recruitment function. This is an argument to the `Assess` function. You can see the details for the arguments for the `Assess` function in the help documentation. This is available with `?Assess`. Help documentation is available for all functions in this same manner `?Function_Name`.
+
+The help documentation for `Assess` shows that the function requires an object of class `Data` as the first argument, and optionally a second argument with an object of class `Parameters`. 
+
+The `Parameters` object contains the initial starting parameters for the assessment model. By default, these are set with the `Initialize_Parameters` function:
+
+```{r parameters}
+myParameters <- Initialize_Parameters(MyData)
+myParameters
+```
+
+If you wish, you can change the starting parameters in this object and provide them to the `Assess` function. If you do define your own starting parameters, it's worth checking them with `Check_Parameters` function:
+
+```{r check_pars}
+Check_Parameters(myParameters, MyData)
+```
+
+### Assessment Report 
+Once the assessment is complete, the `Report` function can be used to generate an Assessment Report:
 
 
-### Generating Fishery Data 
+```{r report_assessment, eval=FALSE}
+Report(MyAssess)
+```
+
+The example assessment report can be found [here](Assessment_Report.html){target="_blank"}. 
+
+```{r report_assessment2, include=FALSE}
+Report(MyAssess, dir='../docs/articles', open_file = FALSE)
+```
 
 
-## Estimation
+# Simulating Fishery Data
+The `SLAM` package also contains functions to simulate fishery dynamics for an octopus fishery. Additional information will be added to this user manual at a later date.
 
-### Applying Assessment Model to Simulated Data
 
-### Applying Assessment Model to Case Study Data
+
+
