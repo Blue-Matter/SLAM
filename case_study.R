@@ -5,6 +5,7 @@ dir <- 'G:/My Drive/1_PROJECTS/Biospherics_Indo_Octopus/Data'
 data <- readxl::read_excel(file.path(dir, 'FOR ADRIAN_Update.xlsx'))
 
 data$Village %>% unique() %>% sort()
+
 # Darawa not there?
 
 data$Fisher %>% unique()
@@ -20,8 +21,6 @@ data_effort <- data %>% filter(`Fishing Duration (hour)`!='Unrecorded')
 data_effort$`Fishing Duration (hour)` %>% as.numeric() %>% unique() %>%  sort()
 
 data_effort$`Fishing Duration (hour)` %>% as.numeric() %>% hist()
-
-
 
 
 data$`Fishing Duration (hour)` %>% table()
