@@ -227,7 +227,11 @@ Type SLAM(objective_function<Type>* obj) {
   Type sumVal = Mean_monthly_F.sum();
   Type meanVal = sumVal/12;
 
-  vector<Type> relMean_monthly_F = Mean_monthly_F/meanVal;
+  vector<Type> relMean_monthly_F(12);
+  relMean_monthly_F.setZero();
+  for (int m=0; m<12; m++) {
+    relMean_monthly_F[m] =   Mean_monthly_F[m]/meanVal;
+  }
 
   matrix<Type> Fa_init(n_ages);
   Fa_init.setZero(); // total mortality for initial age classes
