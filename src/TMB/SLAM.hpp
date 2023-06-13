@@ -531,7 +531,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   // prior for FMinit
   if (use_Finit_prior>0) {
-    nll_joint(6) -= dlnorm(F_minit, F_init_prior(0), F_init_prior(1), true);
+    nll_joint(6) -= dnorm(log_F_minit, log(F_init_prior(0)), F_init_prior(1), true);
   }
 
 
