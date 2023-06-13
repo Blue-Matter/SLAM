@@ -224,7 +224,8 @@ Type SLAM(objective_function<Type>* obj) {
   Mean_monthly_F =  monthly_mean(F_m);
 
   // calculate average monthly pattern in F
-  Type meanVal = Mean_monthly_F.sum()/Mean_monthly_F.size();
+  Type sumVal = Mean_monthly_F.sum()
+  Type meanVal = sumVal/12;
 
   vector<Type> relMean_monthly_F = Mean_monthly_F/meanVal;
 
