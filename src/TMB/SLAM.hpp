@@ -59,7 +59,7 @@ Type SLAM(objective_function<Type>* obj) {
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
   PARAMETER(log_sigmaR); // monthly rec dev sd (fixed or random effect; usually fixed)
 
-  PARAMETER(F_init_prior); // prior (mu and sd) for F_init
+  PARAMETER_VECTOR(F_init_prior); // prior (mu and sd) for F_init
 
   // ---- Transform Parameters ----
   Type sigmaF_m = exp(log_sigmaF_m); // fishing effort monthly random walk sd
