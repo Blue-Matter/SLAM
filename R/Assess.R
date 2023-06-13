@@ -47,9 +47,6 @@ Initialize_Parameters <- function(data,
   parameters
 }
 
-Parameters$F_init_prior <- c(log(0.2), 0.3)
-
-
 Initialize_Parameters_OM <- function(Simulation, Data, sim=1) {
 
   parameters <- list()
