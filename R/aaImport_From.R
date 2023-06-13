@@ -148,6 +148,7 @@ Check_Parameters <- function(Parameters, Data, silent=FALSE) {
   df$Length[match('logF_ts', df$Name)] <- length(Data$Year)
   df$Length[match('logRec_Devs', df$Name)] <- length(Data$Year)
   df$Length[match('logR0_m_est', df$Name)] <- 11
+  df$Length[match('F_init_prior ', df$Name)] <- 2
 
 
   for (i in 1:nrow(df)) {
