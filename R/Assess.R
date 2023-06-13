@@ -11,6 +11,7 @@
 #' @param sigmaR standard deviation of log-normal recruitment deviations
 #' @param sigmaF_m standard deviation of random-walk penalty for monthly fishing mortality
 #' @param sigmaR0 standard deviation of random-walk penalty for monthly (seasonal) recruitment
+#' @param F_init_prior mu and sd (in log-space) for prior for initial equilibrium F
 #'
 #' @return A list of class `Parameters`
 #' @export
@@ -20,7 +21,8 @@ Initialize_Parameters <- function(data,
                                   F_ts=0.1,
                                   sigmaR=0.6,
                                   sigmaF_m=0.4,
-                                  sigmaR0=0.1) {
+                                  sigmaR0=0.1,
+                                  F_init_prior=c(log(0.2), 0.4)) {
 
   if (!inherits(data, 'Data'))
     stop('First argument must be object of class `Data`')
@@ -40,10 +42,12 @@ Initialize_Parameters <- function(data,
   parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
+  parameters$F_init_prior  <- F_init_prior #
   class(parameters) <- 'Parameters'
   parameters
 }
 
+Parameters$F_init_prior <- c(log(0.2), 0.3)
 
 
 Initialize_Parameters_OM <- function(Simulation, Data, sim=1) {

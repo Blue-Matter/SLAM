@@ -171,19 +171,21 @@ import_ts_data <- function(XLData, data) {
 #' @param Fit_CAA Logical. Fit catch-at-age data?
 #' @param use_Frwpen Logical. Use the random walk penalty for F?
 #' @param use_R0rwpen Logical. Use the random walk penalty for seasonal recruitment?
+#' @param use_Finit_prior. Use a prior for initial equilibrium F?
 #' @param Data_types Optional character vector specifying data types to fit to.
 #'
 #' @return A `Data` object
 #' @export
 Import.Simulated <- function(Sampled_Data=NULL,
-                                  sim=1,
-                                  Fit_Effort=1,
-                                  Fit_CPUE=1,
-                                  Fit_CAW=1,
-                                  Fit_CAA=1,
-                                  use_Frwpen=1,
-                                  use_R0rwpen=1,
-                                  Data_types=NULL) {
+                             sim=1,
+                             Fit_Effort=1,
+                             Fit_CPUE=1,
+                             Fit_CAW=1,
+                             Fit_CAA=1,
+                             use_Frwpen=1,
+                             use_R0rwpen=1,
+                             use_Finit_prior=1,
+                             Data_types=NULL) {
 
   data <- list()
   # Assumed life-history parameters
@@ -241,6 +243,9 @@ Import.Simulated <- function(Sampled_Data=NULL,
   # Penalties
   data$use_Frwpen <- use_Frwpen
   data$use_R0rwpen <- use_R0rwpen
+
+  # Prior
+  data$use_Finit_prior <- use_Finit_prior
 
   data$model <- 'SLAM'
 
