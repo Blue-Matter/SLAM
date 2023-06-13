@@ -225,6 +225,15 @@ Type SLAM(objective_function<Type>* obj) {
     Za_init(a) =  Fa_init(a) + M_at_Age(a);
   }
 
+  // add seasonal pattern for initial equilibrium Z
+  vector<Type> Mean_monthly_F(12);
+  Mean_monthly_F.setZero();
+
+  Mean_monthly_F =  monthly_mean(F_m);
+
+
+
+
   for (int t=0; t<48; t++) {
     int m_ind = t % 12; // month index
     for(int a=1;a<n_ages;a++){
@@ -248,10 +257,14 @@ Type SLAM(objective_function<Type>* obj) {
   SB_am.setZero();
   matrix<Type> B_am(n_ages, n_months); // B by age and month
   B_am.setZero();
+  matrix<Type> VB_am(n_ages, n_months); // VB by age and month
+  VB_am.setZero();
   vector<Type> SB_m(n_months); // SB by month
   SB_m.setZero();
   vector<Type> B_m(n_months); // B by month
   B_m.setZero();
+  vector<Type> VB_m(n_months); // VB by month
+  VB_m.setZero();
   matrix<Type> N_m(n_ages, n_months); // N by age and month
   N_m.setZero();
 
@@ -259,11 +272,13 @@ Type SLAM(objective_function<Type>* obj) {
     N_m(a,0) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
     SB_am(a,0) =  N_m(a,0) * Weight_Age_Mean(a) * Maturity_at_Age(a)  * exp(-Fa_init(a)/2);
     B_am(a,0) = N_m(a,0) * Weight_Age_Mean(a);
+    VB_am(a,0) = N_m(a,0) * Weight_Age_Mean(a) * selA(a);
   }
 
   // recruitment in initial month
   SB_m(0) = SB_am.col(0).sum();
   B_m(0) = B_am.col(0).sum();
+  VB_m(0) = VB_am.col(0).sum();
   N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
 
   // ---- Population dynamics for remaining months ----
@@ -273,9 +288,11 @@ Type SLAM(objective_function<Type>* obj) {
       N_m(a,m) = N_m(a-1,m-1) * exp(-Z_ma(a-1, m-1)) * (1-Post_Spawning_Mortality(a-1));
       SB_am(a,m) = N_m(a,m) * Weight_Age_Mean(a) * Maturity_at_Age(a) * exp(-F_ma(a,m)/2);
       B_am(a,m) = N_m(a,m) * Weight_Age_Mean(a);
+      VB_am(a,m) = N_m(a,m) * Weight_Age_Mean(a) * selA(a);
     }
     SB_m(m) = SB_am.col(m).sum();
     B_m(m) = B_am.col(m).sum();
+    VB_m(0) = VB_am.col(0).sum();
     // recruitment
     N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB_m(m), SBpR) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
   }
@@ -417,7 +434,7 @@ Type SLAM(objective_function<Type>* obj) {
   predIndex.setZero();
 
   // Calculate predicted Index
-  predIndex = B_m;
+  predIndex = VB_m; // proportional to vulnerable biomass
 
   // mean 1 over time-steps where Index_Mean data exists
   Type CPUEmean = 0;
@@ -485,8 +502,7 @@ Type SLAM(objective_function<Type>* obj) {
     for(int m=1;m<n_months;m++){
       nll_joint(4) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
     }
-    // include initial equilibrium F
-    nll_joint(4) -= dnorm(logF_minit, logF_ts(0), sigmaF_m, true);
+
   }
 
   // penalty for random walk in logR0_m (seasonal recruitment)
@@ -496,6 +512,12 @@ Type SLAM(objective_function<Type>* obj) {
     }
     nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
+
+
+  // prior for FMinit
+
+  // include initial equilibrium F
+  // CHANGE nll_joint(4) -= dnorm(logF_minit, logF_ts(0), sigmaF_m, true);
 
 
   // ---- Total negative log-likelihood ----
@@ -555,6 +577,8 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(recdevnll);
   REPORT(nll_joint);
   REPORT(nll);
+
+  REPORT(Mean_monthly_F);
 
   return(nll);
 }
