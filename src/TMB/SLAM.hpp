@@ -230,10 +230,10 @@ Type SLAM(objective_function<Type>* obj) {
   vector<Type> relMean_monthly_F(12);
   relMean_monthly_F.setZero();
   for (int m=0; m<12; m++) {
-    relMean_monthly_F(m) =   Mean_monthly_F(m)/meanVal;
+    relMean_monthly_F(m) =  Mean_monthly_F(m)/meanVal;
   }
 
-  matrix<Type> Fa_init(n_ages);
+  matrix<Type> Fa_init(n_ages, 12);
   Fa_init.setZero(); // total mortality for initial age classes
   matrix<Type> Za_init(n_ages, 12);
   Za_init.setZero(); // total mortality for initial age classes
