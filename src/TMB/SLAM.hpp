@@ -42,6 +42,7 @@ Type SLAM(objective_function<Type>* obj) {
   // DATA_INTEGER(Fit_CAA);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
+  DATA_INTEGER(use_Finit_prior);
 
   // ---- Estimated Parameters ----
   PARAMETER(ls50);  // log age-at-50% selectivity
@@ -57,6 +58,8 @@ Type SLAM(objective_function<Type>* obj) {
 
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
   PARAMETER(log_sigmaR); // monthly rec dev sd (fixed or random effect; usually fixed)
+
+  PARAMETER(F_init_prior); // prior (mu and sd) for F_init
 
   // ---- Transform Parameters ----
   Type sigmaF_m = exp(log_sigmaF_m); // fishing effort monthly random walk sd
@@ -478,7 +481,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Joint likelihood ----
-  vector<Type> nll_joint(6);
+  vector<Type> nll_joint(7);
   nll_joint.setZero();
 
   // CAW
@@ -527,9 +530,9 @@ Type SLAM(objective_function<Type>* obj) {
 
 
   // prior for FMinit
-
-  // include initial equilibrium F
-  // CHANGE nll_joint(4) -= dnorm(logF_minit, logF_ts(0), sigmaF_m, true);
+  if (use_Finit_prior>0) {
+    nll_joint(6) -= dlnorm(F_minit, F_init_prior(0), F_init_prior(1), true);
+  }
 
 
   // ---- Total negative log-likelihood ----
