@@ -216,14 +216,6 @@ Type SLAM(objective_function<Type>* obj) {
   SB_am_eq.setZero();
   SB_m_eq.setZero();
 
-  vector<Type> Za_init(n_ages);
-  vector<Type> Fa_init(n_ages);
-  Fa_init.setZero(); // total mortality for initial age classes
-  Za_init.setZero(); // total mortality for initial age classes
-  for(int a=0;a<n_ages;a++){
-    Fa_init(a) = F_minit * selA(a);
-    Za_init(a) =  Fa_init(a) + M_at_Age(a);
-  }
 
   // add seasonal pattern for initial equilibrium Z
   vector<Type> Mean_monthly_F(12);
@@ -231,22 +223,37 @@ Type SLAM(objective_function<Type>* obj) {
 
   Mean_monthly_F =  monthly_mean(F_m);
 
+  // calculate average monthly pattern in F
+  Type meanVal = Mean_monthly_F.sum()/Mean_monthly_F.size();
 
+  vector<Type> relMean_monthly_F = Mean_monthly_F/meanVal;
+
+  matrix<Type> Fa_init(n_ages);
+  Fa_init.setZero(); // total mortality for initial age classes
+  matrix<Type> Za_init(n_ages, 12);
+  Za_init.setZero(); // total mortality for initial age classes
+
+  for (int m=0; m<12; m++) {
+    for(int a=0;a<n_ages;a++){
+      Fa_init(a, m) = F_minit * relMean_monthly_F(m) * selA(a);
+      Za_init(a, m) =  Fa_init(a,m) + M_at_Age(a);
+    }
+  }
 
 
   for (int t=0; t<48; t++) {
     int m_ind = t % 12; // month index
     for(int a=1;a<n_ages;a++){
       if (t==0) {
-        N_fished_eq(a,m_ind) = N_unfished(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
+        N_fished_eq(a,m_ind) = N_unfished(a-1,11) * exp(-Za_init(a-1, m_ind)) * (1-Post_Spawning_Mortality(a-1));
       } else {
         if (m_ind==0) {
-          N_fished_eq(a,m_ind) = N_fished_eq(a-1,11) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
+          N_fished_eq(a,m_ind) = N_fished_eq(a-1,11) * exp(-Za_init(a-1, m_ind)) * (1-Post_Spawning_Mortality(a-1));
         } else {
-          N_fished_eq(a,m_ind) = N_fished_eq(a-1,m_ind-1) * exp(-Za_init(a-1)) * (1-Post_Spawning_Mortality(a-1));
+          N_fished_eq(a,m_ind) = N_fished_eq(a-1,m_ind-1) * exp(-Za_init(a-1, m_ind)) * (1-Post_Spawning_Mortality(a-1));
         }
       }
-      SB_am_eq(a, m_ind) =  N_fished_eq(a,m_ind) * Weight_Age_Mean(a) * Maturity_at_Age(a) * exp(-Fa_init(a)/2);;
+      SB_am_eq(a, m_ind) =  N_fished_eq(a,m_ind) * Weight_Age_Mean(a) * Maturity_at_Age(a) * exp(-Fa_init(a, m_ind)/2);;
     }
     SB_m_eq(m_ind) = SB_am_eq.col(m_ind).sum();
     N_fished_eq(0,m_ind) = BH_SRR(R0_m(m_ind), h, SB_m_eq(m_ind), SBpR);
@@ -578,7 +585,6 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(nll_joint);
   REPORT(nll);
 
-  REPORT(Mean_monthly_F);
 
   return(nll);
 }
