@@ -108,4 +108,26 @@ Type dnorm_(Type x, Type mean, Type sd, int give_log=0) {
 }
 
 
+// Calculate monthly mean
+template <class Type>
+vector<Type> monthly_mean(vector<Type> vec, int periodicity=12) {
+
+  vector<Type> total(12);
+  total.setZero();
+  vector<Type> count(12);
+  count.setZero();
+  vector<Type> average(12);
+  average.setZero();
+
+  for (int mm=0; mm<12; mm++) {
+    for (int i = mm; i < vec.size(); i = i + periodicity) {
+      total(mm) += vec[i];
+      count(mm) += 1;
+    }
+  }
+
+  average = total/count;
+  return(average);
+}
+
 
