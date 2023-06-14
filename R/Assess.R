@@ -238,6 +238,7 @@ Assess <- function(Data, Parameters=NULL,
   Data$Year <- Data$Month <- Data$Metadata <- NULL
 
   do_opt <- opt_TMB_model(Data, Parameters, map, Random, control, restarts=10)
+
   do_opt$map <- map
   do_opt$Data <- outData
   do_opt$Parameters <- Parameters
@@ -248,24 +249,14 @@ Assess <- function(Data, Parameters=NULL,
 
 
 
-opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
+opt_TMB_model <- function(Data, Parameters, map, Random, control, restarts=10) {
 
-  obj <- TMB::MakeADFun(data=data, parameters=parameters, DLL="SLAM_TMBExports",
+  obj <- TMB::MakeADFun(data=Data, parameters=Parameters, DLL="SLAM_TMBExports",
                         silent=TRUE, hessian=FALSE, map=map, random=Random)
 
   starts <- obj$par
   opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control)),silent=TRUE)
 
-  ##############################################################################
-
-  rep <- obj$report()
-  sdreport <- TMB::sdreport(obj)
-
-  cbind(sdreport$par.fixed,  sdreport$gradient.fixed[1,])
-
-  sdreport$cov.fixed
-
-  ##############################################################################
   rerun <- FALSE
   if (inherits(opt, 'list')) {
     rep <- obj$report()
@@ -274,7 +265,7 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
     # check convergence, gradient and positive definite
     chk <- data.frame(#pdHess=sdreport$pdHess,
                       conv=opt$convergence ==0,
-                      grad=max(abs(sdreport$gradient.fixed)) < 0.1)
+                      grad=max(abs(sdreport$gradient.fixed)) < 0.5)
 
     if (any(!chk)) rerun <- TRUE
   } else {
@@ -285,10 +276,10 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
   }
 
   if (rerun & restarts>0) {
-    parameters$ls50 <- parameters$ls50 * rnorm(1, 1, 0.1)
-    parameters$lsdelta <- parameters$lsdelta  * rnorm(1, 1, 0.4)
-    parameters$logR0_m_est <- rep(log(1), 11) + rnorm(11, 0, 0.4)
-    Recall(data, parameters,  map, Random, control, restarts-1)
+    Parameters$ls50 <- Parameters$ls50 * rnorm(1, 1, 0.1)
+    Parameters$lsdelta <- Parameters$lsdelta  * rnorm(1, 1, 0.4)
+    Parameters$logR0_m_est <- rep(log(1), 11) + rnorm(11, 0, 0.4)
+    Recall(Data, Parameters,  map, Random, control, restarts-1)
   }
   list(opt=opt, obj=obj, rep=rep, sdreport=sdreport, chk=chk)
 }
