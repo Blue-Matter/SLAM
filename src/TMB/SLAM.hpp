@@ -307,7 +307,7 @@ Type SLAM(objective_function<Type>* obj) {
     }
     SB_m(m) = SB_am.col(m).sum();
     B_m(m) = B_am.col(m).sum();
-    VB_m(0) = VB_am.col(0).sum();
+    VB_m(m) = VB_am.col(m).sum();
     // recruitment
     N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB_m(m), SBpR) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
   }
@@ -573,9 +573,6 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
   // REPORT(predCAA); // catch-at-age
-
-  REPORT(predIndex);
-  REPORT(CPUEmean);
 
   // predicted seasonal recruitment
   REPORT(R0_m);
