@@ -32,6 +32,8 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(Index_Mean); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(Index_SD); // monthly cpue SD (log-space)
 
+  DATA_VECTOR(F_init_prior); // prior (mu and sd) for F_init
+
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
 
@@ -59,8 +61,6 @@ Type SLAM(objective_function<Type>* obj) {
 
   PARAMETER_VECTOR(logRec_Devs); // monthly recruitment deviations
   PARAMETER(log_sigmaR); // monthly rec dev sd (fixed or random effect; usually fixed)
-
-  PARAMETER_VECTOR(F_init_prior); // prior (mu and sd) for F_init
 
   // ---- Transform Parameters ----
   Type sigmaF_m = exp(log_sigmaF_m); // fishing effort monthly random walk sd
