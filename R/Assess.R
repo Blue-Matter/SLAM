@@ -21,8 +21,7 @@ Initialize_Parameters <- function(data,
                                   F_ts=0.1,
                                   sigmaR=0.6,
                                   sigmaF_m=0.4,
-                                  sigmaR0=0.1,
-                                  F_init_prior=c(log(0.2), 0.4)) {
+                                  sigmaR0=0.1) {
 
   if (!inherits(data, 'Data'))
     stop('First argument must be object of class `Data`')
@@ -42,7 +41,7 @@ Initialize_Parameters <- function(data,
   parameters$log_sigmaR0 <- log(sigmaR0) # sd for random walk penalty for monthly recruitment
   parameters$logRec_Devs <- rep(log(1),  n_ts)
   parameters$log_sigmaR  <- log(sigmaR) # monthly rec dev sd (usually fixed)
-  parameters$F_init_prior  <- F_init_prior #
+
   class(parameters) <- 'Parameters'
   parameters
 }
@@ -183,7 +182,7 @@ Construct_Data_OM <- function(sim=1,
 #' @export
 #'
 Assess <- function(Data, Parameters=NULL,
-                   Assumed_h=0.7,
+                   Assumed_h=0.75,
                    max_ESS=200,
                    Est_Rec_Devs=ifelse(length(Data$Year)>=24, TRUE, FALSE),
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
@@ -234,7 +233,7 @@ Assess <- function(Data, Parameters=NULL,
     Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
                              0,1)
   outData <- Data
-  tt <<- Data
+
   # drop
   Data$Year <- Data$Month <- Data$Metadata <- NULL
 
@@ -257,6 +256,16 @@ opt_TMB_model <- function(data, parameters, map, Random, control, restarts=10) {
   starts <- obj$par
   opt <- try(suppressWarnings(nlminb(starts, obj$fn, obj$gr, control = control)),silent=TRUE)
 
+  ##############################################################################
+
+  rep <- obj$report()
+  sdreport <- TMB::sdreport(obj)
+
+  cbind(sdreport$par.fixed,  sdreport$gradient.fixed[1,])
+
+  sdreport$cov.fixed
+
+  ##############################################################################
   rerun <- FALSE
   if (inherits(opt, 'list')) {
     rep <- obj$report()
