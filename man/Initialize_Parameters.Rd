@@ -31,6 +31,8 @@ Initialize_Parameters(
 \item{sigmaF_m}{standard deviation of random-walk penalty for monthly fishing mortality}
 
 \item{sigmaR0}{standard deviation of random-walk penalty for monthly (seasonal) recruitment}
+
+\item{F_init_prior}{mu and sd (in log-space) for prior for initial equilibrium F}
 }
 \value{
 A list of class \code{Parameters}
