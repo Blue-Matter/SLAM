@@ -185,6 +185,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
                              use_Frwpen=1,
                              use_R0rwpen=1,
                              use_Finit_prior=1,
+                             F_init_prior=c(log(0.2), 0.4),
                              Data_types=NULL) {
 
   data <- list()
@@ -246,6 +247,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
 
   # Prior
   data$use_Finit_prior <- use_Finit_prior
+  data$F_init_prior <- F_init_prior
 
   data$model <- 'SLAM'
 
