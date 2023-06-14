@@ -43,6 +43,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
   DATA_INTEGER(use_Finit_prior);
+  DATA_INTEGER(useSeasonalInit);
 
   // ---- Estimated Parameters ----
   PARAMETER(ls50);  // log age-at-50% selectivity
@@ -243,7 +244,11 @@ Type SLAM(objective_function<Type>* obj) {
 
   for (int m=0; m<12; m++) {
     for(int a=0;a<n_ages;a++){
-      Fa_init(a, m) = F_minit * relMean_monthly_F(m) * selA(a);
+      if (useSeasonalInit==1) {
+        Fa_init(a, m) = F_minit * relMean_monthly_F(m) * selA(a);
+      } else {
+        Fa_init(a, m) = F_minit  * selA(a);
+      }
       Za_init(a, m) =  Fa_init(a,m) + M_at_Age(a);
     }
   }
