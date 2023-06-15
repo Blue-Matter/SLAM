@@ -472,7 +472,7 @@ Type SLAM(objective_function<Type>* obj) {
   // ---- Recruitment deviations ----
   Type recdevnll = 0;
   for(int m=0;m<n_months;m++){
-    recdevnll -= dnorm(logRec_Devs(m), Type(0.0), sigmaR, true);
+    recdevnll -= dnorm_(logRec_Devs(m), Type(0.0), sigmaR, true);
   }
 
   // ---- Joint likelihood ----
@@ -510,16 +510,16 @@ Type SLAM(objective_function<Type>* obj) {
   // penalty for random walk in F
   if (use_Frwpen>0) {
     for(int m=1;m<n_months;m++){
-      nll_joint(4) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
+      nll_joint(4) -= dnorm_(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
     }
   }
 
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(5) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(5) -= dnorm_(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(5) -= dnorm_(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
 
