@@ -32,8 +32,6 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(Index_Mean); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(Index_SD); // monthly cpue SD (log-space)
 
-  DATA_VECTOR(F_init_prior); // prior (mu and sd) for F_init
-
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
 
@@ -44,14 +42,10 @@ Type SLAM(objective_function<Type>* obj) {
   // DATA_INTEGER(Fit_CAA);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
-  DATA_INTEGER(use_Finit_prior);
-  DATA_INTEGER(useSeasonalInit);
 
   // ---- Estimated Parameters ----
   PARAMETER(ls50);  // log age-at-50% selectivity
   PARAMETER(lsdelta); // log interval age-50 - age-95% selectivity
-
-  PARAMETER(logF_minit); // equilibrium fishing mortality for first age-classes
 
   PARAMETER_VECTOR(logF_ts); // fishing mortality for each timestep (month)
   PARAMETER(log_sigmaF_m); // sd for random walk penalty for F
@@ -102,9 +96,6 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Fishing effort and mortality ----
-  // fishing mortality for initial age classes
-  Type F_minit = exp(logF_minit);
-
   vector<Type> F_m(n_months); // fishing mortality each timestep (month)
   F_m.setZero();
   vector<Type> Effort_m(n_months); // relative predicted effort each timestep (month)
@@ -220,6 +211,9 @@ Type SLAM(objective_function<Type>* obj) {
   SB_am_eq.setZero();
   SB_m_eq.setZero();
 
+  // Calculate initial equilbrium F
+  // equal to mean of estimated Fs
+  Type F_minit = F_m.sum()/F_m.size();
 
   // add seasonal pattern for initial equilibrium Z
   vector<Type> Mean_monthly_F(12);
@@ -244,11 +238,7 @@ Type SLAM(objective_function<Type>* obj) {
 
   for (int m=0; m<12; m++) {
     for(int a=0;a<n_ages;a++){
-      if (useSeasonalInit==1) {
-        Fa_init(a, m) = F_minit * relMean_monthly_F(m) * selA(a);
-      } else {
-        Fa_init(a, m) = F_minit  * selA(a);
-      }
+      Fa_init(a, m) = F_minit * relMean_monthly_F(m) * selA(a);
       Za_init(a, m) =  Fa_init(a,m) + M_at_Age(a);
     }
   }
