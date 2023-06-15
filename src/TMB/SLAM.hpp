@@ -512,7 +512,6 @@ Type SLAM(objective_function<Type>* obj) {
     for(int m=1;m<n_months;m++){
       nll_joint(4) -= dnorm(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
     }
-    nll_joint(4) -= dnorm(logF_minit, logF_ts(0), sigmaF_m, true);
   }
 
   // penalty for random walk in logR0_m (seasonal recruitment)
@@ -521,12 +520,6 @@ Type SLAM(objective_function<Type>* obj) {
       nll_joint(5) -= dnorm(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
     nll_joint(5) -= dnorm(logR0_m(11), logR0_m(0), sigmaR0, true);
-  }
-
-
-  // prior for FMinit
-  if (use_Finit_prior>0) {
-    nll_joint(6) -= dnorm(logF_minit, F_init_prior(0), F_init_prior(1), true);
   }
 
 
