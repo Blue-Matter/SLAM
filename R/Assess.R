@@ -6,7 +6,6 @@
 #' @param data An object of class `Data`
 #' @param as50 initial value for age at 50% selection
 #' @param as95 initial value for age at 95% selection
-#' @param Feq_init initial value for initial equilibrium fishing mortality
 #' @param F_ts initial values for monthly fishing mortality. Must be length `length(Data$Years)`
 #' @param sigmaR standard deviation of log-normal recruitment deviations
 #' @param sigmaF_m standard deviation of random-walk penalty for monthly fishing mortality
@@ -17,7 +16,6 @@
 #' @export
 Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
-                                  Feq_init=0.15,
                                   F_ts=0.1,
                                   sigmaR=0.6,
                                   sigmaF_m=0.4,
@@ -32,7 +30,6 @@ Initialize_Parameters <- function(data,
 
   n_ts <- ncol(data$CAW)
 
-  parameters$logF_minit <- log(Feq_init)
   parameters$logF_ts <- rep(log(F_ts), n_ts)
 
   parameters$log_sigmaF_m <- log(sigmaF_m)
