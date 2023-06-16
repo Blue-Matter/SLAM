@@ -182,6 +182,7 @@ Assess <- function(Data, Parameters=NULL,
                    Assumed_h=0.75,
                    max_ESS=200,
                    Est_Rec_Devs=ifelse(length(Data$Year)>=24, TRUE, FALSE),
+                   Est_Seasonal=TRUE,
                    control=list(eval.max=2E4, iter.max=2E4, abs.tol=1E-20),
                    ...) {
 
@@ -206,6 +207,10 @@ Assess <- function(Data, Parameters=NULL,
   if (!Est_Rec_Devs) {
     map$logRec_Devs <- rep(factor(NA), length(Parameters$logRec_Devs))
     Parameters$log_sigmaR <- log(0.001)
+  }
+
+  if (!Est_Seasonal) {
+    map$logR0_m_est <- rep(factor(NA), length(Parameters$logR0_m_est))
   }
 
   if (!is.null(map$log_sigmaR)) {

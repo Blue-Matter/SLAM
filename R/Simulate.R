@@ -585,6 +585,7 @@ Generate_Data <- function(Simulation=NULL, Sampling=NULL, seed=101, silent=FALSE
                    CAA=Data_CAA_DF,
                    Weight_Bins=Weight_Bins,
                    Weight_Mids=Weight_Mids)
+  out$AWK <- AWK
 
   class(out) <- 'Simulated'
   out
