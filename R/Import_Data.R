@@ -183,6 +183,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
                              Fit_CAA=1,
                              use_Frwpen=1,
                              use_R0rwpen=1,
+                             CAW_ESS=50,
                              Data_types=NULL) {
 
   data <- list()
@@ -206,6 +207,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
   CAW <- matrix(CAW_DF$Count, nrow=nBins, nMonths)
   data$CAW <- CAW
   CAW_Monthly_ESS <- Sampled_Data$Sampling$CAW_Annual_ESS/12
+  CAW_Monthly_ESS[CAW_Monthly_ESS>CAW_ESS] <- CAW_ESS
   data$CAW_ESS <- rep(CAW_Monthly_ESS, nMonths)
 
   # CAA Data
