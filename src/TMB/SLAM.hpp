@@ -562,6 +562,10 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(predCAW); // catch-at-weight
   // REPORT(predCAA); // catch-at-age
 
+  REPORT(predC_a);
+  REPORT(predCB_a);
+  REPORT(AWK);
+
   // predicted seasonal recruitment
   REPORT(R0_m);
   REPORT(logRec_Devs); // recruitment deviations
