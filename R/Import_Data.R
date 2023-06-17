@@ -184,6 +184,8 @@ Import.Simulated <- function(Sampled_Data=NULL,
                              use_Frwpen=1,
                              use_R0rwpen=1,
                              CAW_ESS=50,
+                             Effort_CV=0.2,
+                             Index_CV=0.2,
                              Data_types=NULL) {
 
   data <- list()
@@ -220,12 +222,12 @@ Import.Simulated <- function(Sampled_Data=NULL,
   # Effort Index
   Effort_DF <- Sampled_Data$Data$TS %>% filter(Sim==sim) %>% select(Effort)
   data$Effort_Mean <- Effort_DF$Effort
-  data$Effort_SD <- rep(Sampled_Data$Sampling$Effort_CV, nMonths)
+  data$Effort_SD <- rep(Effort_CV, nMonths)
 
   # CPUE Index
   CPUE_DF <- Sampled_Data$Data$TS %>% filter(Sim==sim) %>% select(CPUE)
   data$Index_Mean <- CPUE_DF$CPUE
-  data$Index_SD <- rep(Sampled_Data$Sampling$CPUE_CV, nMonths)
+  data$Index_SD <- rep(Index_CV, nMonths)
 
   # Year and Month info
   tt <- Sampled_Data$Data$TS %>% filter(Sim==sim)
