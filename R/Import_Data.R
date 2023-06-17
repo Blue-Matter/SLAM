@@ -183,9 +183,9 @@ Import.Simulated <- function(Sampled_Data=NULL,
                              Fit_CAA=1,
                              use_Frwpen=1,
                              use_R0rwpen=1,
-                             CAW_ESS=50,
+                             CAW_ESS=200,
                              Effort_CV=0.2,
-                             Index_CV=0.2,
+                             Index_CV=0.3,
                              Data_types=NULL) {
 
   data <- list()
