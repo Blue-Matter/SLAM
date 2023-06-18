@@ -516,9 +516,9 @@ Type SLAMv2(objective_function<Type>* obj) {
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(5) -= dnorm_(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(5) -= dnorm_(log(R0_m)(m), log(R0_m(m-1)), sigmaR0, true);
     }
-    nll_joint(5) -= dnorm_(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(5) -= dnorm_(log(R0_m(11)), log(R0_m(0)), sigmaR0, true);
   }
 
 
