@@ -4,7 +4,7 @@
 #include <TMB.hpp>
 #include "optF.hpp"
 #include "SLAM.hpp"
-
+#include "SLAMv2.hpp"
 
 template<class Type>
 Type objective_function<Type>::operator() () {
@@ -13,6 +13,8 @@ Type objective_function<Type>::operator() () {
     return optF(this);
   } else if(model == "SLAM") {
     return SLAM(this);
+  } else if(model == "SLAMv2") {
+    return SLAMv2(this);
   } else {
     Rf_error("Unknown model.");
   }
