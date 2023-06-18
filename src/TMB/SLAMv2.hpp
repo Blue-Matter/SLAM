@@ -2,8 +2,6 @@
 #undef TMB_OBJECTIVE_PTR
 #define TMB_OBJECTIVE_PTR obj
 
-#include "include/functions.h"
-
 template<class Type>
 Type SLAMv2(objective_function<Type>* obj) {
 
