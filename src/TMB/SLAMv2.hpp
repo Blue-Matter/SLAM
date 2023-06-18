@@ -86,12 +86,17 @@ Type SLAMv2(objective_function<Type>* obj) {
   // ---- Seasonal Recruitment ----
   vector<Type> R0_m(12); // mean R0 for each calendar month
   R0_m.setZero();
+  vector<Type> logR0_m(12); // mean R0 for each calendar month
+  logR0_m.setZero();
+
+
   R0_m =  monthly_mean(rec_devs);
   Type R0_mtotal = R0_m.sum();
 
   // standardize to sum to 1
   for(int m=0;m<12;m++){
     R0_m(m) = R0_m(m)/R0_mtotal;
+    logR0_m(m) = log(R0_m(m));
   }
 
   // ---- Fishing effort and mortality ----
