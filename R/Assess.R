@@ -28,7 +28,7 @@ Initialize_Parameters <- function(data,
   parameters$ls50 <- log(as50)
   parameters$lsdelta <- log(as95-as50)
 
-  n_ts <- ncol(data$CAW)
+  n_ts <- nrow(data$CAW)
 
   parameters$logF_ts <- rep(log(F_ts), n_ts)
 
