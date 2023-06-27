@@ -79,9 +79,7 @@ report_Effort_TS <- function(data) {
   df <- data.frame(Year=data$Year,
                    Month=data$Month,
                    Effort_Mean=data$Effort_Mean,
-                   Effort_SD=data$Effort_SD,
-                   Index_Mean=data$Index_Mean,
-                   Index_SD=data$Index_SD
+                   Effort_SD=data$Effort_SD
   )
   if (is.numeric(df$Month)) {
     df$Month <- month.abb[df$Month]
