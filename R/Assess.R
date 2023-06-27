@@ -231,9 +231,11 @@ Assess <- function(Data, Parameters=NULL,
   if (Data$Fit_Effort)
     Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == length(Data$Year) | sum(!is.na(Data$Effort_Mean)) <2,
                               0,1)
-  if (Data$Fit_Index)
-    Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
-                             0,1)
+
+  Data$Fit_Index <- 0
+  # if (Data$Fit_Index)
+    # Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
+                             # 0,1)
   outData <- Data
 
   # drop
