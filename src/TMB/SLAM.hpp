@@ -561,6 +561,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
   // REPORT(predCAA); // catch-at-age
+  REPORT(relMean_monthly_F);
 
   REPORT(predC_a);
   REPORT(predCB_a);
