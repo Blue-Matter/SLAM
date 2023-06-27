@@ -184,7 +184,7 @@ report_CAW <- function(data) {
     df_list[[i]] <- data.frame(Year=data$Year[i],
                                Month=data$Month[i],
                                Weight=data$Weight_Mids,
-                               Count=data$CAW[,i])
+                               Count=data$CAW[i,])
   }
   df <- do.call('rbind', df_list)
 
