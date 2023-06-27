@@ -25,7 +25,7 @@ Example_Data <- function() {
 Import <- function(csvfile,
                    silent=FALSE,
                    ...) {
-  if (inherits(cvsfile, 'Simulated')) {
+  if (inherits(csvfile, 'Simulated')) {
     UseMethod('Import')
   } else {
 
