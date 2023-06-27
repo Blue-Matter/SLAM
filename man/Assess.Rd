@@ -10,6 +10,7 @@ Assess(
   Assumed_h = 0.75,
   max_ESS = 200,
   Est_Rec_Devs = ifelse(length(Data$Year) >= 24, TRUE, FALSE),
+  Est_Seasonal = TRUE,
   control = list(eval.max = 20000, iter.max = 20000, abs.tol = 1e-20),
   ...
 )

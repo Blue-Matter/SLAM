@@ -4,14 +4,10 @@
 \alias{Import}
 \title{Import and organize data for assessment model}
 \usage{
-Import(xlfile, BinWidth = NULL, BinMax = NULL, silent = FALSE, ...)
+Import(csvfile, silent = FALSE, ...)
 }
 \arguments{
-\item{xlfile}{The full file path to an Excel file structured for SLAM data}
-
-\item{BinWidth}{The width of the bins for the catch-at-weight data. Only needed if the CAW data is raw.}
-
-\item{BinMax}{The maximum bin for the catch-at-weight data. Only needed if the CAW data is raw.}
+\item{csvfile}{The full file path to an CSV file structured for SLAM data}
 
 \item{silent}{Logical. Hide the messages?}
 

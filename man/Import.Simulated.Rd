@@ -13,8 +13,9 @@
   Fit_CAA = 1,
   use_Frwpen = 1,
   use_R0rwpen = 1,
-  use_Finit_prior = 1,
-  F_init_prior = c(log(0.2), 0.4),
+  CAW_ESS = 200,
+  Effort_CV = 0.2,
+  Index_CV = 0.3,
   Data_types = NULL
 )
 }
@@ -36,8 +37,6 @@
 \item{use_R0rwpen}{Logical. Use the random walk penalty for seasonal recruitment?}
 
 \item{Data_types}{Optional character vector specifying data types to fit to.}
-
-\item{use_Finit_prior.}{Use a prior for initial equilibrium F?}
 }
 \value{
 A \code{Data} object

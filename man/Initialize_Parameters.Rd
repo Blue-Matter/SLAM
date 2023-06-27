@@ -8,11 +8,10 @@ Initialize_Parameters(
   data,
   as50 = 4,
   as95 = 6,
-  Feq_init = 0.15,
   F_ts = 0.1,
-  sigmaR = 0.6,
-  sigmaF_m = 0.4,
-  sigmaR0 = 0.1
+  sigmaR = 0.4,
+  sigmaF_m = 0.6,
+  sigmaR0 = 0.3
 )
 }
 \arguments{
@@ -21,8 +20,6 @@ Initialize_Parameters(
 \item{as50}{initial value for age at 50\% selection}
 
 \item{as95}{initial value for age at 95\% selection}
-
-\item{Feq_init}{initial value for initial equilibrium fishing mortality}
 
 \item{F_ts}{initial values for monthly fishing mortality. Must be length \code{length(Data$Years)}}
 
