@@ -1,6 +1,6 @@
 Simulation <- Simulate(LifeHistory, Exploitation, nsim=2)
 
-Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL, dev=F) {
+Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL, dev=T) {
 
   if (dev) {
     dir <- 'inst'
@@ -43,6 +43,7 @@ Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL,
   df_out <- data.frame(Year=Sampled_Data$Year, Month=Sampled_Data$Month, t(CAW))
   colnames(df_out) <- c('Year', 'Month', Sampled_Data$Weight_Mids)
   df_CAW <- df_out
+  df_CAW$Month <- match(df_CAW$Month, month.abb)
 
   # Effort Data
   df <- Data$Data$TS %>% filter(Sim==sim) %>% select(Year, Month,
@@ -50,7 +51,7 @@ Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL,
   df$Effort_SD <- Data$Sampling$Effort_CV
   df_Effort <- df %>% select(Year, Month, Effort_Mean, Effort_SD)
   df_Effort$Effort_Mean <- round(df_Effort$Effort_Mean,2) *100
-
+  df_Effort$Month <- match(df_Effort$Month, month.abb)
   # write csv
 
   # Meta-data
