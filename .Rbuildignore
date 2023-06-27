@@ -2,5 +2,7 @@
 ^\.Rproj\.user$
 ^data-raw$
 ^Analysis$
+^Results$
 ^LICENSE\.md$
 ^build$
+^img$
