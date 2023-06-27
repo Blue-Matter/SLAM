@@ -228,9 +228,8 @@ Assess <- function(Data, Parameters=NULL,
   maxage <- length(Data$Weight_Age_Mean)-1
   if (is.null(Data$Ages)) Data$Ages <- 0:maxage
 
-  if (Data$Fit_Effort)
-    Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == length(Data$Year) | sum(!is.na(Data$Effort_Mean)) <2,
-                              0,1)
+  Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == length(Data$Year) | sum(!is.na(Data$Effort_Mean)) <2,
+                            0,1)
 
   Data$Fit_Index <- 0
   # if (Data$Fit_Index)

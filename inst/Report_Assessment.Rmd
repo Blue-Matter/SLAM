@@ -97,11 +97,11 @@ report_Effort_TS(data)
 
 ```
 
-### Index of Abundance
+<!-- ### Index of Abundance -->
 
-```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.')}
-report_Index_TS(data)
-```
+<!-- ```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.')} -->
+<!-- report_Index_TS(data) -->
+<!-- ``` -->
 
 ## Assessment Results {.tabset}
 
@@ -158,9 +158,9 @@ report_SPR(data)
 report_F(data)
 ```
 
-```{r, fig.cap=paste(fig.number(), 'The estimated relative spawning biomass.')}
-report_SB_SB0(data)
-```
+<!-- ```{r, fig.cap=paste(fig.number(), 'The estimated relative spawning biomass.')} -->
+<!-- report_SB_SB0(data) -->
+<!-- ``` -->
 
 ```{r, fig.cap=paste(fig.number(), 'The estimated log recruitment deviations.')}
 report_rec_devs(data)

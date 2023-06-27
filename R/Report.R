@@ -304,14 +304,17 @@ assumed_pars <- function(data) {
 }
 
 nll_vals <- function(data) {
-  data.frame(Component=c('Catch-at-Weight',
+  df <- data.frame(Component=c('Catch-at-Weight',
                         'Index of Effort',
                         'Index of Abundance',
                         'Recruitment deviations',
                         'Random Walk F',
                         'Random Walk Seasonal Recruitment',
+                        'None',
                         'Total'),
              Value=c(data$rep$nll_joint, sum(data$rep$nll_joint)))
+
+  df %>% filter(Component!='Index of Abundance', Component!='None')
 
 }
 

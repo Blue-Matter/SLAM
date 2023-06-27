@@ -100,6 +100,10 @@ Import <- function(csvfile,
     ind <- match(Effort_Year_Month, Year_Month)
     data$Effort_Mean[ind] <- effort_mean
     data$Effort_SD[ind] <- effort_sd
+
+    # index - not currently used
+    data$Index_Mean <- rep(NA, n_months)
+    data$Index_SD <- rep(NA, n_months)
     return(data)
   }
 }
