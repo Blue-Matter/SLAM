@@ -8,7 +8,7 @@
 #' Example_Data()
 Example_Data <- function() {
   dir <- system.file(package='SLAM')
-  file.path(dir, list.files(dir, pattern='xlsx'))
+  file.path(dir, list.files(dir, pattern='csv'))
 }
 
 #' Import and organize data for assessment model
