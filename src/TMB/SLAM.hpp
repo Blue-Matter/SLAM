@@ -16,7 +16,7 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(Post_Spawning_Mortality); // probability dying at-age (after spawning)
 
   // Weight composition data
-  DATA_MATRIX(CAW);    // CAW observations for each bin and month
+  DATA_MATRIX(CAW);    // CAW observations for each month and bin
   DATA_VECTOR(Weight_Bins);
   DATA_VECTOR(Weight_Mids); // mid-points of the CAW bins
   DATA_VECTOR(CAW_ESS); // number of independent observation of weight samples in each month
@@ -363,13 +363,13 @@ Type SLAM(objective_function<Type>* obj) {
   CAWnll.setZero();
 
   for (int m=0; m<n_months; m++) {
-    CAWns(m) = CAW.col(m).sum(); // sum of CAW observations
+    CAWns(m) = CAW.row(m).sum(); // sum of CAW observations
 
     if (CAWns(m)>0) {
       // standardize observed CAW to sum 1
       vector<Type> CAWp_obs(n_bins);
       CAWp_obs.setZero();
-      CAWp_obs = CAW.col(m)/CAW.col(m).sum();
+      CAWp_obs = CAW.row(m)/CAW.row(m).sum();
 
       // scale by effective sample size
       vector<Type> N_obs(n_bins);
