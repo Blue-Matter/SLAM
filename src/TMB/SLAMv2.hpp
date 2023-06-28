@@ -291,7 +291,7 @@ Type SLAMv2(objective_function<Type>* obj) {
   SB_m(0) = SB_am.col(0).sum();
   B_m(0) = B_am.col(0).sum();
   VB_m(0) = VB_am.col(0).sum();
-  N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * exp(logRec_Devs(0) - pow(sigmaR,2)/Type(2.0));
+  N_m(0,0) = BH_SRR(R0_m(0), h, SB_m(0), SBpR) * rec_devs(0);
 
   // ---- Population dynamics for remaining months ----
   for (int m=1; m<n_months; m++) {
@@ -306,7 +306,7 @@ Type SLAMv2(objective_function<Type>* obj) {
     B_m(m) = B_am.col(m).sum();
     VB_m(m) = VB_am.col(m).sum();
     // recruitment
-    N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB_m(m), SBpR) * exp(logRec_Devs(m) - pow(sigmaR,2)/Type(2.0));
+    N_m(0,m) = BH_SRR(R0_m(m_ind), h, SB_m(m), SBpR) * rec_devs(m);
   }
 
   // ---- Calculate catch ----

@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 # Introduction 
 The `SLAM` package is designed to simulate fishery dynamics and data, and to apply an age-structured assessment model to fishery data for a short-lived semelparous species such as octopus.
 
-`SLAM` is designed with a monthly time-step and to fit to catch-at-weight data. If available, it will also fit to an index of fishing effort and an index of abundance. `SLAM` estimates the selectivity pattern, fishing mortality (F), the spawning potential ratio (SPR), and the relative spawning biomass (SB/SB0) for each month.
+`SLAM` is designed with a monthly time-step and to fit to catch-at-weight data. If available, it will also fit to an index of fishing effort. `SLAM` estimates the selectivity pattern, fishing mortality (F), and the spawning potential ratio (SPR) for each month, as well as reference points related to F and SPR.
 
 ## Installation
 The `SLAM` package can be installed directly from GitHub. A couple of prerequisites are required to install `SLAM` from GitHub. RTools is required because the package uses [TMB](https://cran.r-project.org/package=TMB). The `devtools` package can check if RTools is installed on your system:
@@ -61,23 +61,24 @@ library(SLAM)
 ## The Data object
 Fishery data is loaded into an object of class `Data`. 
 
-There are two ways to create a `Data` object: Importing from Excel and Creating in R
+There are two ways to create a `Data` object: Importing from a CSV files and Creating in R
 
-### Import a Data object from Excel
-The `Import` function can be used to import fishery data from a correctly formatted Excel Workbook. 
+### Import a Data object from a CSV file
+The `Import` function can be used to import fishery data from a correctly formatted CSV file.
 
-The `SLAM` package includes a few example Excel files with example data. The `Example_Data` function will 
+
+The `SLAM` package includes a few files with example data. The `Example_Data` function will 
 print out the full file paths to these example files:
 
 ```{r example}
 Example_Data()
 ```
 
-You can examine the example files to see the specific format of the Excel workbooks containing the example data. Data files must follow this same structure with the same names for the Worksheets (tabs) and same names for the column headings in Row 1, and the text in Column A. 
+You can examine the example files to see the specific format of the CSV files containing the example data. Data files must follow this same structure. 
 
-"Data_Template.xlsx" is an empty data file that can be used as a template for your data.
+"Data_Template.csv" is an empty data file that can be used as a template for your data.
 
-The data can be imported from the specially formatted Excel workbooks using the `Import` function:
+The data can be imported from the CSV file using the `Import` function:
 
 ```{r import}
 MyData <- Import(Example_Data()[1])
