@@ -4,10 +4,10 @@
 \alias{Process_Data}
 \title{Process Case Study Data}
 \usage{
-Process_Data(village, Case_Study_Data)
+Process_Data(Sites, Case_Study_Data, maxWeightBin = 4, weight_bin = 0.25)
 }
 \arguments{
-\item{village}{Name of the village}
+\item{Sites}{Names of the village}
 
 \item{Case_Study_Data}{A data.frame}
 }
