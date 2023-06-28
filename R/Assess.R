@@ -232,10 +232,10 @@ Assess <- function(Data, Parameters=NULL,
     Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == length(Data$Year) | sum(!is.na(Data$Effort_Mean)) <2,
                             0,1)
 
-  Data$Fit_Index <- 0
-  # if (Data$Fit_Index)
-    # Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
-                             # 0,1)
+
+  if (is.null(Data$Fit_Index))
+  Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
+  0,1)
   outData <- Data
 
   # drop
@@ -285,6 +285,8 @@ opt_TMB_model <- function(Data, Parameters, map, Random, control, restarts=10) {
     Parameters$logR0_m_est <- rep(log(1), 11) + rnorm(11, 0, 0.4)
     Recall(Data, Parameters,  map, Random, control, restarts-1)
   }
+  if (!all(is.na(rep)))
+    names(rep$nll_joint) <- c('CAW', 'Effort', 'CPUE', 'RecDevs', 'RW_F', 'RW_R0', 'NA')
   list(opt=opt, obj=obj, rep=rep, sdreport=sdreport, chk=chk)
 }
 
