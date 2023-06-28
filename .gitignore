@@ -2,6 +2,7 @@
 *.dll
 .Rhistory
 src/init_dummy_file.o
+src/TMB/SLAM_TMBExports.o
 .Rhistory
 inst/doc
 
