@@ -258,7 +258,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
   nBins <- length(unique(CAW_DF$Weight))
   nMonths <- length(unique(CAW_DF$Month_ind))
 
-  CAW <- matrix(CAW_DF$Count, nrow=nBins, nMonths)
+  CAW <- t(matrix(CAW_DF$Count, nrow=nBins, nMonths))
   data$CAW <- CAW
   CAW_Monthly_ESS <- Sampled_Data$Sampling$CAW_Annual_ESS/12
   CAW_Monthly_ESS[CAW_Monthly_ESS>CAW_ESS] <- CAW_ESS
