@@ -97,11 +97,11 @@ report_Effort_TS(data)
 
 ```
 
-### Index of Abundance
+<!-- ### Index of Abundance -->
 
-```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.')}
-report_Index_TS(data)
-```
+<!-- ```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.')} -->
+<!-- report_Index_TS(data) -->
+<!-- ``` -->
 
 ## Assessment Results {.tabset}
 
