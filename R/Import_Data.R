@@ -230,6 +230,7 @@ Import <- function(csvfile,
 Import.Simulated <- function(Sampled_Data=NULL,
                              sim=1,
                              Fit_Effort=1,
+                             Fit_Catch=1,
                              Fit_CPUE=1,
                              Fit_CAW=1,
                              Fit_CAA=1,
@@ -237,6 +238,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
                              use_R0rwpen=1,
                              CAW_ESS=200,
                              Effort_CV=0.2,
+                             Catch_CV=0.2,
                              Index_CV=0.3,
                              Data_types=NULL) {
 
@@ -276,6 +278,12 @@ Import.Simulated <- function(Sampled_Data=NULL,
   data$Effort_Mean <- Effort_DF$Effort
   data$Effort_SD <- rep(Effort_CV, nMonths)
 
+  # Catch Index
+  Catch_DF <- Sampled_Data$Data$TS %>% filter(Sim==sim) %>% select(Catch)
+  data$Catch_Mean <- Catch_DF$Catch/mean(Catch_DF$Catch, na.rm=TRUE)
+  data$Catch_n <- sum(Catch_DF$Catch, na.rm=TRUE)
+  data$Catch_SD <- rep(Catch_CV, nMonths)
+
   # CPUE Index
   CPUE_DF <- Sampled_Data$Data$TS %>% filter(Sim==sim) %>% select(CPUE)
   data$Index_Mean <- CPUE_DF$CPUE
@@ -290,6 +298,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
 
   # Options
   data$Fit_Effort <- Fit_Effort
+  data$Fit_Catch <- Fit_Catch
   data$Fit_Index <- Fit_CPUE
   data$Fit_CAW <- Fit_CAW
   data$Fit_CAA <- Fit_CAA

@@ -8,7 +8,7 @@
 #' @return A list
 #' @export
 #'
-Sim_Test <- function(x, grid, Simulation, Sampling, useSeasonalInit=1) {
+Sim_Test <- function(x, grid, Simulation, Sampling) {
 
   # Generate Data
   Sampling$n_recent_months <- grid$n_months[x]
@@ -20,9 +20,9 @@ Sim_Test <- function(x, grid, Simulation, Sampling, useSeasonalInit=1) {
   for (i in 1:nsim) {
     message(i, '/', nsim)
     Data <- Import(Sampled_Data, sim=i, Data_types = grid$data_types[x])
-    Data$useSeasonalInit <- useSeasonalInit
 
     Parameters <- Initialize_Parameters(Data)
+
     assess <- Assess(Data, Parameters)
 
     outlist[[i]] <- assess
