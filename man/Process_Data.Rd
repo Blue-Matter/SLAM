@@ -4,7 +4,7 @@
 \alias{Process_Data}
 \title{Process Case Study Data}
 \usage{
-Process_Data(Sites, Case_Study_Data, maxWeightBin = 4, weight_bin = 0.25)
+Process_Data(Sites, Case_Study_Data, maxWeightBin = 4, weight_bin = 0.1)
 }
 \arguments{
 \item{Sites}{Names of the village}

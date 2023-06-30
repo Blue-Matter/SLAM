@@ -8,6 +8,7 @@
   Sampled_Data = NULL,
   sim = 1,
   Fit_Effort = 1,
+  Fit_Catch = 1,
   Fit_CPUE = 1,
   Fit_CAW = 1,
   Fit_CAA = 1,
@@ -15,6 +16,7 @@
   use_R0rwpen = 1,
   CAW_ESS = 200,
   Effort_CV = 0.2,
+  Catch_CV = 0.2,
   Index_CV = 0.3,
   Data_types = NULL
 )

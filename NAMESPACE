@@ -3,6 +3,7 @@
 S3method(Import,Simulated)
 S3method(Report,Assess)
 S3method(Report,Data)
+export(Aggregate_Data)
 export(Assess)
 export(Check)
 export(Check_Parameters)

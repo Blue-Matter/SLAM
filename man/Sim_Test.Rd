@@ -4,7 +4,7 @@
 \alias{Sim_Test}
 \title{Run a Simulation Test}
 \usage{
-Sim_Test(x, grid, Simulation, Sampling, useSeasonalInit = 1)
+Sim_Test(x, grid, Simulation, Sampling)
 }
 \arguments{
 \item{x}{Scenario number. Row of \code{grid}}

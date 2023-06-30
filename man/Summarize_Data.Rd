@@ -4,7 +4,7 @@
 \alias{Summarize_Data}
 \title{Summarize Case Study Data}
 \usage{
-Summarize_Data(village, Case_Study_Data, Case_Study_Sites)
+Summarize_Data(sites, Case_Study_Data, Case_Study_Sites)
 }
 \arguments{
 \item{data}{a data.frame returned by \code{Process_Data}}
