@@ -486,7 +486,7 @@ Type SLAM(objective_function<Type>* obj) {
     Catchmean = Catchsum/Catchn;
   }
 
-  Catchnll<Type> Catchnll(n_months);
+  vector<Type> Catchnll(n_months);
   Catchnll.setZero();
   vector<Type> stpredCatch(n_months);
   stpredCatch.setZero();
