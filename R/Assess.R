@@ -18,8 +18,8 @@ Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
                                   F_ts=0.1,
                                   sigmaR=0.6,
-                                  sigmaF_m=0.4,
-                                  sigmaR0=0.3) {
+                                  sigmaF_m=0.2,
+                                  sigmaR0=0.2) {
 
   if (!inherits(data, 'Data'))
     stop('First argument must be object of class `Data`')
@@ -223,9 +223,12 @@ Assess <- function(Data, Parameters=NULL,
   Data$h <- Assumed_h
   message('Assuming a BH-SRR steepness of ', Assumed_h)
 
+  Data$CAW_nsamp <- Data$CAW_ESS
   Data$CAW_ESS[Data$CAW_ESS>max_ESS] <- max_ESS
+
   Data$Fit_CAW <- 1
   Data$Fit_CAA <- 0
+
   maxage <- length(Data$Weight_Age_Mean)-1
   if (is.null(Data$Ages)) Data$Ages <- 0:maxage
 
@@ -233,10 +236,21 @@ Assess <- function(Data, Parameters=NULL,
     Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == length(Data$Year) | sum(!is.na(Data$Effort_Mean)) <2,
                             0,1)
 
+  if (is.null(Data$Fit_Catch))
+    Data$Fit_Catch <- ifelse(sum(is.na(Data$Catch_Mean)) == length(Data$Year) | sum(!is.na(Data$Catch_Mean)) <2,
+                              0,1)
 
   if (is.null(Data$Fit_Index))
   Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
   0,1)
+
+  if (Data$Fit_Index) {
+    if (Data$Fit_Effort & Data$Fit_Catch)
+      warning('Index, Effort, and Catch detected. Only fitting to Index and Catch')
+    Data$Fit_Effort <- 0
+  }
+
+
   outData <- Data
 
   # drop
@@ -287,7 +301,7 @@ opt_TMB_model <- function(Data, Parameters, map, Random, control, restarts=10) {
     Recall(Data, Parameters,  map, Random, control, restarts-1)
   }
   if (!all(is.na(rep)))
-    names(rep$nll_joint) <- c('CAW', 'Effort', 'CPUE', 'RecDevs', 'RW_F', 'RW_R0', 'NA')
+    names(rep$nll_joint) <- c('CAW', 'Effort', 'CPUE', 'Catch', 'RecDevs', 'RW_F', 'RW_R0')
   list(opt=opt, obj=obj, rep=rep, sdreport=sdreport, chk=chk)
 }
 
