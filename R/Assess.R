@@ -179,7 +179,7 @@ Construct_Data_OM <- function(sim=1,
 #' @export
 #'
 Assess <- function(Data, Parameters=NULL,
-                   Assumed_h=0.75,
+                   Assumed_h=0.90,
                    max_ESS=200,
                    Est_Rec_Devs=ifelse(length(Data$Year)>=24, TRUE, FALSE),
                    Est_Seasonal=TRUE,
