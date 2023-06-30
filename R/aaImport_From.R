@@ -38,6 +38,8 @@ Make_Data <- function(silent=FALSE) {
   data$Month <- numeric()
   data$Effort_Mean <- numeric()
   data$Effort_SD <- numeric()
+  data$Catch_Mean <- numeric()
+  data$Catch_SD <- numeric()
   data$Index_Mean <- numeric()
   data$Index_SD <- numeric()
 
