@@ -32,12 +32,16 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_VECTOR(Index_Mean); // monthly cpue - mean 1 over time-series
   DATA_VECTOR(Index_SD); // monthly cpue SD (log-space)
 
+  DATA_VECTOR(Catch_Mean); // monthly catch - mean 1 over time-series
+  DATA_VECTOR(Catch_SD); // monthly catch SD (log-space)
+
   // Stock-recruit
   DATA_SCALAR(h); // steepness of BH-SRR
 
   // options
   DATA_INTEGER(Fit_Effort);
   DATA_INTEGER(Fit_Index);
+  DATA_INTEGER(Fit_Catch);
   DATA_INTEGER(Fit_CAW);
   // DATA_INTEGER(Fit_CAA);
   DATA_INTEGER(use_Frwpen);
@@ -469,6 +473,31 @@ Type SLAM(objective_function<Type>* obj) {
     }
   }
 
+  // Catch
+  // mean 1 over time-steps where Catch_Mean data exists
+  Type Catchmean = 0;
+  Type Catchsum = 0;
+  Type Catchn = 0;
+  for (int m=0; m<n_months; m++) {
+    if (!R_IsNA(asDouble(Catch_Mean(m)))) {
+      Catchsum += predCB(m);
+      Catchn += 1;
+    }
+    Catchmean = Catchsum/Catchn;
+  }
+
+  Catchnll<Type> Catchnll(n_months);
+  Catchnll.setZero();
+  vector<Type> stpredCatch(n_months);
+  stpredCatch.setZero();
+  for (int m=0; m<n_months; m++) {
+    stpredCatch(m) = predCB(m)/Catchmean;
+    if (!R_IsNA(asDouble(Catch_Mean(m)))) {
+      Catchnll(m) -= dnorm_(log(stpredCatch(m)), log(Catch_Mean(m)), Catch_SD(m), true);
+    }
+  }
+
+
   // ---- Recruitment deviations ----
   Type recdevnll = 0;
   for(int m=0;m<n_months;m++){
@@ -484,11 +513,6 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(0) =  CAWnll.sum();
   }
 
-  // // CAA
-  // if (Fit_CAA>0) {
-  //   nll_joint(1) =  CAAnll.sum();
-  // }
-
   // Effort
   if (Fit_Effort>0) {
     nll_joint(1) =  Effnll.sum();
@@ -499,27 +523,31 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(2) =  CPUEnll.sum();
   }
 
+  // Index
+  if (Fit_Catch>0) {
+    nll_joint(3) =  Catchnll.sum();
+  }
+
 
   // Recruitment deviations
   if (sigmaR> 0.01) {
-    nll_joint(3) =  recdevnll;
+    nll_joint(4) =  recdevnll;
   }
-
 
   // ---- Penalties ----
   // penalty for random walk in F
   if (use_Frwpen>0) {
     for(int m=1;m<n_months;m++){
-      nll_joint(4) -= dnorm_(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
+      nll_joint(5) -= dnorm_(logF_ts(m), logF_ts(m-1), sigmaF_m, true);
     }
   }
 
   // penalty for random walk in logR0_m (seasonal recruitment)
   if (use_R0rwpen>0) {
     for(int m=1;m<12;m++){
-      nll_joint(5) -= dnorm_(logR0_m(m), logR0_m(m-1), sigmaR0, true);
+      nll_joint(6) -= dnorm_(logR0_m(m), logR0_m(m-1), sigmaR0, true);
     }
-    nll_joint(5) -= dnorm_(logR0_m(11), logR0_m(0), sigmaR0, true);
+    nll_joint(6) -= dnorm_(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
 
@@ -562,9 +590,6 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(predCAW); // catch-at-weight
   // REPORT(predCAA); // catch-at-age
 
-  REPORT(relMean_monthly_F);
-  REPORT(Mean_monthly_F);
-
   REPORT(predC_a);
   REPORT(predCB_a);
   REPORT(AWK);
@@ -581,9 +606,9 @@ Type SLAM(objective_function<Type>* obj) {
 
   // likelihoods
   REPORT(CAWnll);
-  // REPORT(CAAnll);
   REPORT(Effnll);
   REPORT(CPUEnll);
+  REPORT(Catchnll);
   REPORT(recdevnll);
   REPORT(nll_joint);
   REPORT(nll);
