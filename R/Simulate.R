@@ -141,8 +141,6 @@ Simulate <- function(LifeHistory=NULL,
   HARA_power <- Exploitation$HARA_power
   nts <- nmonths
 
-  # Parameter Checks
-  #TODO
 
   # Model Fishery Dynamics
 
@@ -174,7 +172,7 @@ Simulate <- function(LifeHistory=NULL,
   N_Age_fished <- array(0, dim=c(nsim, nAge, nts))
   N_Age_unfished <- N_Age_unfished_eq <- SPR <- SB_Age_fished <- SB_Age_unfished <-
     SB_Age_unfished_eq <- Catch_Age <- N_Age_fished
-  B_Age_fished <- B_Age_unfished <- B_Age_unfished_eq <- array(0, dim=c(nsim, nAge, nts))
+  B_Age_fished <- VB_Age_fished <-  B_Age_unfished <- B_Age_unfished_eq <- array(0, dim=c(nsim, nAge, nts))
   SB_fished <- SB_unfished <- SB_unfished_eq <- matrix(0, nrow=nsim, ncol=nts)
 
   Sel_at_Age <-  1/(1+exp(-log(19)*((Ages-SA50)/(SA95-SA50))))
@@ -239,8 +237,10 @@ Simulate <- function(LifeHistory=NULL,
   Catch_Age[,,1] <- N_Age_fished[,,1]*((1-Maturity_at_Age_array[,,1])*exp(-M_at_Age[,,1]/2)+Maturity_at_Age_array[,,1]*exp(-Post_Spawning_Mortality_array[,,1]/2))*(1-exp(-F_at_Age[,,1]))
 
   B_Age_fished[,,1] <- N_Age_fished[,,1] * Weight_Age_Mean_array[,,1]
+  VB_Age_fished[,,1] <- N_Age_fished[,,1] * Sel_at_Age[,,1] * Weight_Age_Mean_array[,,1]
   B_Age_unfished[,,1]  <- N_Age_unfished[,,1] * Weight_Age_Mean_array[,,1]
   B_Age_unfished_eq[,,1]  <- N_Age_unfished_eq[,,1] * Weight_Age_Mean_array[,,1]
+
 
   # Fished population - Loop over remaining time-steps
   for (t in 2:nts) {
@@ -255,6 +255,7 @@ Simulate <- function(LifeHistory=NULL,
     B_Age_fished[,,t] <- N_Age_fished[,,t] * Weight_Age_Mean_array[,,t]
     B_Age_unfished[,,t]  <- N_Age_unfished[,,t] * Weight_Age_Mean_array[,,t]
     B_Age_unfished_eq[,,t]  <- N_Age_unfished_eq[,,t] * Weight_Age_Mean_array[,,t]
+    VB_Age_fished[,,t] <- N_Age_fished[,,t] * Sel_at_Age[,,t] * Weight_Age_Mean_array[,,t]
 
     # Spawning Biomass mid time-step
     SB_Age_fished[,,t] <- N_Age_fished[,,t] * Weight_Age_Mean_array[,,t] * Maturity_at_Age_array[,,t] * exp(-F_Month[,t]/2)
@@ -283,7 +284,8 @@ Simulate <- function(LifeHistory=NULL,
   B_unfished_eq_Month <- apply(N_Age_unfished_eq * Weight_Age_Mean_array, c(1,3), sum)
   SB_unfished_Month <- apply(N_Age_unfished * Weight_Age_Mean_array * Maturity_at_Age_array, c(1,3), sum)
 
-  B_Month <- apply(N_Age_fished * Weight_Age_Mean_array, c(1,3), sum)
+  B_Month <- apply(B_Age_fished, c(1,3), sum)
+  VB_Month <-  apply(VB_Age_fished, c(1,3), sum)
   Catch_N_Month <- apply(Catch_Age, c(1,3), sum)
   Catch_B_Month <- apply(Catch_Age * Weight_Age_Mean_array, c(1,3), sum)
 
@@ -309,6 +311,7 @@ Simulate <- function(LifeHistory=NULL,
                                    N_unfished=as.vector(N_Age_unfished),
                                    N_unfished_eq=as.vector(N_Age_unfished),
                                    B_fished=as.vector(B_Age_fished),
+                                   VB_fished=as.vector(VB_Age_fished),
                                    B_unfished=as.vector(N_Age_unfished * Weight_Age_Mean_array),
                                    SB_fished=as.vector(SB_Age_fished),
                                    SB_unfished=as.vector(SB_Age_unfished),
@@ -323,6 +326,7 @@ Simulate <- function(LifeHistory=NULL,
                             N_fished=as.vector(N_fished),
                             N_unfished=as.vector(N_unfished),
                             B_fished=as.vector(B_Month),
+                            VB_fished=as.vector(VB_Month),
                             B_unfished=as.vector(B_unfished_Month),
                             B_unfished_eq=as.vector(B_unfished_eq_Month),
                             SB_fished=as.vector(SB_fished),
@@ -491,7 +495,7 @@ Generate_Data <- function(Simulation=NULL, Sampling=NULL, seed=101, silent=FALSE
 
   # CPUE
   B_Month <- array(NA, dim=c(nsim, nts))
-  B_Month[] <- Simulation$Time_Series$B_fished
+  B_Month[] <- Simulation$Time_Series$VB_fished
   CPUE_Sample <- B_Month/apply(B_Month, 1, mean) * exp(rnorm(nts*nsim, -0.5*CPUE_CV^2, CPUE_CV))
 
   # Effort (Index)

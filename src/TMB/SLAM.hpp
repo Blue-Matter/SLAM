@@ -448,7 +448,7 @@ Type SLAM(objective_function<Type>* obj) {
   predIndex.setZero();
 
   // Calculate predicted Index
-  predIndex = B_m; // proportional to biomass
+  predIndex = VB_m; // proportional to biomass
 
   // mean 1 over time-steps where Index_Mean data exists
   Type CPUEmean = 0;
