@@ -245,11 +245,11 @@ Assess <- function(Data, Parameters=NULL,
   0,1)
 
   if (Data$Fit_Index) {
-    if (Data$Fit_Effort & Data$Fit_Catch)
+    if (Data$Fit_Effort & Data$Fit_Catch) {
       warning('Index, Effort, and Catch detected. Only fitting to Index and Catch')
-    Data$Fit_Effort <- 0
+      Data$Fit_Effort <- 0
+    }
   }
-
 
   outData <- Data
 
