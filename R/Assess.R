@@ -17,7 +17,7 @@
 Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
                                   F_ts=0.1,
-                                  sigmaR=0.6,
+                                  sigmaR=0.4,
                                   sigmaF_m=0.4,
                                   sigmaR0=0.3) {
 
@@ -180,7 +180,7 @@ Construct_Data_OM <- function(sim=1,
 #' @export
 #'
 Assess <- function(Data, Parameters=NULL,
-                   Assumed_h=0.90,
+                   Assumed_h=0.85,
                    max_ESS=200,
                    Est_Rec_Devs=ifelse(length(Data$Year)>=24, TRUE, FALSE),
                    Est_Seasonal=TRUE,

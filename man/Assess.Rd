@@ -7,7 +7,7 @@
 Assess(
   Data,
   Parameters = NULL,
-  Assumed_h = 0.9,
+  Assumed_h = 0.85,
   max_ESS = 200,
   Est_Rec_Devs = ifelse(length(Data$Year) >= 24, TRUE, FALSE),
   Est_Seasonal = TRUE,
