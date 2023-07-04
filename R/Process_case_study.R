@@ -338,6 +338,7 @@ Make_Data_Objects <- function(i, data_list, Case_Study_Sites, Catch_SD=0.1, save
   Weight_Mids <- Weight_Mids[!is.na(Weight_Mids)]
   by <- Weight_Mids[2] - Weight_Mids[1]
   Weight_Bins <-  seq(Weight_Mids[1]-0.5*by, by=by, length.out=length(Weight_Mids)+1)
+  Weight_Bins[Weight_Bins<0] <- 0
   nbins <- length(Weight_Mids)
 
   Years <- unique(obs_data$CAW$Year)

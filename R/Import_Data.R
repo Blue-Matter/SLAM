@@ -76,6 +76,7 @@ Import <- function(csvfile,
     data$Weight_Mids <- Weight_Mids <- as.numeric(datasheet[CAW_ind,3:ncol(datasheet)])
     by <-Weight_Mids[2]- Weight_Mids[1]
     Weight_Bins <- seq(Weight_Mids[1]-0.5*by, by=by, length.out=length(Weight_Mids)+1)
+    Weight_Bins[Weight_Bins<0] <- 0
     data$Weight_Bins <- Weight_Bins
 
     CAW_n <- apply(CAW_df, 1, sum)
@@ -84,133 +85,70 @@ Import <- function(csvfile,
     data$Year <- as.numeric(datasheet$V1[row_ind])
     data$Month <- as.numeric(datasheet$V2[row_ind])
 
+    # indices
+
+    # Effort, Catch, Biomass
+    year_ind <- which(datasheet$V1 =='Year')[2]
+    year_rows <- (year_ind+1):length(datasheet$V1)
+
+    years <- suppressWarnings(as.numeric(datasheet$V1[year_rows]))
+    year_rows <- year_rows[which(!is.na(years))]
+
+    years <- as.numeric(datasheet$V1[year_rows])
+    month <- as.numeric(datasheet$V2[year_rows])
+    mean <- as.numeric(datasheet$V3[year_rows])
+    sd <- as.numeric(datasheet$V4[year_rows])
+    type <- trimws(datasheet$V5[year_rows])
+
+    if (any(! type %in% c('Catch', 'Effort', 'Biomass'))) {
+      stop('Time-series Type must be  `Catch`, `Effort`, `Biomass`')
+    }
+
+    df <- data.frame(Year=years, Month=month, Mean=mean, SD=sd, Type=type)
+
+    # catch
+    nts <- length(data$Year)
+    df2 <- df %>% filter(Type=='Catch')
+    if (nrow(df2)>0) {
+      data$Catch_Mean <- df2$Mean
+      data$Catch_SD <- df2$SD
+    } else {
+      data$Catch_Mean <- rep(NA, nts)
+      data$Catch_SD <- rep(NA, nts)
+    }
+
     # effort
-    Effort_ind <- which(datasheet$V1 =='Year')[2]
-    year_rows <- (Effort_ind+1):length(datasheet$V1)
+    df2 <- df %>% filter(Type=='Effort')
+    if (nrow(df2)>0) {
+      data$Effort_Mean <- df2$Mean
+      data$Effort_SD <- df2$SD
+    } else {
+      data$Effort_Mean <- rep(NA, nts)
+      data$Effort_SD <- rep(NA, nts)
+    }
 
-    effort_year <- as.numeric(datasheet$V1[year_rows])
-    effort_month <- as.numeric(datasheet$V2[year_rows])
-    effort_mean <- as.numeric(datasheet$V3[year_rows])
-    effort_sd <- as.numeric(datasheet$V4[year_rows])
+    # biomass
+    df2 <- df %>% filter(Type=='Biomass')
+    if (nrow(df2)>0) {
+      data$Index_Mean <- df2$Mean
+      data$Index_SD <- df2$SD
+    } else {
+      data$Index_Mean <- rep(NA, nts)
+      data$Index_SD <- rep(NA, nts)
+    }
 
-    Year_Month <- paste(data$Year, data$Month, sep='_')
-    Effort_Year_Month <- paste(effort_year,effort_month, sep='_')
-    data$Effort_Mean <- rep(NA, n_months)
-    data$Effort_SD <- rep(NA, n_months)
-    ind <- match(Effort_Year_Month, Year_Month)
-    data$Effort_Mean[ind] <- effort_mean
-    data$Effort_SD[ind] <- effort_sd
 
-    # index - not currently used
-    data$Index_Mean <- rep(NA, n_months)
-    data$Index_SD <- rep(NA, n_months)
-    return(data)
+    # Parameters
+    par_ind <- which(datasheet$V1 =='Parameters')
+    vars <- datasheet$V1[(par_ind+1):(par_ind+4)]
+    vals <- as.numeric(datasheet$V2[(par_ind+1):(par_ind+4)])
+
+    for (i in seq_along(vars)) {
+      data[[vars[i]]] <- vals[i]
+    }
+    data
   }
 }
-#
-# import_at_age <- function(XLData, data) {
-#   At_Age_Data <- XLData$`At-Age-Schedules`
-#   if (is.null(At_Age_Data)) {
-#     stop('Could not import At-Age-Schedules from ', xlfile, ' . Is the worksheet named `At-Age-Schedules`?')
-#   }
-#   Names <- At_Age_Data$At.Age.Schedules %>% as.vector()
-#   Ncol <- ncol(At_Age_Data)
-#   n_age <- Ncol-1
-#
-#   for (i in seq_along(Names)) {
-#     dd <- At_Age_Data[i,2:(Ncol)]
-#     dd <- as.matrix(dd)
-#     colnames(dd) <- NULL
-#     data[[Names[i]]] <- as.vector(dd)
-#   }
-#
-#   data
-# }
-#
-# import_caw_data <- function(XLData, data, BinWidth=NULL, BinMax=NULL) {
-#   CAW_Data <- XLData$`CAW-Data`
-#   if (is.null(CAW_Data)) {
-#     stop('Could not import CAW-Data from ', xlfile, ' . Is the worksheet named `CAW-Data`?')
-#   }
-#   cnames <- colnames(CAW_Data)
-#   if (length(cnames)>3) {
-#     # binned data
-#     BinMids <- as.numeric(cnames[3:length(cnames)])
-#     by <- BinMids[2]-BinMids[1]
-#     Bins <- seq(BinMids[1]-0.5*by, by=by, length.out=length(BinMids)+1)
-#     nMonths <- nrow(CAW_Data)
-#     nBins <- length(BinMids)
-#     data$CAW <- as.matrix(CAW_Data[,3:length(cnames)])
-#     data$Weight_Bins <- Bins
-#     data$Weight_Mids <- BinMids
-#     data$CAW <- t(data$CAW)
-#     data$CAW_ESS <- apply(data$CAW, 2, sum)
-#     data$Year <- XLData$`CAW-Data`$Year
-#     data$Month <- XLData$`CAW-Data`$Month
-#
-#   } else {
-#     message('Raw CAW data detected')
-#     if (is.null(BinWidth)) {
-#       message('Argument `BinWidth` not set. Using default value of 0.1')
-#       BinWidth <- 0.1
-#     }
-#
-#     if (!is.null(BinMax)) {
-#       maxBin <- BinMax
-#       XLData$`CAW-Data`$Weight[XLData$`CAW-Data`$Weight>maxBin] <- maxBin
-#       message('Setting maximum bin width to: ', maxBin)
-#     } else {
-#       maxBin <- ceiling(max(XLData$`CAW-Data`$Weight))
-#       message('Setting maximum bin width to maximum observed weight: ', maxBin)
-#     }
-#     BinMids <- seq(0.5*BinWidth, by=BinWidth, maxBin)
-#     nBins <- length(BinMids)
-#     Bins <- seq(BinMids[1]-0.5*BinWidth, by=BinWidth, length.out=length(BinMids)+1)
-#     Years <- unique(XLData$`CAW-Data`$Year)
-#     CAW <- XLData$`CAW-Data`
-#     Year_Month <- CAW %>% distinct(Year, Month)
-#     nMonths <- Year_Month %>% nrow()
-#     data$CAW <- matrix(0, nBins, nMonths)
-#     for (i in 1:nMonths) {
-#       ts <- Year_Month[i,]
-#       caw_yr <- CAW %>% filter(Year %in% ts$Year, Month %in% ts$Month)
-#       data$CAW[, i] <- as.numeric(table(cut(caw_yr$Weight, Bins)))
-#     }
-#     data$CAW_ESS <- apply(data$CAW, 2, sum)
-#     Year_Month <- data.frame(Year=XLData$`CAW-Data`$Year, Month=XLData$`CAW-Data`$Month) %>%
-#       distinct(Year, Month)
-#     data$Year <- Year_Month$Year
-#     data$Month <- Year_Month$Month
-#   }
-#   data
-# }
-#
-# import_ts_data <- function(XLData, data) {
-#   TS_data <- XLData$`Time-Series-Data`
-#   TS_Year_Month <- data.frame(Year=TS_data$Year, Month=TS_data$Month)
-#   CAW_Year_Month <- data.frame(Year=data$Year, Month=data$Month)
-#
-#   # match Year and Months
-#   match <- FALSE
-#   if (all(dim(TS_Year_Month) ==dim(CAW_Year_Month))) {
-#     match <- all(TS_Year_Month == CAW_Year_Month)
-#   }
-#   if (!match)
-#     stop('`CAW-Data` and `Time-Series-Data` must both contain all Years and Months. Use NA for missing values.')
-#
-#   data$Effort_Mean <- TS_data$Effort_Mean
-#   data$Effort_SD <- TS_data$Effort_SD
-#   data$Index_Mean <- TS_data$Index_Mean
-#   data$Index_SD <- TS_data$Index_SD
-#   data
-# }
-
-
-
-
-
-
-
 
 
 #' Import Simulated Data
@@ -295,6 +233,8 @@ Import.Simulated <- function(Sampled_Data=NULL,
   data$n_month <- length(data$Month_ind)
   data$Year <- tt$Year
   data$Month <- tt$Month
+
+  data$Steepness <- Sampled_Data$Simulation$LifeHistory$steepness
 
   # Options
   data$Fit_Effort <- Fit_Effort

@@ -479,6 +479,8 @@ Generate_Data <- function(Simulation=NULL, Sampling=NULL, seed=101, silent=FALSE
   }
   AWK[,nBins] <- 1 - plnorm(Weight_Bins[nBins], mu, Weight_Age_SD)
 
+
+
   # Catch-at-Weight - expected
   Catch_Age <- array(NA, dim=c(nsim, nAge, nts))
   Catch_Age[] <- Simulation$At_Age_Time_Series$Catch_n

@@ -40,7 +40,7 @@ Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL,
   dd <- dim(CAW)
   nBins <- dd[1]
   mat <- matrix(0, length(Sampled_Data$Year), nBins)
-  df_out <- data.frame(Year=Sampled_Data$Year, Month=Sampled_Data$Month, t(CAW))
+  df_out <- data.frame(Year=Sampled_Data$Year, Month=Sampled_Data$Month, CAW)
   colnames(df_out) <- c('Year', 'Month', Sampled_Data$Weight_Mids)
   df_CAW <- df_out
   df_CAW$Month <- match(df_CAW$Month, month.abb)
@@ -52,6 +52,15 @@ Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL,
   df_Effort <- df %>% select(Year, Month, Effort_Mean, Effort_SD)
   df_Effort$Effort_Mean <- round(df_Effort$Effort_Mean,2) *100
   df_Effort$Month <- match(df_Effort$Month, month.abb)
+
+  # Index of Abundance
+  df_Abund <- Data$Data$TS %>% filter(Sim==sim) %>% select(Year, Month,
+                                                        Mean=CPUE)
+  df_Abund$SD <- Data$Sampling$CPUE_CV
+  df_Abund <- df_Abund %>% select(Year, Month, Mean, SD)
+  df_Abund$Mean <- round(df_Abund$Mean,2) *100
+  df_Abund$Month <- match(df_Abund$Month, month.abb)
+
   # write csv
 
   # Meta-data
@@ -78,14 +87,37 @@ Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL,
     cat(paste0(paste(df_CAW[i,], collapse=', '), '\n'), file=csvfile, append=TRUE)
   }
 
-  # Effort Data
+  # Index Data
+
+  # effort
   cat('\n', file=csvfile, append = TRUE)
-  cat('Effort Data\n', file=csvfile,  append = TRUE)
+  cat('Index Data\n', file=csvfile,  append = TRUE)
+  names(df_Effort)[3:4] <- c('Mean', 'SD')
+  df_Effort$Type <- 'Effort'
   cat(paste(names(df_Effort), collapse=', '), file=csvfile,  append=TRUE)
   cat('\n', file=csvfile, append = TRUE)
   for (i in 1:nrow(df_Effort)) {
     cat(paste0(paste(df_Effort[i,], collapse=', '), '\n'), file=csvfile, append=TRUE)
   }
+
+  # abundance
+  df_Abund$Type <- 'Biomass'
+  cat('\n', file=csvfile, append = TRUE)
+  for (i in 1:nrow(df_Abund)) {
+    cat(paste0(paste(df_Abund[i,], collapse=', '), '\n'), file=csvfile, append=TRUE)
+  }
+
+
+  # Parameters
+  sigmaF <- 0.4
+  sigmaR0 <- 0.3
+
+  cat('\n', file=csvfile, append = TRUE)
+  cat('Parameters, Value, Description\n', file=csvfile,  append = TRUE)
+  cat(paste('Steepness', Simulation$LifeHistory$steepness, 'Assumed steepness of Beverton-Holt Stock-Recruit Relationship', sep=', '), '\n', file=csvfile,  append = TRUE)
+  cat(paste('sigmaR', Simulation$LifeHistory$sigmaR, 'Assumed standard deviation of log-normal recruitment deviations', sep=', '), '\n', file=csvfile,  append = TRUE)
+  cat(paste('sigmaF', sigmaF, 'Standard deviation for penalty for random walk in monthly F (log-space)', sep=', '), '\n', file=csvfile,  append = TRUE)
+  cat(paste('sigmaR0', sigmaR0, 'Standard deviation for penalty for random walk in monthly recruitment pattern (log-space)', sep=', '), '\n', file=csvfile,  append = TRUE)
 
 }
 

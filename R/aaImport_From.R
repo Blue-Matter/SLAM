@@ -43,6 +43,11 @@ Make_Data <- function(silent=FALSE) {
   data$Index_Mean <- numeric()
   data$Index_SD <- numeric()
 
+  data$Steepness <- numeric()
+  data$sigmaR <- numeric()
+  data$sigmaF <- numeric()
+  data$sigmaR0 <- numeric()
+
   data$use_Frwpen <- 1
   data$use_R0rwpen <- 1
   data$model <- 'SLAM'

@@ -170,7 +170,6 @@ Construct_Data_OM <- function(sim=1,
 #'
 #' @param Data A `Data` object
 #' @param Parameters A `Parameters` object
-#' @param Assumed_h Assumed value of steepness for the stock-recruitment relationship
 #' @param max_ESS Maximum effective sample size for the catch-at-weight data
 #' @param Est_Rec_Devs Logical. Estimate recruitment deviations (TRUE) or assume constant recruitment (FALSE)
 #' @param control Optional controls for optimizer
@@ -180,7 +179,6 @@ Construct_Data_OM <- function(sim=1,
 #' @export
 #'
 Assess <- function(Data, Parameters=NULL,
-                   Assumed_h=0.85,
                    max_ESS=200,
                    Est_Rec_Devs=ifelse(length(Data$Year)>=24, TRUE, FALSE),
                    Est_Seasonal=TRUE,
@@ -220,7 +218,10 @@ Assess <- function(Data, Parameters=NULL,
     Random <- 'logRec_Devs'
   }
 
-  Data$h <- Assumed_h
+  Assumed_h <- Data$h
+  if (is.null(Assumed_h) || is.na(Assumed_h)) {
+    Assumed_h <- 0.99
+  }
   message('Assuming a BH-SRR steepness of ', Assumed_h)
 
   Data$CAW_nsamp <- Data$CAW_ESS
