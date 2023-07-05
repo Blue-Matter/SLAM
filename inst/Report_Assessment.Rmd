@@ -1,6 +1,6 @@
 ---
-title: "`r data$type`"
-subtitle: "`r data$Data$Metadata$Value[data$Data$Metadata$Field=='Author']`"
+title: "Assessment Report"
+subtitle: "`r data$Data$Metadata$Value[data$Data$Metadata$Field=='Fishery']`"
 date: "`r ifelse(is.null(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']) | is.na(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']), Sys.Date(), data$Data$Metadata$Value[data$Data$Metadata$Field=='Date'])`"
 ---
 <style type="text/css">
@@ -34,8 +34,7 @@ tab.number <- function() {
 knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Information.'))
 ```
 
-## Data {.tabset}
-### At-Age Schedules  {.tabset}
+## At-Age Schedules 
 
 ```{r}
  weight_at_age <- report_weight_at_age(data$Data)
@@ -57,51 +56,31 @@ knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Informatio
 ```
 
 
-####  Figures  
-```{r, fig.cap=paste(fig.number(), 'The mean weight-at-age, with 10th and 90th percentiles.')}
-weight_at_age$p
+```{r, fig.cap=paste(fig.number(), 'a) The mean weight-at-age, with 10th and 90th percentiles., b) The natural mortality-at-age schedule. c) The maturity-at-age schedule. d)The post-spawning mortality-at-age schedule.')}
+plot_at_Age(data$Data)
 ```
-
-```{r, fig.cap=paste(fig.number(), 'The maturity-at-age schedule.')}
-maturity_at_age$p
-```
-
-```{r, fig.cap=paste(fig.number(), 'The natural mortality-at-age schedule.')}
-M_at_age$p
-```
-
-```{r, fig.cap=paste(fig.number(), 'The post-spawning mortality-at-age schedule.')}
-PSM$p
-```
-
-
-
-####  Table  
 
 ```{r}
- knitr::kable(df, caption=paste(tab.number(), 'At-Age schedules.'))
+ knitr::kable(df, caption=paste(tab.number(), 'Table of values for the At-Age schedules.'))
 ```
+
+
+## Data {.tabset}
 
 ### Catch-at-Weight
 
-```{r, fig.width=8,fig.height=16, fig.cap=paste(fig.number(), 'The catch-at-weight data. The blue line shows the predictions from the assessment model.')}
- CAW <- report_CAW(data)
+```{r, fig.width=8,fig.height=16, fig.cap=paste(fig.number(), 'The catch-at-weight data with the model fit shown as a blue line. Each plot is standardised to sum to 1 across the weight classes. The sample size is shown in the top left corner.')}
+ CAW <- plot_CAW(data)
  CAW$p
 ```
 
 
+### Indices 
 
-### Index of Effort
-```{r fig.cap=paste(fig.number(), 'The index of effort data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.')}
-report_Effort_TS(data)
-
+```{r fig.cap=paste(fig.number(), 'a) The indices of vulnerable biomass, b) effort, and c) catch, with 10 and 90th percentiles. The blue dashed line indicates the model fit. Empty plots mean no data was provided.'), fig.height=8}
+plot_Indices(data)
 ```
 
-### Index of Abundance
-
-```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. The blue line shows the predictions from the assessment model.')}
-report_Index_TS(data)
-```
 
 ## Assessment Results {.tabset}
 
@@ -112,7 +91,7 @@ knitr::kable(assumed_pars(data),  caption=paste(tab.number(), 'Assumed parameter
 ```
 
 ```{r}
-DT::datatable(nll_vals(data),  caption=paste(tab.number(), 'Negative log-likelihood values.'),
+DT::datatable(report_NLL(data),  caption=paste(tab.number(), 'Negative log-likelihood values.'),
                 options = list(
     info = FALSE,
     paging = FALSE,
@@ -120,9 +99,10 @@ DT::datatable(nll_vals(data),  caption=paste(tab.number(), 'Negative log-likelih
   ))
 ```
 
+
 ```{r}
-df <- make_df(data) %>% select(Year, Month, SPR, F, log_rec_devs, SB_SB0) %>% 
-  dplyr::mutate(dplyr::across(3:6, \(x) round(x,3)))
+df <- make_df(data) %>% select(Year, Month, SPR, F, log_rec_devs) %>% 
+  dplyr::mutate(dplyr::across(3:5, \(x) round(x,3)))
 
 DT::datatable(df,  caption=paste(tab.number(), 'Estimated values.'),
                 options = list(
@@ -135,7 +115,7 @@ DT::datatable(df,  caption=paste(tab.number(), 'Estimated values.'),
 
 ### Seasonal Recruitment Pattern 
 ```{r, fig.cap=paste(fig.number(), 'The estimated seasonal recruitment pattern.')}
-p <- report_seasonal_rec(data)
+p <- plot_seasonal_rec(data)
 p$p
 
 ```
@@ -143,7 +123,7 @@ p$p
 ### Selectivity
 
 ```{r, fig.cap=paste(fig.number(), 'The estimated selectivity pattern.')}
-p <- report_selectivity(data)
+p <- plot_selectivity(data)
 p$p
 ```
 
@@ -151,21 +131,17 @@ p$p
 ### Time-Series
 
 ```{r, fig.cap=paste(fig.number(), 'The estimated spawning potential ratio.')}
-report_SPR(data)
+plot_SPR(data)
 ```
 
 ```{r, fig.cap=paste(fig.number(), 'The estimated fishing mortality.')}
-report_F(data)
+plot_F(data)
 ```
 
-<!-- ```{r, fig.cap=paste(fig.number(), 'The estimated relative spawning biomass.')} -->
-<!-- report_SB_SB0(data) -->
-<!-- ``` -->
-
-```{r, fig.cap=paste(fig.number(), 'The estimated log recruitment deviations.')}
-report_rec_devs(data)
+### Reference Points 
+```{r, fig.cap=paste(fig.number(), 'The mean monthly F and SPR (red lines) and the optimal values calculated from the HARA utility model with two values for the exponent (rows). Lower values of the HARA exponent mean higher utility for lower variance in catches throughout the year. Higher values of the HARA exponent mean greater utilty on the overall annual catch.')}
+plot_RP(data)
 ```
-
 
 
 

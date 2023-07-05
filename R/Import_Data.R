@@ -94,10 +94,10 @@ Import <- function(csvfile,
     years <- suppressWarnings(as.numeric(datasheet$V1[year_rows]))
     year_rows <- year_rows[which(!is.na(years))]
 
-    years <- as.numeric(datasheet$V1[year_rows])
-    month <- as.numeric(datasheet$V2[year_rows])
-    mean <- as.numeric(datasheet$V3[year_rows])
-    sd <- as.numeric(datasheet$V4[year_rows])
+    years <- suppressWarnings(as.numeric(datasheet$V1[year_rows]))
+    month <- suppressWarnings(as.numeric(datasheet$V2[year_rows]))
+    mean <- suppressWarnings(as.numeric(datasheet$V3[year_rows]))
+    sd <- suppressWarnings(as.numeric(datasheet$V4[year_rows]))
     type <- trimws(datasheet$V5[year_rows])
 
     if (any(! type %in% c('Catch', 'Effort', 'Biomass'))) {

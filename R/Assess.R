@@ -231,8 +231,9 @@ Assess <- function(Data, Parameters=NULL,
   Assumed_h <- Data$h <- Data$Steepness
   if (is.null(Assumed_h) || is.na(Assumed_h)) {
     Assumed_h <- 0.99
+    message('BH-SRR steepness value not provided. Assuming: ', Assumed_h)
   }
-  message('Assuming a BH-SRR steepness of ', Assumed_h)
+
 
   Data$CAW_nsamp <- Data$CAW_ESS
   Data$CAW_ESS[Data$CAW_ESS>max_ESS] <- max_ESS
@@ -242,6 +243,11 @@ Assess <- function(Data, Parameters=NULL,
 
   maxage <- length(Data$Weight_Age_Mean)-1
   if (is.null(Data$Ages)) Data$Ages <- 0:maxage
+
+  fit_effort <- 0
+  if (!is.null(Data$Fit_Effort)) {
+    fit_effort <- 1
+  }
 
   if (is.null(Data$Fit_Effort))
     Data$Fit_Effort <- ifelse(sum(is.na(Data$Effort_Mean)) == length(Data$Year) | sum(!is.na(Data$Effort_Mean)) <2,
@@ -255,9 +261,9 @@ Assess <- function(Data, Parameters=NULL,
   Data$Fit_Index <- ifelse(sum(is.na(Data$Index_Mean)) == length(Data$Year) | sum(!is.na(Data$Index_Mean)) <2,
   0,1)
 
-  if (Data$Fit_Index) {
+  if (Data$Fit_Index & !fit_effort) {
     if (Data$Fit_Effort & Data$Fit_Catch) {
-      warning('Index, Effort, and Catch detected. Only fitting to Index and Catch')
+      message('Index, Effort, and Catch detected. Only fitting to Index and Catch. Set `Data$Fit_Effort=1` to fit to Effort as well.')
       Data$Fit_Effort <- 0
     }
   }

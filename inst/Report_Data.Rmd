@@ -1,6 +1,6 @@
 ---
 title: "`r data$type`"
-subtitle: "`r data$Data$Metadata$Value[data$Data$Metadata$Field=='Author']`"
+subtitle: "`r data$Data$Metadata$Value[data$Data$Metadata$Field=='Fishery']`"
 date: "`r ifelse(is.null(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']) | is.na(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']), Sys.Date(), data$Data$Metadata$Value[data$Data$Metadata$Field=='Date'])`"
 ---
 <style type="text/css">
@@ -35,8 +35,7 @@ tab.number <- function() {
 knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Information.'))
 ```
 
-## Data {.tabset}
-### At-Age Schedules  {.tabset}
+## At-Age Schedules 
 
 ```{r}
  weight_at_age <- report_weight_at_age(data$Data)
@@ -57,49 +56,28 @@ knitr::kable(data$Data$Metadata, caption=paste(tab.number(), 'Fishery Informatio
  
 ```
 
-
-####  Figures  
-```{r, fig.cap=paste(fig.number(), 'The mean weight-at-age, with 10th and 90th percentiles.')}
-weight_at_age$p
+```{r, fig.cap=paste(fig.number(), 'a) The mean weight-at-age, with 10th and 90th percentiles., b) The natural mortality-at-age schedule. c) The maturity-at-age schedule. d)The post-spawning mortality-at-age schedule.')}
+plot_at_Age(data$Data)
 ```
-
-```{r, fig.cap=paste(fig.number(), 'The maturity-at-age schedule.')}
-maturity_at_age$p
-```
-
-```{r, fig.cap=paste(fig.number(), 'The natural mortality-at-age schedule.')}
-M_at_age$p
-```
-
-```{r, fig.cap=paste(fig.number(), 'The post-spawning mortality-at-age schedule.')}
-PSM$p
-```
-
-
-
-####  Table  
 
 ```{r}
- knitr::kable(df, caption=paste(tab.number(), 'At-Age schedules.'))
+ knitr::kable(df, caption=paste(tab.number(), 'Table of values for the At-Age schedules.'))
 ```
+
+
+## Data {.tabset}
 
 ### Catch-at-Weight
 
-```{r, fig.width=8,fig.height=16, fig.cap=paste(fig.number(), 'The catch-at-weight data.')}
- CAW <- report_CAW(data)
+```{r, fig.width=8,fig.height=16, fig.cap=paste(fig.number(), 'The catch-at-weight data. Each plot is standardised to sum to 1 across the weight classes. The sample size is shown in the top left corner.')}
+ CAW <- plot_CAW(data$Data)
  CAW$p
 ```
 
+### Indices 
 
-
-### Index of Effort
-```{r fig.cap=paste(fig.number(), 'The index of effort data, with 10 and 90th percentiles. ')}
-report_Effort_TS(data)
-
+```{r fig.cap=paste(fig.number(), 'a) The indices of vulnerable biomass, b) effort, and c) catch, with 10 and 90th percentiles. Empty plots mean no data was provided.'), fig.height=8}
+plot_Indices(data)
 ```
 
-### Index of Abundance
 
-```{r fig.cap=paste(fig.number(), 'The index of abundance data, with 10 and 90th percentiles. ')}
-report_Index_TS(data)
-```

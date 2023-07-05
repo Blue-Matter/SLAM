@@ -1,6 +1,6 @@
 Simulation <- Simulate(LifeHistory, Exploitation, nsim=2)
 
-Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL, dev=T) {
+Write_Data2CSV.Simulation <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL, dev=T) {
 
   if (dev) {
     dir <- 'inst'
@@ -122,6 +122,6 @@ Write_Data2CSV <- function(Simulation, csvfile, n_years=3, sim=1, Sampling=NULL,
 }
 
 
-Write_Data2CSV(Simulation, csvfile='inst/Data_Example.csv', dev=T)
+Write_Data2CSV.Simulation(Simulation, csvfile='inst/Data_Example.csv', dev=T)
 
 

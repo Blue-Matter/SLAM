@@ -21,6 +21,7 @@ Report(
   dir = tempdir(),
   open_file = TRUE,
   silent = FALSE,
+  dev = FALSE,
   ...
 )
 
@@ -29,6 +30,7 @@ Report(
   filename = "Assessment_Report",
   dir = tempdir(),
   open_file = TRUE,
+  dev = FALSE,
   silent = FALSE,
   ...
 )

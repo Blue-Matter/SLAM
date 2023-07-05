@@ -298,7 +298,8 @@ Process_Data <- function(Sites, Case_Study_Data,
 
 
 
-Make_Data_Objects <- function(i, data_list, Case_Study_Sites, Catch_SD=0.1, save.dir=NULL) {
+Make_Data_Objects <- function(i, data_list, Case_Study_Sites, Catch_SD=0.1, steepness=0.85,
+                              save.dir=NULL) {
 
   obs_data <- data_list[[i]]
   Sites <- obs_data$Site
@@ -392,7 +393,7 @@ Make_Data_Objects <- function(i, data_list, Case_Study_Sites, Catch_SD=0.1, save
     }
   }
 
-  data$Catch_n <- data$Catch_Mean
+
   data$Catch_Mean <- data$Catch_Mean/mean(data$Catch_Mean, na.rm=TRUE)
 
   # Index
@@ -423,17 +424,19 @@ Make_Data_Objects <- function(i, data_list, Case_Study_Sites, Catch_SD=0.1, save
   data$Effort_SD <- data$Effort_SD[keep_rows]
   data$Index_Mean <-   data$Index_Mean[keep_rows]
   data$Index_SD <-   data$Index_SD[keep_rows]
-  data$Catch_n <- data$Catch_n[keep_rows]
   data$Catch_Mean <- data$Catch_Mean[keep_rows]
   data$Catch_SD <- data$Catch_SD[keep_rows]
 
+  catch_n <- obs_data$CAW %>% group_by(Year, Month) %>% summarize(n=sum(Count))
+  data$Catch_n <- catch_n$n
 
   data$iterpolated <- obs_data$CAW %>% select(Year, Month, interpolated)
-
+  data$Steepness <- steepness
   if (!is.null(save.dir)) {
     nm <- paste(sites, collapse="_")
     nm <- paste0(nm, '.rdata')
     saveRDS(data, file.path(save.dir, nm))
   }
+
   invisible(data)
 }

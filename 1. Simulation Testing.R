@@ -123,49 +123,13 @@ for (x in 1:nrow(grid)) {
 
 # ---- Calculate Reference Points ----
 
-calc_Fref_RE <- function(sim, ll, utilpow=0.4) {
-  assess <- ll$assess[[sim]]
-  Simulation <- ll$Simulation
-
-  n_months_total <- ncol(Simulation$Exploitation$Sel_at_Age[sim,,])
-  sel_at_age <- Simulation$Exploitation$Sel_at_Age[sim,,n_months_total]
-
-  OM <- calculate_optimal_fishing(R0_m=Simulation$LifeHistory$R0_m,
-                                  steepness=Simulation$LifeHistory$steepness,
-                                  Weight_Age_Mean=Simulation$LifeHistory$Weight_Age_Mean,
-                                  Maturity_at_Age=Simulation$LifeHistory$Maturity_at_Age,
-                                  M_at_Age=Simulation$LifeHistory$M_at_Age,
-                                  Post_Spawning_Mortality=Simulation$LifeHistory$Post_Spawning_Mortality,
-                                  sel_at_age=sel_at_age,
-                                  opt_type=1,
-                                  utilpow=utilpow)
-
-  Est <- calculate_optimal_fishing(R0_m=assess$rep$R0_m,
-                                   steepness=assess$Data$h,
-                                   Weight_Age_Mean=assess$Data$Weight_Age_Mean,
-                                   Maturity_at_Age=assess$Data$Maturity_at_Age,
-                                   M_at_Age=assess$Data$M_at_Age,
-                                   Post_Spawning_Mortality=assess$Data$Post_Spawning_Mortality,
-                                   sel_at_age=assess$rep$selA,
-                                   opt_type=1, utilpow=utilpow)
-
-
-  OM_DF <- Simulation$Time_Series %>% filter(Sim==sim) %>% tail(12)
-
-  est <- (tail(assess$rep$F_m,12)/Est$F_m)
-  om <- (OM_DF$F_mort/OM$F_m)
-
-  data.frame(RE=median((est-om)/om),
-             n_months=ll$n_months,
-             Data_types=ll$Data_types, Var='Fref')
-
-}
-
 
 # ---- Process Results ----
 
 # Constant Recruitment
 sim_results <- list.files("Results/Simulation_Testing")
+
+source('R/Calculate_Relative_Error.r')
 
 results_list <- list()
 for (i in seq_along(sim_results)) {

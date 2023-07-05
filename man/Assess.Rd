@@ -7,7 +7,6 @@
 Assess(
   Data,
   Parameters = NULL,
-  Assumed_h = 0.85,
   max_ESS = 200,
   Est_Rec_Devs = ifelse(length(Data$Year) >= 24, TRUE, FALSE),
   Est_Seasonal = TRUE,
@@ -19,8 +18,6 @@ Assess(
 \item{Data}{A \code{Data} object}
 
 \item{Parameters}{A \code{Parameters} object}
-
-\item{Assumed_h}{Assumed value of steepness for the stock-recruitment relationship}
 
 \item{max_ESS}{Maximum effective sample size for the catch-at-weight data}
 
