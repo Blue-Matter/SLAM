@@ -73,7 +73,7 @@
 <a href="mailto:adrian@bluematterscience.com" class="email">adrian@bluematterscience.com</a>
 </h4>
             
-            <h4 data-toc-skip class="date">2023-04-03</h4>
+            <h4 data-toc-skip class="date">2023-07-05</h4>
       
       
       <div class="hidden name"><code>SLAM_User_Guide.Rmd</code></div>
@@ -90,10 +90,9 @@ dynamics and data, and to apply an age-structured assessment model to
 fishery data for a short-lived semelparous species such as octopus.</p>
 <p><code>SLAM</code> is designed with a monthly time-step and to fit to
 catch-at-weight data. If available, it will also fit to an index of
-fishing effort and an index of abundance. <code>SLAM</code> estimates
-the selectivity pattern, fishing mortality (F), the spawning potential
-ratio (SPR), and the relative spawning biomass (SB/SB0) for each
-month.</p>
+fishing effort. <code>SLAM</code> estimates the selectivity pattern,
+fishing mortality (F), and the spawning potential ratio (SPR) for each
+month, as well as reference points related to F and SPR.</p>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
@@ -115,7 +114,7 @@ system:</p>
 <span><span class="op">}</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Check if RTools is installed</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://r-lib.github.io/pkgbuild/reference/has_rtools.html" class="external-link">find_rtools</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://pkgbuild.r-lib.org/reference/has_rtools.html" class="external-link">find_rtools</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">'RTools needs to be installed'</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>If you get an error message after running the code above, you need to
@@ -150,35 +149,29 @@ loaded into memory:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span></code></pre></div>
 <div class="section level3">
-<h3 id="the-data-object">The Data object<a class="anchor" aria-label="anchor" href="#the-data-object"></a>
+<h3 id="importing-fishery-data">Importing Fishery Data<a class="anchor" aria-label="anchor" href="#importing-fishery-data"></a>
 </h3>
-<p>Fishery data is loaded into an object of class <code>Data</code>.</p>
-<p>There are two ways to create a <code>Data</code> object: Importing
-from Excel and Creating in R</p>
-<div class="section level4">
-<h4 id="import-a-data-object-from-excel">Import a Data object from Excel<a class="anchor" aria-label="anchor" href="#import-a-data-object-from-excel"></a>
-</h4>
+<p>Fishery data is loaded into an object of class <code>Data</code>.
+Fishery data can be loaded from a correctly structured CSV file.</p>
 <p>The <code>Import</code> function can be used to import fishery data
-from a correctly formatted Excel Workbook.</p>
-<p>The <code>SLAM</code> package includes a few example Excel files with
-example data. The <code>Example_Data</code> function will print out the
-full file paths to these example files:</p>
+from a correctly formatted CSV file.</p>
+<p>The <code>SLAM</code> package includes a few files with example data.
+The <code>Example_Data</code> function will print out the full file
+paths to these example files:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/Example_Data.html">Example_Data</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example_Binned.xlsx"</span></span>
-<span><span class="co">#&gt; [2] "C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example_Raw.xlsx"   </span></span>
-<span><span class="co">#&gt; [3] "C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Template.xlsx"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example.csv"  </span></span>
+<span><span class="co">#&gt; [2] "C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example_2.csv"</span></span>
+<span><span class="co">#&gt; [3] "C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Template.csv"</span></span></code></pre></div>
 <p>You can examine the example files to see the specific format of the
-Excel workbooks containing the example data. Data files must follow this
-same structure with the same names for the Worksheets (tabs) and same
-names for the column headings in Row 1, and the text in Column A.</p>
-<p>“Data_Template.xlsx” is an empty data file that can be used as a
+CSV files containing the example data. Data files must follow this same
+structure.</p>
+<p>“Data_Template.csv” is an empty data file that can be used as a
 template for your data.</p>
-<p>The data can be imported from the specially formatted Excel workbooks
-using the <code>Import</code> function:</p>
+<p>The data can be imported from the CSV file using the
+<code>Import</code> function:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">MyData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Import.html">Import</a></span><span class="op">(</span><span class="fu"><a href="../reference/Example_Data.html">Example_Data</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Successfully imported `Data` object from: C:/Users/User/AppData/Local/R/win-library/4.2/SLAM/Data_Example_Binned.xlsx</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">MyData</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Import.html">Import</a></span><span class="op">(</span><span class="fu"><a href="../reference/Example_Data.html">Example_Data</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p>Once you’ve imported a <code>Data</code> object, use the
 <code>Check</code> function to check that everything is structured
 correctly:</p>
@@ -186,71 +179,106 @@ correctly:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/Check.html">Check</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Data passes all checks</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="structure-of-the-csv-data-file">Structure of the CSV Data File<a class="anchor" aria-label="anchor" href="#structure-of-the-csv-data-file"></a>
+</h3>
+<p>The CSV files containing the data for the <code>SLAM</code> model has
+to be structured in a specific way. The easiest method for creating your
+own data file is to copy and edit one of the example data files.</p>
+<p>The sections below describe the structure of each section of the CSV
+file.</p>
 <div class="section level4">
-<h4 id="create-a-data-object-in-r">Create a Data object in R<a class="anchor" aria-label="anchor" href="#create-a-data-object-in-r"></a>
+<h4 id="meta-data">Meta-Data<a class="anchor" aria-label="anchor" href="#meta-data"></a>
 </h4>
-<p>Another option is to create an empty <code>Data</code> object and
-populate it in R. This can be done with the <code>Make</code>
-command:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">MyData2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Make_Data.html">Make</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Creating an empty `Data` object</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">MyData2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $Metadata</span></span>
-<span><span class="co">#&gt;         Field Value</span></span>
-<span><span class="co">#&gt; 1     Fishery    NA</span></span>
-<span><span class="co">#&gt; 2    Location    NA</span></span>
-<span><span class="co">#&gt; 3     Species    NA</span></span>
-<span><span class="co">#&gt; 4 Common_Name    NA</span></span>
-<span><span class="co">#&gt; 5      Author    NA</span></span>
-<span><span class="co">#&gt; 6        Date    NA</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $Ages</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $Weight_Age_Mean</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $Weight_Age_SD</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $Maturity_at_Age</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $M_at_Age</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
-<p>As you can see, the <code>Make</code> function returns an empty
-<code>Data</code> object, which can then be populated manually in R.</p>
-<p>For example, the metadata (used for reporting):</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">MyData2</span><span class="op">$</span><span class="va">Metadata</span><span class="op">$</span><span class="va">Value</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">'My Fishery'</span>, <span class="st">'My Location'</span>, <span class="st">'My Species'</span>, <span class="st">'My Species Name'</span>, <span class="st">'Me'</span>, <span class="st">'Today'</span><span class="op">)</span></span>
-<span><span class="va">MyData2</span><span class="op">$</span><span class="va">Metadata</span></span>
-<span><span class="co">#&gt;         Field           Value</span></span>
-<span><span class="co">#&gt; 1     Fishery      My Fishery</span></span>
-<span><span class="co">#&gt; 2    Location     My Location</span></span>
-<span><span class="co">#&gt; 3     Species      My Species</span></span>
-<span><span class="co">#&gt; 4 Common_Name My Species Name</span></span>
-<span><span class="co">#&gt; 5      Author              Me</span></span>
-<span><span class="co">#&gt; 6        Date           Today</span></span></code></pre></div>
-<p>The at-age schedules:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">MyData2</span><span class="op">$</span><span class="va">Ages</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">:</span><span class="fl">14</span></span>
-<span><span class="va">MyData2</span><span class="op">$</span><span class="va">Weight_Age_Mean</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="fl">0.12</span>, <span class="fl">0.23</span>, <span class="fl">0.40</span>, <span class="fl">0.60</span>, </span>
-<span>                             <span class="fl">0.86</span>, <span class="fl">1.17</span>, <span class="fl">1.54</span>, <span class="fl">1.96</span>, <span class="fl">2.44</span>, <span class="fl">2.99</span>, <span class="fl">3.60</span>, <span class="fl">4.27</span><span class="op">)</span></span>
-<span><span class="co"># ...</span></span></code></pre></div>
-<p>And so on for all the other available data.</p>
-<p>As above, once you’re finished populating your <code>Data</code>
-object, it’s worth checking to make sure everything is ok:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/Check.html">Check</a></span><span class="op">(</span><span class="va">MyData2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error in Check(MyData2): No catch-at-weight Data detected</span></span></code></pre></div>
+<p>The first 7 rows of the CSV file contain the meta-data used for
+reporting.</p>
+<p>The text in the first column must be exactly: ‘Field’, ‘Fishery’,
+‘Location’, ‘Species’, ‘Common_Name’, ‘Author’, and ‘Date’.</p>
+<p>The first row of the second column must say ‘Value’.</p>
+<p>Enter the relevant meta-data information for your fishery in the
+remaining rows. Missing values are accepted.</p>
 </div>
+<div class="section level4">
+<h4 id="age-schedules">Age Schedules<a class="anchor" aria-label="anchor" href="#age-schedules"></a>
+</h4>
+<p>The first column in row 9 must say ‘Age Schedules’. Row 10 must have
+the text ‘Ages’, ‘Weight_Age_Mean’, ‘Weight_Age_SD’, ‘Maturity_at_Age’,
+‘M_at_Age’, ‘Post_Spawning_Mortality’ in columns 1 to 6. Enter the
+corresponding information in the rows below. There must be values for
+all ages (rows) and all columns.</p>
+</div>
+<div class="section level4">
+<h4 id="caw-binned-data">CAW Binned Data<a class="anchor" aria-label="anchor" href="#caw-binned-data"></a>
+</h4>
+<p>Next, enter the catch-at-weight (CAW) data. The row with ‘CAW Binned
+Data’ in the first column indicates the beginning of the CAW Data. The
+row below this must have ‘Year’, ‘Month’, and then numeric values for
+the mid-points of the CAW bins. The CAW bins must increase sequentially
+with the same increment between each bin.</p>
+<p>The Year and Month columns should increase sequentially by month.
+Months should be specified as integers. There can not be any missing
+months.</p>
+<p>Enter the observed weight composition data for each month in the
+corresponding row. The default is to enter raw observed numbers, such
+that summing over the weight bins results in the total sample size for
+that month.</p>
+<p>The CAW Data cannot have any missing rows.</p>
+</div>
+<div class="section level4">
+<h4 id="indices">Indices<a class="anchor" aria-label="anchor" href="#indices"></a>
+</h4>
+<p>The row with the text ‘Index Data’ in the first column indicates the
+beginning of the index time-series data. The row below this must have
+the text ‘Year’, ‘Month’, ‘Mean’, ‘SD’, and ‘Type’.</p>
+<p>The ‘Year’ and ‘Month’ values must exactly match those for the CAW
+data (i.e., it must start and end at the same years and months as the
+CAW data).</p>
+<p>Enter the mean value and the standard deviation (log-normal) for any
+available ‘Effort’, ‘Catch’, and/or ‘Biomass’ indices. Enter the
+corresponding type (‘Effort’, ‘Catch’, ‘Biomass’) in the ‘Type’
+column.</p>
+<p>The data-sets should appear below each other (e.g., first Effort then
+Catch).</p>
+<p>Missing values should be indicated with NA.</p>
+</div>
+<div class="section level4">
+<h4 id="parameters">Parameters<a class="anchor" aria-label="anchor" href="#parameters"></a>
+</h4>
+<p>The final information to enter is parameters for the assessment
+model. If the parameters are not provided, default values will be
+used.</p>
+<p>The row with text ‘Parameters’, ‘Value’, and (optionally)
+‘Description’ indicates the beginning of the parameters section. The
+first column below this should have the text: ‘Steepness’, ‘sigmaR’,
+‘sigmaF’, and ‘sigmaR0’. Enter the corresponding values in the second
+column.</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="plotting-the-data">Plotting the Data<a class="anchor" aria-label="anchor" href="#plotting-the-data"></a>
+</h3>
+<p>Once a <code>Data</code> object is complete, the assumed life-history
+information, the weight composition data, and the indices (if any) can
+be plotted:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_at_Age.html">plot_at_Age</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SLAM_User_Guide_files/figure-html/atage-1.png" width="700"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_CAW.html">plot_CAW</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span>
+<span><span class="va">p</span><span class="op">$</span><span class="va">p</span></span></code></pre></div>
+<p><img src="SLAM_User_Guide_files/figure-html/caw-1.png" width="700"></p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_Indices.html">plot_Indices</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SLAM_User_Guide_files/figure-html/indices-1.png" width="700"></p>
+<p>The <code>plot_CAW</code> return a list with <code>ggplot</code>
+object (<code>p</code>) and a data.frame containing the information
+presented in the plots (<code>df</code>).</p>
 <div class="section level4">
 <h4 id="data-report">Data Report<a class="anchor" aria-label="anchor" href="#data-report"></a>
 </h4>
-<p>Once a <code>Data</code> object is complete, a Data Report can be
-generated with the <code>Report</code> function:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<p>A HTML Data Report including all these plots can be generated with
+the <code>Report</code> function:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/Report.html">Report</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span></code></pre></div>
 <p>This will compile a HTML report with figures and tables summarizing
 your fishery data, and open the HTML file in your web browser.</p>
@@ -264,85 +292,31 @@ example Data Report created above.</p>
 <p>Now that the Data is imported and checked, we are ready to run the
 <code>SLAM</code> assessment model. This is done with the
 <code>Assess</code> function:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">MyAssess</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Assess.html">Assess</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Parameters pass all checks</span></span>
-<span><span class="co">#&gt; Assuming a BH-SRR steepness of 0.7</span></span></code></pre></div>
-<p>You will note that the <code>Assess</code> function prints out a
-message with an assumed value for the steepness parameter in the
-Beverton-Holt stock-recruitment function. This is an argument to the
-<code>Assess</code> function. You can see the details for the arguments
-for the <code>Assess</code> function in the help documentation. This is
-available with <code><a href="../reference/Assess.html">?Assess</a></code>. Help documentation is available for
-all functions in this same manner <code>?Function_Name</code>.</p>
-<p>The help documentation for <code>Assess</code> shows that the
-function requires an object of class <code>Data</code> as the first
-argument, and optionally a second argument with an object of class
-<code>Parameters</code>.</p>
-<p>The <code>Parameters</code> object contains the initial starting
-parameters for the assessment model. By default, these are set with the
-<code>Initialize_Parameters</code> function:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">myParameters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Initialize_Parameters.html">Initialize_Parameters</a></span><span class="op">(</span><span class="va">MyData</span><span class="op">)</span></span>
-<span><span class="va">myParameters</span></span>
-<span><span class="co">#&gt; $ls50</span></span>
-<span><span class="co">#&gt; [1] 1.386294</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $lsdelta</span></span>
-<span><span class="co">#&gt; [1] 0.6931472</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $logF_minit</span></span>
-<span><span class="co">#&gt; [1] -1.89712</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $logF_ts</span></span>
-<span><span class="co">#&gt;  [1] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
-<span><span class="co">#&gt;  [8] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
-<span><span class="co">#&gt; [15] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
-<span><span class="co">#&gt; [22] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
-<span><span class="co">#&gt; [29] -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585 -2.302585</span></span>
-<span><span class="co">#&gt; [36] -2.302585</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $log_sigmaF_m</span></span>
-<span><span class="co">#&gt; [1] -0.9162907</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $logR0_m_est</span></span>
-<span><span class="co">#&gt;  [1] 0 0 0 0 0 0 0 0 0 0 0</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $log_sigmaR0</span></span>
-<span><span class="co">#&gt; [1] -0.9162907</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $logRec_Devs</span></span>
-<span><span class="co">#&gt;  [1] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $log_sigmaR</span></span>
-<span><span class="co">#&gt; [1] -0.5108256</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; attr(,"class")</span></span>
-<span><span class="co">#&gt; [1] "Parameters"</span></span></code></pre></div>
-<p>If you wish, you can change the starting parameters in this object
-and provide them to the <code>Assess</code> function. If you do define
-your own starting parameters, it’s worth checking them with
-<code>Check_Parameters</code> function:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/Check_Parameters.html">Check_Parameters</a></span><span class="op">(</span><span class="va">myParameters</span>, <span class="va">MyData</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Parameters pass all checks</span></span></code></pre></div>
+<span><span class="co">#&gt; Index, Effort, and Catch detected. Only fitting to Index and Catch. Set `Data$Fit_Effort=1` to fit to Effort as well.</span></span></code></pre></div>
 <div class="section level4">
-<h4 id="assessment-report">Assessment Report<a class="anchor" aria-label="anchor" href="#assessment-report"></a>
+<h4 id="plotting-the-assessment-results">Plotting the Assessment Results<a class="anchor" aria-label="anchor" href="#plotting-the-assessment-results"></a>
 </h4>
-<p>Once the assessment is complete, the <code>Report</code> function can
-be used to generate an Assessment Report:</p>
+<p>The assessment output can be plotted, e.g.,:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_CAW.html">plot_CAW</a></span><span class="op">(</span><span class="va">MyAssess</span><span class="op">)</span></span>
+<span><span class="va">p</span><span class="op">$</span><span class="va">p</span></span></code></pre></div>
+<p><img src="SLAM_User_Guide_files/figure-html/caw2-1.png" width="700"></p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_Indices.html">plot_Indices</a></span><span class="op">(</span><span class="va">MyAssess</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SLAM_User_Guide_files/figure-html/indices2-1.png" width="700"></p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/plot_SPR.html">plot_SPR</a></span><span class="op">(</span><span class="va">MyAssess</span><span class="op">)</span></span></code></pre></div>
+<p><img src="SLAM_User_Guide_files/figure-html/spr-1.png" width="700"></p>
+<p>The <code>Report</code> function can also be used to generate an
+Assessment Report:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/Report.html">Report</a></span><span class="op">(</span><span class="va">MyAssess</span><span class="op">)</span></span></code></pre></div>
 <p>The example assessment report can be found <a href="Assessment_Report.html" target="_blank">here</a>.</p>
 </div>
 </div>
-</div>
-<div class="section level2">
-<h2 id="simulating-fishery-data">Simulating Fishery Data<a class="anchor" aria-label="anchor" href="#simulating-fishery-data"></a>
-</h2>
-<p>The <code>SLAM</code> package also contains functions to simulate
-fishery dynamics for an octopus fishery. Additional information will be
-added to this user manual at a later date.</p>
 </div>
   </div>
 

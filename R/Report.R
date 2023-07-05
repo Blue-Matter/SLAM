@@ -680,7 +680,8 @@ plot_RP <- function(assess, utilpow=c(0.4, 0.9)) {
    geom_line() +
    expand_limits(y=c(0,1)) +
    theme_bw() +
-   labs(x='')
+   labs(x='') +
+   theme(axis.text.x=element_text(angle=90, vjust=0))
 }
 
 

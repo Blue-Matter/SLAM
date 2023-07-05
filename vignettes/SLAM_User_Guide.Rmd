@@ -58,14 +58,10 @@ In each new R session, the `SLAM` package must first be loaded into memory:
 library(SLAM)
 ```
 
-## The Data object
-Fishery data is loaded into an object of class `Data`. 
+## Importing Fishery Data
+Fishery data is loaded into an object of class `Data`. Fishery data can be loaded from a correctly structured CSV file.
 
-There are two ways to create a `Data` object: Importing from a CSV files and Creating in R
-
-### Import a Data object from a CSV file
 The `Import` function can be used to import fishery data from a correctly formatted CSV file.
-
 
 The `SLAM` package includes a few files with example data. The `Example_Data` function will 
 print out the full file paths to these example files:
@@ -81,7 +77,7 @@ You can examine the example files to see the specific format of the CSV files co
 The data can be imported from the CSV file using the `Import` function:
 
 ```{r import}
-MyData <- Import(Example_Data()[1])
+MyData <- Import(Example_Data()[2])
 ```
 
 Once you've imported a `Data` object, use the `Check` function to check that everything is structured correctly:
@@ -90,40 +86,78 @@ Once you've imported a `Data` object, use the `Check` function to check that eve
 Check(MyData)
 ```
 
-### Create a Data object in R 
-Another option is to create an empty `Data` object and populate it in R. This can be done with the `Make` command:
+## Structure of the CSV Data File
+The CSV files containing the data for the `SLAM` model has to be structured in a specific way. The easiest method for creating your own data file is to copy and edit one of the example data files. 
 
-```{r make}
-MyData2 <- Make()
-head(MyData2)
-```
-As you can see, the `Make` function returns an empty `Data` object, which can then be populated manually in R. 
+The sections below describe the structure of each section of the CSV file.
 
-For example, the metadata (used for reporting):
+### Meta-Data
+The first 7 rows of the CSV file contain the meta-data used for reporting. 
 
-```{r metadata}
-MyData2$Metadata$Value <- c('My Fishery', 'My Location', 'My Species', 'My Species Name', 'Me', 'Today')
-MyData2$Metadata
-```
+The text in the first column must be exactly: 'Field', 'Fishery', 'Location', 'Species', 'Common_Name', 'Author', and 'Date'.
 
-The at-age schedules:
+The first row of the second column must say 'Value'.
+
+Enter the relevant meta-data information for your fishery in the remaining rows. Missing values are accepted.
+
+### Age Schedules
+
+The first column in row 9 must say 'Age Schedules'.
+Row 10 must have the text 'Ages', 'Weight_Age_Mean', 'Weight_Age_SD', 'Maturity_at_Age', 'M_at_Age', 'Post_Spawning_Mortality' in columns 1 to 6. 
+Enter the corresponding information in the rows below. There must be values for all ages (rows) and all columns.
+
+### CAW Binned Data
+Next, enter the catch-at-weight (CAW) data. 
+The row with 'CAW Binned Data' in the first column indicates the beginning of the CAW Data.
+The row below this must have 'Year', 'Month', and then numeric values for the mid-points of the CAW bins. The CAW bins must increase sequentially with the same increment between each bin. 
+
+The Year and Month columns should increase sequentially by month. Months should be specified as integers. There can not be any missing months. 
+
+Enter the observed weight composition data for each month in the corresponding row. The default is to enter raw observed numbers, such that summing over the weight bins results in the total sample size for that month.
+
+The CAW Data cannot have any missing rows.
+
+### Indices
+The row with the text 'Index Data' in the first column indicates the beginning of the index time-series data. 
+The row below this must have the text 'Year', 'Month', 'Mean', 'SD', and 'Type'.
+
+The 'Year' and 'Month' values must exactly match those for the CAW data (i.e., it must start and end at the same years and months as the CAW data). 
+
+Enter the mean value and the standard deviation (log-normal) for any available 'Effort', 'Catch', and/or 'Biomass' indices. Enter the corresponding type ('Effort', 'Catch', 'Biomass') in the 'Type' column. 
+
+The data-sets should appear below each other (e.g., first Effort then Catch). 
+
+Missing values should be indicated with NA.
+
+### Parameters 
+The final information to enter is parameters for the assessment model. If the parameters are not provided, default values will be used.
+
+The row with text 'Parameters', 'Value', and (optionally) 'Description' indicates the beginning of the parameters section.
+The first column below this should have the text: 'Steepness', 'sigmaR', 'sigmaF', and 'sigmaR0'. Enter the corresponding values in the second column.
+
+
+## Plotting the Data 
+
+Once a `Data` object is complete, the assumed life-history information, the weight composition data, and the indices (if any) can be plotted:
+
+
 ```{r atage}
-MyData2$Ages <- 0:14
-MyData2$Weight_Age_Mean <- c(0, 0.01, 0.05, 0.12, 0.23, 0.40, 0.60, 
-                             0.86, 1.17, 1.54, 1.96, 2.44, 2.99, 3.60, 4.27)
-# ...
+plot_at_Age(MyData)
 ```
 
-And so on for all the other available data.
-
-As above, once you're finished populating your `Data` object, it's worth checking to make sure everything is ok:
-
-```{r check2,error=TRUE}
-Check(MyData2)
+```{r caw, fig_height=8}
+p <- plot_CAW(MyData)
+p$p
 ```
+
+```{r indices}
+plot_Indices(MyData)
+```
+
+The `plot_CAW` return a list with  `ggplot` object (`p`) and a data.frame containing the information presented in the plots (`df`). 
 
 ### Data Report
-Once a `Data` object is complete, a Data Report can be generated with the `Report` function:
+A HTML Data Report including all these plots can be generated with the `Report` function:
 
 ```{r report_data, eval=FALSE}
 Report(MyData)
@@ -145,26 +179,24 @@ Now that the Data is imported and checked, we are ready to run the `SLAM` assess
 MyAssess <- Assess(MyData)
 ```
 
-You will note that the `Assess` function prints out a message with an assumed value for the steepness parameter in the Beverton-Holt stock-recruitment function. This is an argument to the `Assess` function. You can see the details for the arguments for the `Assess` function in the help documentation. This is available with `?Assess`. Help documentation is available for all functions in this same manner `?Function_Name`.
+### Plotting the Assessment Results
 
-The help documentation for `Assess` shows that the function requires an object of class `Data` as the first argument, and optionally a second argument with an object of class `Parameters`. 
+The assessment output can be plotted, e.g.,:
 
-The `Parameters` object contains the initial starting parameters for the assessment model. By default, these are set with the `Initialize_Parameters` function:
-
-```{r parameters}
-myParameters <- Initialize_Parameters(MyData)
-myParameters
+```{r caw2, fig_height=8}
+p <- plot_CAW(MyAssess)
+p$p
 ```
 
-If you wish, you can change the starting parameters in this object and provide them to the `Assess` function. If you do define your own starting parameters, it's worth checking them with `Check_Parameters` function:
-
-```{r check_pars}
-Check_Parameters(myParameters, MyData)
+```{r indices2}
+plot_Indices(MyAssess)
 ```
 
-### Assessment Report 
-Once the assessment is complete, the `Report` function can be used to generate an Assessment Report:
+```{r spr}
+plot_SPR(MyAssess)
+```
 
+The `Report` function can also be used to generate an Assessment Report:
 
 ```{r report_assessment, eval=FALSE}
 Report(MyAssess)
@@ -176,9 +208,6 @@ The example assessment report can be found [here](Assessment_Report.html){target
 Report(MyAssess, dir='../docs/articles', open_file = FALSE)
 ```
 
-
-# Simulating Fishery Data
-The `SLAM` package also contains functions to simulate fishery dynamics for an octopus fishery. Additional information will be added to this user manual at a later date.
 
 
 

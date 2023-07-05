@@ -28,6 +28,9 @@
     <loc>/LICENSE.html</loc>
   </url>
   <url>
+    <loc>/reference/Aggregate_Data.html</loc>
+  </url>
+  <url>
     <loc>/reference/Assess.html</loc>
   </url>
   <url>
@@ -35,6 +38,9 @@
   </url>
   <url>
     <loc>/reference/calculate_optimal_fishing.html</loc>
+  </url>
+  <url>
+    <loc>/reference/Calc_RP.html</loc>
   </url>
   <url>
     <loc>/reference/Check.html</loc>
@@ -67,6 +73,9 @@
     <loc>/reference/Import.html</loc>
   </url>
   <url>
+    <loc>/reference/Import.Simulated.html</loc>
+  </url>
+  <url>
     <loc>/reference/Import_Data.Simulated.html</loc>
   </url>
   <url>
@@ -97,10 +106,19 @@
     <loc>/reference/opt_TMB_model.html</loc>
   </url>
   <url>
+    <loc>/reference/plot_at_Age.html</loc>
+  </url>
+  <url>
     <loc>/reference/plot_B.html</loc>
   </url>
   <url>
+    <loc>/reference/plot_CAW.html</loc>
+  </url>
+  <url>
     <loc>/reference/plot_F.html</loc>
+  </url>
+  <url>
+    <loc>/reference/plot_Indices.html</loc>
   </url>
   <url>
     <loc>/reference/plot_N.html</loc>
@@ -109,16 +127,34 @@
     <loc>/reference/plot_SB.html</loc>
   </url>
   <url>
+    <loc>/reference/plot_seasonal_rec.html</loc>
+  </url>
+  <url>
+    <loc>/reference/plot_selectivity.html</loc>
+  </url>
+  <url>
     <loc>/reference/plot_SPR.html</loc>
+  </url>
+  <url>
+    <loc>/reference/Process_Data.html</loc>
   </url>
   <url>
     <loc>/reference/Report.html</loc>
   </url>
   <url>
+    <loc>/reference/report_NLL.html</loc>
+  </url>
+  <url>
     <loc>/reference/Simulate.html</loc>
   </url>
   <url>
+    <loc>/reference/Sim_Test.html</loc>
+  </url>
+  <url>
     <loc>/reference/SLAM-package.html</loc>
+  </url>
+  <url>
+    <loc>/reference/Summarize_Data.html</loc>
   </url>
   <url>
     <loc>/reference/Write_Data2XL.html</loc>

@@ -57,9 +57,9 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">Assess</span><span class="op">(</span></span>
 <span>  <span class="va">Data</span>,</span>
 <span>  Parameters <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  Assumed_h <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>  max_ESS <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>  max_ESS <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  Est_Rec_Devs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">Data</span><span class="op">$</span><span class="va">Year</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">24</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  Est_Seasonal <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>eval.max <span class="op">=</span> <span class="fl">20000</span>, iter.max <span class="op">=</span> <span class="fl">20000</span>, abs.tol <span class="op">=</span> <span class="fl">1e-20</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -73,10 +73,6 @@
 
 <dt>Parameters</dt>
 <dd><p>A <code>Parameters</code> object</p></dd>
-
-
-<dt>Assumed_h</dt>
-<dd><p>Assumed value of steepness for the stock-recruitment relationship</p></dd>
 
 
 <dt>max_ESS</dt>
