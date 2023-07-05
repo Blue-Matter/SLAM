@@ -290,6 +290,8 @@ plot_TS <- function(data, type='Catch') {
   if (inherits(data, 'Assess')) {
     rep <- data$rep
     data <- data$Data
+  } else {
+    rep <- NULL
   }
 
   nms <- paste(type, c('Mean', 'SD'), sep='_')
@@ -343,7 +345,7 @@ plot_TS <- function(data, type='Catch') {
     theme_bw() +
     theme(axis.text.x = element_text(angle = 90)) +
     scale_x_date(date_breaks = '1 month', date_labels = "%b-%Y",
-                 limits = c(min(df$Date), max = max(dfE$Date)),
+                 limits = c(min(df$Date), max = max(df$Date)),
                  expand=c(0.01,0))
 
 
