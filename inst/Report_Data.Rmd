@@ -1,5 +1,5 @@
 ---
-title: "`r data$type`"
+title: "Data Report"
 subtitle: "`r data$Data$Metadata$Value[data$Data$Metadata$Field=='Fishery']`"
 date: "`r ifelse(is.null(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']) | is.na(data$Data$Metadata$Value[data$Data$Metadata$Field=='Date']), Sys.Date(), data$Data$Metadata$Value[data$Data$Metadata$Field=='Date'])`"
 ---
