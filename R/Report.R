@@ -29,10 +29,8 @@ Report.Data <- function(x,
                         silent = FALSE,
                         dev=FALSE,
                         ...) {
-  data <- list()
-  data$Data <- Check(x, silent=TRUE)
+  data <- Check(x, silent=TRUE)
 
-  data$type <- 'Data Report'
 
   if (!dev) {
     rmd_file <- file.path(system.file(package = "SLAM"), "Report_Data.Rmd")
@@ -195,6 +193,8 @@ plot_CAW <- function(data) {
     rep <- data$rep
     data <- data$Data
 
+  } else {
+    rep <- NULL
   }
 
   df_list <- list()
