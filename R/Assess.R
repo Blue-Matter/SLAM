@@ -194,6 +194,16 @@ Assess <- function(Data, Parameters=NULL,
 
   Check_Parameters(Parameters, Data)
 
+  if (length(Data$sigmaF)>0 && is.finite(Data$sigmaF)) {
+    Parameters$log_sigmaF_m <- log(Data$sigmaF)
+  }
+  if (length(Data$sigmaR)>0 && is.finite(Data$sigmaR)) {
+    Parameters$log_sigmaR <- log(Data$sigmaR)
+  }
+  if (length(Data$sigmaR0)>0 && is.finite(Data$sigmaR0)) {
+    Parameters$log_sigmaR0 <- log(Data$sigmaR0)
+  }
+
   dots <- list(...)
   if (!is.null(dots$map)) {
     map <- dots$map
@@ -218,7 +228,7 @@ Assess <- function(Data, Parameters=NULL,
     Random <- 'logRec_Devs'
   }
 
-  Assumed_h <- Data$h
+  Assumed_h <- Data$h <- Data$Steepness
   if (is.null(Assumed_h) || is.na(Assumed_h)) {
     Assumed_h <- 0.99
   }
