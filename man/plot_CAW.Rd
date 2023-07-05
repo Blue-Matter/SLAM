@@ -17,5 +17,5 @@ Plot the weight composition data, and model fits to the data
 }
 \examples{
 Data <- Import(Example_Data()[1])
-plot_CAW(Data)
+plot_CAW(Data)$p
 }

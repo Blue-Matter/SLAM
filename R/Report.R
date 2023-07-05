@@ -186,7 +186,7 @@ plot_PSM_at_age <- function(data) {
 #'
 #' @examples
 #' Data <- Import(Example_Data()[1])
-#' plot_CAW(Data)
+#' plot_CAW(Data)$p
 plot_CAW <- function(data) {
 
   if (inherits(data, 'Assess')) {
