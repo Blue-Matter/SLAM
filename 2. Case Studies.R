@@ -136,13 +136,25 @@ for (i in 1:length(table_df$Site)) {
 
 # 4. Make Data Objects  ----
 save.dir <- file.path(Data.Dir, 'Casestudies')
+
 for (i in 1:length(table_df$Site)) {
   tt <- Make_Data_Objects(i, data_list, Case_Study_Sites, save.dir=save.dir)
-
 }
 
 # 5. Fit Assessment Model  ----
-data_files <- list.files(save.dir)
+data_files <- list.files(save.dir, pattern='.rdata')
+
+# Write Data CSVs
+for (i in seq_along(data_files)) {
+  Data <- readRDS(file.path(save.dir,data_files[[i]]))
+
+  csvfile <- paste0(tools::file_path_sans_ext(data_files[[i]]), '.csv')
+
+  Write_Data2CSV(Data, csvfile, dir=save.dir, overwrite = TRUE)
+
+}
+
+
 for (i in seq_along(data_files)) {
   data <- readRDS(file.path(save.dir, data_files[i]))
   DoAssess <- Assess(data)
@@ -153,6 +165,7 @@ for (i in seq_along(data_files)) {
   saveRDS(DoAssess, file.path('Results/Case_Studies/Assessments',nm))
 
 }
+
 
 # 6. Plot  Data  ----
 assess_files <- list.files('Results/Case_Studies/Assessments')
@@ -268,30 +281,36 @@ for (i in seq_along(assess_list)) {
                                 SPR=pred_SPR)
 
 }
-F_SPR_df <- do.call('rbind', F_SPR_list) %>%
-  tidyr::pivot_longer(., cols=3:4)
+F_SPR_df <- do.call('rbind', F_SPR_list)
 
-p1 <- ggplot(F_SPR_df, aes(x=Date, y=value)) +
-  facet_grid(name~Site, scales='free_y') +
+p1 <- ggplot(F_SPR_df, aes(x=Date, y=F)) +
+  facet_wrap(~Site, ncol=4) +
   expand_limits(y=c(0,1)) +
   geom_line() + theme_bw() +
-  labs(y='Value')
+  labs(y='Fishing Mortality (F)') +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        strip.text=element_text(size=8))
 p1
 
-ggsave('img/Case_Studies/F_SPR.png', p1, width=20, height=5)
+ggsave('img/Case_Studies/F.png', p1, width=10, height=4)
+
+
+p1 <- ggplot(F_SPR_df, aes(x=Date, y=SPR)) +
+  facet_wrap(~Site, ncol=4) +
+  expand_limits(y=c(0,1)) +
+  geom_line() + theme_bw() +
+  labs(y='Spawning Potential Ratio (SPR)') +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        strip.text=element_text(size=8))
+p1
+
+ggsave('img/Case_Studies/SPR.png', p1, width=10, height=4)
 
 
 ## Plot Seasonal Recruitment
 R0_list <- list()
 
-get_seasonal_recruitment <- function(assess) {
-  months <- assess$Data$Month[1:12]
-  df <- data.frame(Month=months, Recruitment=assess$rep$R0_m) %>%
-    arrange(Month)
-  df$Month_Name <- month.abb[df$Month]
-  df
 
-}
 
 for (i in seq_along(assess_list)) {
   data <- assess_list[[i]]$Data
@@ -336,22 +355,7 @@ ggsave('img/Case_Studies/Select.png', p1, width=8, height=5)
 
 
 
-## Calculate and Plot F and SPR relative to Reference Points
-calc_average_monthly_F <- function(assess) {
-  months <- assess$Data$Month
-  df <- data.frame(Month=months, F=assess$rep$F_m) %>%
-    group_by(Month) %>% summarise(Mean=mean(F))
-  df$Month_Name <- month.abb[df$Month]
-  df
-}
 
-calc_average_monthly_SPR <- function(assess) {
-  months <- assess$Data$Month
-  df <- data.frame(Month=months, SPR=assess$rep$SPR) %>%
-    group_by(Month) %>% summarise(Mean=mean(SPR))
-  df$Month_Name <- month.abb[df$Month]
-  df
-}
 
 
 utilpow <- 0.4
@@ -402,9 +406,10 @@ p1 <- ggplot(ref_df, aes(x=Month_Name, y=Value, color=Name, group=Name)) +
   expand_limits(y=0) +
   theme_bw() +
   labs(x='Month', color='Legend') +
-  theme(axis.text.x=element_text(angle=90, vjust=0.5))
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        strip.text = element_text(size=8))
 
-ggsave('img/Case_Studies/Refs.png', p1, width=20, height=7)
+ggsave('img/Case_Studies/Refs.png', p1, width=10, height=4)
 
 
 
