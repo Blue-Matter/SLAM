@@ -215,9 +215,14 @@ Type SLAM(objective_function<Type>* obj) {
   SB_am_eq.setZero();
   SB_m_eq.setZero();
 
-  // Calculate initial equilbrium F
-  // equal to mean of estimated Fs
-  Type F_minit = F_m.sum()/F_m.size();
+  // Calculate initial equilibrium F
+  // equal to mean of estimated Fs from first 12 months
+  Type sumF = 0;
+  for (int m=0; m<12; m++) {
+    sumF +=  F_m(m);
+  }
+  Type F_minit = sumF/12;
+  // Type F_minit = F_m.sum()/F_m.size();
 
   // add seasonal pattern for initial equilibrium Z
   vector<Type> Mean_monthly_F(12);
