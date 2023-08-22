@@ -180,7 +180,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
                              Index_CV=0.3,
                              Data_types=NULL) {
 
-  data <- list()
+  data <- Make_Data()
   # Assumed life-history parameters
   data$Weight_Age_Mean <- Sampled_Data$Simulation$LifeHistory$Weight_Age_Mean
   data$Weight_Age_SD <- Sampled_Data$Simulation$LifeHistory$Weight_Age_SD
@@ -247,7 +247,7 @@ Import.Simulated <- function(Sampled_Data=NULL,
   data$use_Frwpen <- use_Frwpen
   data$use_R0rwpen <- use_R0rwpen
   data$use_HRpen <- 1
-  data$beta_shape <- c(1.01, 1.01)
+
 
   data$model <- 'SLAM'
 
