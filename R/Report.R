@@ -566,19 +566,27 @@ assumed_pars <- function(data) {
                                'use_F_pen',
                                'sigmaF_m',
                                'use_R0_pen',
-                               'sigmaR0'),
+                               'sigmaR0',
+                               'use_HRpen',
+                               'beta_shape'),
                    Value=c(data$Data$h,
                            exp(data$Parameters$log_sigmaR),
                            as.logical(data$Data$use_Frwpen),
                            exp(data$Parameters$log_sigmaF_m),
                            as.logical(data$Data$use_R0rwpen),
-                           exp(data$Parameters$log_sigmaR0)),
+                           exp(data$Parameters$log_sigmaR0),
+                           as.logical(data$Data$use_HRpen),
+                           paste(data$Data$beta_shape, collapse=', ')
+                           ),
+
                    Description=c('Assumed steepness of stock-recruit curve',
                                  'Standard deviation of log-normal recruitment deviations',
                                  'Use the penalty for random walk in F?',
                                  'Standard deviation for random walk penalty for F',
                                  'Use the penalty for random walk in seasonal recruitment?',
-                                 'Standard deviation for random walk penalty for seasonal recruitment')
+                                 'Standard deviation for random walk penalty for seasonal recruitment',
+                                 'Use the penalty for mean harvest rate?',
+                                 'shape parameters for beta distribution')
   )
   df
 }
