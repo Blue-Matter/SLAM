@@ -556,7 +556,7 @@ Type SLAM(objective_function<Type>* obj) {
   // penality for mean exploitation rate
   if (use_HRpen>0) {
     Type HR = 1-exp(-F_minit);
-    nll_joint(7) = dbeta(HR,beta_shape(0), beta_shape(1));
+    nll_joint(7) = dbeta(HR,beta_shape(0), beta_shape(1), false);
   }
 
   // ---- Total negative log-likelihood ----
