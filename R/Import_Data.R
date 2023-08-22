@@ -177,10 +177,10 @@ Import.Simulated <- function(Sampled_Data=NULL,
                              CAW_ESS=200,
                              Effort_CV=0.2,
                              Catch_CV=0.2,
-                             Index_CV=0.3,
+                             Index_CV=0.2,
                              Data_types=NULL) {
 
-  data <- Make_Data()
+  data <- Make_Data(TRUE)
   # Assumed life-history parameters
   data$Weight_Age_Mean <- Sampled_Data$Simulation$LifeHistory$Weight_Age_Mean
   data$Weight_Age_SD <- Sampled_Data$Simulation$LifeHistory$Weight_Age_SD

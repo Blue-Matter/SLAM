@@ -16,7 +16,7 @@ calc_F_RE <- function(sim, ll) {
                    OM=OM$F_mort,
                    Estimate=assess$rep$F_m)
 
-  df <- df %>% tail(n_months)
+  df <- df %>% tail(12)
   # data.frame(RE=(median(df$Estimate)-median(df$OM))/median(df$OM),
   #            n_months=ll$n_months, Data_types=ll$Data_types, Var='F')
   data.frame(RE=median((df$Estimate-df$OM)/df$OM),
@@ -43,7 +43,7 @@ calc_SB_SB0_RE <- function(sim, ll) {
                    OM=OM$SB_fished/OM$SB_unfished_eq,
                    Estimate=assess$rep$SB_m/assess$rep$SB0_m)
 
-  df <- df %>% tail(n_months)
+  df <- df %>% tail(12)
   data.frame(RE=median((df$Estimate-df$OM)/df$OM),
              n_months=ll$n_months, Data_types=ll$Data_types, Var='SB/SB0')
 }
@@ -66,7 +66,7 @@ calc_SPR_RE <- function(sim, ll) {
                    OM=OM$SPR,
                    Estimate=assess$rep$SPR)
 
-  df <- df %>% tail(n_months)
+  df <- df %>% tail(12)
   data.frame(RE=median((df$Estimate-df$OM)/df$OM),
              n_months=ll$n_months, Data_types=ll$Data_types, Var='SPR')
 

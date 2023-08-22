@@ -593,6 +593,7 @@ Type SLAM(objective_function<Type>* obj) {
   REPORT(predCB); // catch biomass
   REPORT(StEffort); // effort
   REPORT(stpredIndex); // Index of abundance
+  REPORT(stpredCatch); // index of catches
   REPORT(SPR); // SPR
   REPORT(F_m); // fishing mortality
   REPORT(predCAW); // catch-at-weight
