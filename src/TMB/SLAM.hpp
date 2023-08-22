@@ -43,9 +43,12 @@ Type SLAM(objective_function<Type>* obj) {
   DATA_INTEGER(Fit_Index);
   DATA_INTEGER(Fit_Catch);
   DATA_INTEGER(Fit_CAW);
+
   // DATA_INTEGER(Fit_CAA);
   DATA_INTEGER(use_Frwpen);
   DATA_INTEGER(use_R0rwpen);
+  DATA_INTEGER(use_HRpen);
+  DATA_VECTOR(beta_shape);
 
   // ---- Estimated Parameters ----
   PARAMETER(ls50);  // log age-at-50% selectivity
@@ -505,7 +508,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Joint likelihood ----
-  vector<Type> nll_joint(7);
+  vector<Type> nll_joint(8);
   nll_joint.setZero();
 
   // CAW
@@ -550,6 +553,11 @@ Type SLAM(objective_function<Type>* obj) {
     nll_joint(6) -= dnorm_(logR0_m(11), logR0_m(0), sigmaR0, true);
   }
 
+  // penality for mean exploitation rate
+  if (use_HRpen>0) {
+    Type HR = 1-exp(-F_minit);
+    nll_joint(7) = dbeta(HR,beta_shape(0), beta_shape(1));
+  }
 
   // ---- Total negative log-likelihood ----
   Type nll=0;
