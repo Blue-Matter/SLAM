@@ -32,14 +32,19 @@ Aggregate_Data <- function(village, Case_Study_Data, Case_Study_Sites) {
 #' @export
 Summarize_Data <- function(sites, Case_Study_Data, Case_Study_Sites) {
 
-  agg_villages <- strsplit(sites, ',')[[1]] %>% trimws
+  agg_villages <- strsplit(sites, ',')[[1]] %>% trimws()
 
   village_data <- Case_Study_Data %>% filter(Village %in% agg_villages)
 
   # ---- Format Dates ----
   village_data$Year <- village_data$year
-  village_data$Date <-  lubridate::date(village_data$Fishing.Date)
+  # village_data$Date <-  lubridate::dmy(village_data$Fishing.Date)
+
   village_data$Date2 <-  lubridate::my(paste(village_data$Month, village_data$Year, sep="-"))
+  nas <- which(is.na(  village_data$Date2 ))
+  village_data$Date2[nas] <- lubridate::dmy(village_data$Fishing.Date[nas])
+  village_data$Month[nas] <- lubridate::month(village_data$Date2[nas])
+
   village_data$Month_Name <- month.abb[village_data$Month]
 
   # ---- Catch-Weight Data ----
@@ -63,7 +68,7 @@ Summarize_Data <- function(sites, Case_Study_Data, Case_Study_Sites) {
   # Continuous Dates
   df$Year <- lubridate::year(df$Date)
   df$Month <- lubridate::month(df$Date)
-  Years <- range(df$Year)
+  Years <- range(df$Year, na.rm=TRUE)
   Years <- seq(Years[1], Years[2], by=1)
 
   Date_DF <- data.frame(Year=Years, Month=rep(1:12, each=length(Years))) %>%
@@ -71,8 +76,6 @@ Summarize_Data <- function(sites, Case_Study_Data, Case_Study_Sites) {
     mutate(Date=lubridate::my(paste(Month, Year, sep="-")))
 
   df <- left_join(Date_DF, df, by = join_by(Year, Month, Date))
-
-
 
   # ---- Effort -----
   village_data$Duration <- suppressWarnings(as.numeric(village_data$Fishing.Duration..hour.))
@@ -111,17 +114,24 @@ Summarize_Data <- function(sites, Case_Study_Data, Case_Study_Sites) {
 #' @return A list
 #' @export
 Process_Data <- function(Sites, Case_Study_Data,
+                         Use_Dates,
                          maxWeightBin=4, weight_bin=0.1) {
-
+ library(lubridate)
   agg_villages <- strsplit(Sites, ',')[[1]] %>% trimws
 
   village_data <- Case_Study_Data %>% filter(Village %in% agg_villages)
 
   # ---- Format Dates ----
   village_data$Year <- village_data$year
-  village_data$Date <-  lubridate::date(village_data$Fishing.Date)
+ # village_data$Date <-  lubridate::date(village_data$Fishing.Date)
   village_data$Date2 <-  lubridate::my(paste(village_data$Month, village_data$Year, sep="-"))
+  nas <- which(is.na(  village_data$Date2 ))
+  village_data$Date2[nas] <- lubridate::dmy(village_data$Fishing.Date[nas])
+  village_data$Month[nas] <- lubridate::month(village_data$Date2[nas])
+
   village_data$Month_Name <- month.abb[village_data$Month]
+  village_data <- village_data %>% filter(Date2 %within%  lubridate::interval(Use_Dates[1], Use_Dates[2]))
+
 
   # ---- Weight Composition Data -----
   weight_data <- village_data %>% select(Date2,
@@ -153,13 +163,17 @@ Process_Data <- function(Sites, Case_Study_Data,
 
   WeightData_Binned <- WeightData_Binned %>% filter(Date %in% keep$Date)
 
+
   # Continuous Dates
   Years <- range(WeightData_Binned$Year)
   Years <- seq(Years[1], Years[2], by=1)
 
   Date_DF <- data.frame(Year=Years, Month=rep(1:12, each=length(Years))) %>%
     arrange(Year) %>%
-    mutate(Date=lubridate::my(paste(Month, Year, sep="-")))
+    mutate(Date=lubridate::my(paste(Month, Year, sep="-"))) %>%
+    filter(Date %within%  lubridate::interval(Use_Dates[1], Use_Dates[2]))
+
+
 
   WeightData_Binned <- left_join(Date_DF, WeightData_Binned, by = join_by(Year, Month, Date))
   WeightData_Binned$Sites <- Sites
@@ -244,10 +258,12 @@ Process_Data <- function(Sites, Case_Study_Data,
 
   # ---- CPUE Data ----
   # Mean CPUE by Fisher and Month
+  village_data$Weight <- as.numeric(village_data$Octopus.individual.weight..kg.)
+
   CPUE_DF <- village_data %>% group_by(Date=Date2, Fisher) %>%
     filter(is.na(Duration)==FALSE,
-           is.na(Octopus.individual.weight..kg.)==FALSE) %>%
-    summarize(Catch=sum(Octopus.individual.weight..kg., na.rm=TRUE),
+           is.na(Weight)==FALSE) %>%
+    summarize(Catch=sum(Weight, na.rm=TRUE),
               Effort=sum(Duration, na.rm=TRUE)) %>%
     mutate(CPUE=Catch/Effort, lCPUE=log(CPUE)) %>%
     ungroup()
@@ -323,7 +339,7 @@ Make_Data_Objects <- function(i, data_list, Case_Study_Sites, Catch_SD=0.1, stee
                            'Octopus cyanea',
                            'Day octopus',
                            'A. Hordyk (adrian@bluematterscience.com',
-                           'June 2023')
+                           as.character(Sys.Date()))
 
   # Life History
   data$Ages <-LifeHistory$Ages
