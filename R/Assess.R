@@ -18,7 +18,7 @@ Initialize_Parameters <- function(data,
                                   as50=4, as95=6,
                                   F_ts=0.1,
                                   sigmaR=0.4,
-                                  sigmaF_m=0.4,
+                                  sigmaF_m=0.2,
                                   sigmaR0=0.3) {
 
   if (!inherits(data, 'Data'))
@@ -191,6 +191,7 @@ Assess <- function(Data, Parameters=NULL,
   if (is.null(Parameters)) {
     Parameters <- Initialize_Parameters(Data)
   }
+
 
   Check_Parameters(Parameters, Data)
 
