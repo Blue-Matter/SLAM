@@ -319,7 +319,7 @@ opt_TMB_model <- function(Data, Parameters, map, Random, control, restarts=10) {
     Recall(Data, Parameters,  map, Random, control, restarts-1)
   }
   if (!all(is.na(rep)))
-    names(rep$nll_joint) <- c('CAW', 'Effort', 'CPUE', 'Catch', 'RecDevs', 'RW_F', 'RW_R0')
+    names(rep$nll_joint) <- c('CAW', 'Effort', 'CPUE', 'Catch', 'RecDevs', 'RW_F', 'RW_R0', 'HR_pen')
   list(opt=opt, obj=obj, rep=rep, sdreport=sdreport, chk=chk)
 }
 

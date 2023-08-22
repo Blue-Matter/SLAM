@@ -246,6 +246,8 @@ Import.Simulated <- function(Sampled_Data=NULL,
   # Penalties
   data$use_Frwpen <- use_Frwpen
   data$use_R0rwpen <- use_R0rwpen
+  data$use_HRpen <- 1
+  data$beta_shape <- c(1.01, 1.01)
 
   data$model <- 'SLAM'
 

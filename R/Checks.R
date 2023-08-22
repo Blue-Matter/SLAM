@@ -40,6 +40,8 @@ Make_Data <- function(silent=FALSE) {
 
   data$use_Frwpen <- 1
   data$use_R0rwpen <- 1
+  data$use_HRpen <- 1
+  data$beta_shape <- c(1.01, 1.01)
   data$model <- 'SLAM'
   class(data) <- 'Data'
   data
