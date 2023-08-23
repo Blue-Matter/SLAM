@@ -508,7 +508,7 @@ Type SLAM(objective_function<Type>* obj) {
   }
 
   // ---- Joint likelihood ----
-  vector<Type> nll_joint(8);
+  vector<Type> nll_joint(7);
   nll_joint.setZero();
 
   // CAW
@@ -556,7 +556,7 @@ Type SLAM(objective_function<Type>* obj) {
   // penality for mean exploitation rate
   if (use_HRpen>0) {
     Type HR = 1-exp(-F_minit);
-    nll_joint(7) -= dbeta(HR,beta_shape(0), beta_shape(1), true);
+    nll_joint(0) = nll_joint(0) * 1/dbeta(HR,beta_shape(0), beta_shape(1), false);
   }
 
   // ---- Total negative log-likelihood ----
