@@ -25,6 +25,30 @@ calc_F_RE <- function(sim, ll) {
 }
 
 
+calc_SB_SB0_RE <- function(sim, ll) {
+  assess <- ll$assess[[sim]]
+  if(class(assess$opt) =='try-error')
+    return(NULL)
+
+  n_months <- ll$n_months
+  OM <- ll$Simulation$Time_Series %>%
+    filter(Sim==sim, Month_ind %in% assess$Data$Month_ind)
+  Year <- sort(assess$Data$Year)
+  Month <- assess$Data$Month
+  Year_Month <- paste(Year, Month, sep="_")
+
+  df <- data.frame(Year=Year,
+                   Month=Month,
+                   Year_Month=Year_Month,
+                   OM=OM$SB_fished/OM$SB_unfished_eq,
+                   Estimate=assess$rep$SB_m/assess$rep$SB0_m)
+
+  df <- df %>% tail(12)
+  data.frame(RE=median((df$Estimate-df$OM)/df$OM),
+             n_months=ll$n_months, Data_types=ll$Data_types, Var='SB/SB0')
+}
+
+
 calc_SPR_RE <- function(sim, ll) {
   assess <- ll$assess[[sim]]
   if(class(assess$opt) =='try-error')
@@ -42,7 +66,7 @@ calc_SPR_RE <- function(sim, ll) {
                    OM=OM$SPR,
                    Estimate=assess$rep$SPR)
 
-  # df <- df %>% tail(12)
+  df <- df %>% tail(12)
   data.frame(RE=median((df$Estimate-df$OM)/df$OM),
              n_months=ll$n_months, Data_types=ll$Data_types, Var='SPR')
 
