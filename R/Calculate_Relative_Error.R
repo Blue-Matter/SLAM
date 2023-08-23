@@ -16,7 +16,7 @@ calc_F_RE <- function(sim, ll) {
                    OM=OM$F_mort,
                    Estimate=assess$rep$F_m)
 
-  df <- df %>% tail(12)
+  #df <- df %>% tail(12)
   # data.frame(RE=(median(df$Estimate)-median(df$OM))/median(df$OM),
   #            n_months=ll$n_months, Data_types=ll$Data_types, Var='F')
   data.frame(RE=median((df$Estimate-df$OM)/df$OM),
