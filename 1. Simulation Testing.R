@@ -3,12 +3,12 @@
 library(SLAM)
 library(ggplot2)
 
+
 nsim <- 100
 
 # Simulate historical fishery ----
 Simulation <- Simulate(LifeHistory, Exploitation, nsim=nsim)
 Simulation_Pulse <- Simulate(LifeHistory_Pulse, Exploitation, nsim=nsim)
-
 
 # Recruitment Scenario Plot ----
 df1 <- data.frame(Month=month.abb, Rec=Simulation$LifeHistory$R0_m, Scenario='Constant')
@@ -23,7 +23,6 @@ ggplot(df, aes(x=Month, y=Rec, color=Scenario, group=Scenario)) +
   labs(y='Relative Recruitment')
 
 ggsave('img/Simulation_Testing/Recruitment_Scenarios.png', width=6, height=4)
-
 
 
 # Historical Effort Plot ----
@@ -150,13 +149,10 @@ for (i in seq_along(sim_results)) {
   SPR_RE <- lapply(1:nsim, calc_SPR_RE, ll=ll) %>% do.call('rbind', .)
   SPR_RE$Scenario <- Scenario
 
-  # SB_SB0_RE <- lapply(1:nsim, calc_SB_SB0_RE, ll=ll) %>% do.call('rbind', .)
-  # SB_SB0_RE$Scenario <- Scenario
+  #relF_RE <- lapply(1:nsim, calc_Fref_RE, ll=ll) %>% do.call('rbind', .)
+  #relF_RE$Scenario <- Scenario
 
-  relF_RE <- lapply(1:nsim, calc_Fref_RE, ll=ll) %>% do.call('rbind', .)
-  relF_RE$Scenario <- Scenario
-
-  results_list[[i]] <- bind_rows(F_RE, SPR_RE, relF_RE)
+  results_list[[i]] <- bind_rows(F_RE, SPR_RE) #, relF_RE)
 }
 
 results_df <- do.call('rbind', results_list)
@@ -170,5 +166,5 @@ ggplot(results_df, aes(x=n_months, y=RE, fill=Scenario)) +
   theme_bw() +
   labs(x='Number of Months', y='Relative Error')
 
-ggsave('img/Simulation_Testing/Relative_Error.png')
+ggsave('img/Simulation_Testing/Relative_Error.png',width=12, height=4)
 
