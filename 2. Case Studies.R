@@ -15,6 +15,7 @@ Case_Study_Sites <- read.csv(file.path(Data.Dir, 'Case_Study_Sites.csv'))
 Data_Villages <- Case_Study_Data$Village %>% unique() %>% sort()
 length(Data_Villages)
 
+
 # 1. Aggregate Village Data into Sites ----
 village_list <- list()
 for (i in 1:length(Data_Villages)) {
@@ -33,30 +34,75 @@ for (i in seq_along(Sites)) {
   sites <- Sites[i]
   summary_list[[i]] <- Summarize_Data(sites, Case_Study_Data, Case_Study_Sites)
 }
+
 summary_df <- do.call('rbind', summary_list)
 
+summary_df$Site %>% unique()
 summary_df$Site %>% unique() %>% length()
 
 villages <- summary_df$Site %>% strsplit(., ',') %>% unlist() %>% trimws() %>% unique()
 length(villages)
 Data_Villages[!Data_Villages %in% villages]
 
+# 3. Filter for less than 2 months of sequential missing CAW data ----
+subset_df <- function(df, ...) {
 
-# 3. Filter for at 12 months of CAW data ----
-summary_df2 <- summary_df %>% filter(n_months>=12)
+  if (nrow(df)<12) return(NULL)
 
-summary_df$Site[!summary_df$Site %in% summary_df2$Site] %>% unique()
+  # dummy value for NA
+  for (i in 2:(nrow(df)-1)) {
+    if (is.na(df$n_CAW[i]) & !is.na(df$n_CAW[i+1]) & !is.na(df$n_CAW[i-1]))
+              df$n_CAW[i] <- Inf
 
+  }
+
+  # filter to longest continuous data set
+  group <- 1
+  df$group <- group
+  df$run <- 1
+  df$keep <- TRUE
+  for (i in 2:nrow(df)) {
+    if (!is.na(df$n_CAW[i]) & !is.na(df$n_CAW[i-1])) {
+      df$run[i] <- df$run[i-1] + 1
+      df$group[i] <- group
+      df$keep[i] <- TRUE
+    } else {
+      df$run[i] <- 0
+      group <- group+1
+      df$group[i] <- group
+      df$keep[i] <- FALSE
+    }
+  }
+  tt <- df %>% group_by(group, keep) %>% summarize(rr=max(run))
+  top <- tt %>% ungroup() %>% filter(keep==TRUE, rr==max(rr))
+  df <- df %>% filter(group==top$group)
+
+  # replace dummy value with NA again
+  df$n_CAW[!is.finite(df$n_CAW)] <- NA
+  df$n_months <- nrow(df)
+  df$run <- df$group <- df$keep <- NULL
+  if (nrow(df)<12) return(NULL)
+  df
+}
+
+
+summary_df2 <- summary_df %>% group_by(Site) %>% group_map(., subset_df, .keep = TRUE) %>%
+  do.call('rbind', .)
+
+summary_df2$Site %>% unique()
 summary_df2$Site %>% unique() %>% length()
 
-# 4. Filter for less than 2 months of sequential missing CAW data ----
-summary_df3 <- summary_df2 %>% filter(max.missing.months<2)
 
-summary_df2$Site[!summary_df2$Site %in% summary_df3$Site] %>% unique()
+# 4. Filter for at 12 months of CAW data ----
+# already done above
+summary_df2 %>% filter(n_months<12) %>% reframe(unique(Site))
+
+summary_df3 <- summary_df2 %>% filter(n_months>=12)
 
 summary_df3$Site %>% unique() %>% length()
 
-summary_df3 %>% filter(max.missing.months>0) %>% distinct(Site)
+
+
 
 # 5. Summarize n months of data
 
@@ -107,6 +153,8 @@ ylim <- Sites_df$Latitude %>% range()
 xlim <- Sites_df$Longitude %>% range()
 world <- map_data('world')
 
+Sites_df$Village == 'Tetandara (Arubura)'
+
 map <- ggplot() +
   geom_polygon(data = world, aes(x=long, y = lat, group = group),
                fill = "lightgreen", color = "black") +
@@ -130,8 +178,13 @@ map
 data_list <- list()
 for (i in 1:length(table_df$Site)) {
   Sites <- table_df$Site[i]
-  data_list[[i]] <- Process_Data(Sites, Case_Study_Data)
+  Use_Dates <- table_df$Date[i]
+
+  Use_Dates <- lubridate::ymd(paste0(strsplit(Use_Dates, '--')[[1]], '-01'))
+
+  data_list[[i]] <- Process_Data(Sites, Case_Study_Data, Use_Dates)
 }
+
 
 
 # 4. Make Data Objects  ----
@@ -157,7 +210,18 @@ for (i in seq_along(data_files)) {
 
 for (i in seq_along(data_files)) {
   data <- readRDS(file.path(save.dir, data_files[i]))
-  DoAssess <- Assess(data)
+
+  Parameters <- Initialize_Parameters(data, sigmaF_m=0.3)
+
+  DoAssess <- Assess(data, Parameters = Parameters)
+
+  maxit <- 0
+  while(!all(DoAssess$chk) & maxit<10) {
+    maxit <- maxit+1
+    Parameters$ls50 <- log(exp(Parameters$ls50) * rlnorm(1, 0, 0.1))
+    DoAssess <- Assess(data, Parameters = Parameters)
+
+  }
 
   nm <- strsplit(data$Metadata$Value[1], ',') %>% unlist() %>% trimws() %>%
     paste(collapse = '_')
@@ -169,11 +233,102 @@ for (i in seq_along(data_files)) {
 
 # 6. Plot  Data  ----
 assess_files <- list.files('Results/Case_Studies/Assessments')
+assess_files <- assess_files[!assess_files=="Tetandara (Arubara).rdata"]
 
 assess_list <- list()
 for (i in seq_along(assess_files)) {
   assess_list[[i]] <- readRDS(file.path('Results/Case_Studies/Assessments', assess_files[i]))
 }
+
+## Plot F and SPR
+F_SPR_list <- list()
+for (i in seq_along(assess_list)) {
+  data <- assess_list[[i]]$Data
+  pred_FM <- assess_list[[i]]$rep$F_m
+  pred_SPR <- assess_list[[i]]$rep$SPR
+
+  F_SPR_list[[i]] <- data.frame(Site=data$Metadata$Value[1],
+                                Date=lubridate::my(paste(data$Month, data$Year, sep="-")),
+                                F=pred_FM,
+                                SPR=pred_SPR)
+
+}
+F_SPR_df <- do.call('rbind', F_SPR_list)
+
+p1 <- ggplot(F_SPR_df, aes(x=Date, y=F)) +
+  facet_wrap(~Site, ncol=4, scales='free_y') +
+  expand_limits(y=c(0,1)) +
+  geom_line() + theme_bw() +
+  labs(y='Fishing Mortality (F)') +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        strip.text=element_text(size=8))
+p1
+
+ggsave('img/Case_Studies/F.png', p1, width=10, height=6)
+
+
+p1 <- ggplot(F_SPR_df, aes(x=Date, y=SPR)) +
+  facet_wrap(~Site, ncol=4) +
+  expand_limits(y=c(0,1)) +
+  geom_line() + theme_bw() +
+  labs(y='Spawning Potential Ratio (SPR)') +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        strip.text=element_text(size=8))
+p1
+
+ggsave('img/Case_Studies/SPR.png', p1, width=10, height=6)
+
+
+
+## Plot Seasonal Recruitment
+R0_list <- list()
+
+for (i in seq_along(assess_list)) {
+  data <- assess_list[[i]]$Data
+  df <- get_seasonal_recruitment(assess_list[[i]])
+  df$Site <- data$Metadata$Value[1]
+
+  R0_list[[i]] <- df
+
+}
+R0_df <- do.call('rbind', R0_list)
+R0_df$Month_Name <- factor(R0_df$Month_Name, levels=month.abb, ordered = TRUE)
+R0_df$Month <- factor(R0_df$Month, levels=1:12, ordered = TRUE)
+
+p1 <- ggplot(R0_df, aes(x=Month_Name, y=Recruitment, group=1)) +
+  facet_wrap(~Site) +
+  geom_line() +
+  expand_limits(y=0) +
+  theme_bw() +
+  labs(x='Month', y='Relative Annual Recruitment') +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        strip.text = element_text(size=6))
+
+ggsave('img/Case_Studies/SeasonalR0.png', p1, width=8, height=5)
+
+## Plot Selectivity
+select_list <- list()
+for (i in seq_along(assess_list)) {
+  data <- assess_list[[i]]$Data
+  df <- data.frame(Age=0:14, Selectivity=assess_list[[i]]$rep$selA)
+  df$Site <- data$Metadata$Value[1]
+  select_list[[i]] <- df
+}
+select_df <- do.call('rbind', select_list)
+
+p1 <- ggplot(select_df, aes(x=Age, y=Selectivity)) +
+  facet_wrap(~Site) +
+  geom_line() +
+  expand_limits(y=0) +
+  theme_bw() +
+  labs(x='Age', y='Selectivity') +
+  theme(strip.text = element_text(size=6))
+
+
+ggsave('img/Case_Studies/Select.png', p1, width=8, height=5)
+
+
+
 
 ## Plot CAW Data
 for (i in seq_along(assess_list)) {
@@ -212,11 +367,55 @@ for (i in seq_along(assess_list)) {
   n_year <- df$Year %>% unique() %>% length()
 
   nm <- paste0('img/Case_Studies/CAW/', i, '.png')
-  height <- 12
+  height <- 11
   width <- n_year * 3
   ggsave(nm, p, width=width, height=height)
 
 }
+
+
+# Make plot of overall weight comps
+plist <- list()
+for (i in seq_along(assess_list)) {
+  data <- assess_list[[i]]$Data
+
+  nbin <- length(data$Weight_Mids)
+  df <- data.frame(Year=rep(data$Year, each=nbin),
+                   Month=rep(data$Month, each=nbin),
+                   Bin=data$Weight_Mids)
+
+  df$interpolated <- data$iterpolated$interpolated
+
+  df2 <- data.frame(Year=data$Year,
+                    Month=data$Month,
+                    Nsamp=round(data$CAW_nsamp,0))
+
+  df$Weight <- as.vector(t(data$CAW))
+  df$Fit <-  as.vector(assess_list[[i]]$rep$predCAW)
+
+  df <- left_join(df, df2,by = join_by(Year, Month))
+
+  ninter <- sum(df$interpolated)
+  df$interpolated <- factor(df$interpolated, levels=c(FALSE, TRUE), ordered = TRUE)
+
+  df <- df %>% group_by(Bin) %>% summarise(Weight=sum(Weight))
+  df$Site <- data$Metadata$Value[1]
+  df$Weight <- df$Weight/sum(df$Weight)
+  plist[[i]] <- df
+}
+pdf <- do.call('rbind', plist)
+
+p <- ggplot(pdf) +
+  facet_wrap(~Site) +
+  geom_bar(aes(x=Bin, y=Weight), stat='identity') +
+    theme_bw() +
+    labs(x='Weight Bin (kg)', y='Count') +
+    guides(fill='none') +
+  theme(strip.text = element_text(size=8))
+p
+ggsave('img/Case_Studies/CAW_overall.png', p, width=10, height=6)
+
+
 
 ## Plot Fit to Relative Catch
 catch_list <- list()
@@ -233,14 +432,15 @@ for (i in seq_along(assess_list)) {
 catch_df <- do.call('rbind', catch_list) %>%
   tidyr::pivot_longer(., cols=3:4)
 
-
+catch_df <- catch_df %>% filter(is.finite(value)==TRUE)
 p1 <- ggplot(catch_df, aes(x=Date, y=value, color=name)) +
-  facet_wrap(~Site) +
+  facet_wrap(~Site, ncol=4) +
   expand_limits(y=0) +
   geom_line() + theme_bw() +
-  labs(color='Legend', x='Date', y='Relative Catch')
+  labs(color='Legend', x='Date', y='Relative Catch') +
+  theme(strip.text=element_text(size=6))
 
-ggsave('img/Case_Studies/Catch.png', p1, width=12, height=5)
+ggsave('img/Case_Studies/Catch.png', p1, width=12, height=7)
 
 
 ## Plot Fit to Index
@@ -258,7 +458,7 @@ for (i in seq_along(assess_list)) {
 index_df <- do.call('rbind', index_list) %>%
   tidyr::pivot_longer(., cols=3:4)
 
-
+index_df <- index_df %>% filter(is.finite(value)==TRUE)
 p1 <- ggplot(index_df, aes(x=Date, y=value, color=name)) +
   facet_wrap(~Site) +
   expand_limits(y=0) +
@@ -266,94 +466,6 @@ p1 <- ggplot(index_df, aes(x=Date, y=value, color=name)) +
   labs(color='Legend', x='Date', y='Index of Abundance')
 
 ggsave('img/Case_Studies/Index.png', p1, width=12, height=5)
-
-
-## Plot F and SPR
-F_SPR_list <- list()
-for (i in seq_along(assess_list)) {
-  data <- assess_list[[i]]$Data
-  pred_FM <- assess_list[[i]]$rep$F_m
-  pred_SPR <- assess_list[[i]]$rep$SPR
-
-  F_SPR_list[[i]] <- data.frame(Site=data$Metadata$Value[1],
-                                Date=lubridate::my(paste(data$Month, data$Year, sep="-")),
-                                F=pred_FM,
-                                SPR=pred_SPR)
-
-}
-F_SPR_df <- do.call('rbind', F_SPR_list)
-
-p1 <- ggplot(F_SPR_df, aes(x=Date, y=F)) +
-  facet_wrap(~Site, ncol=4) +
-  expand_limits(y=c(0,1)) +
-  geom_line() + theme_bw() +
-  labs(y='Fishing Mortality (F)') +
-  theme(axis.text.x=element_text(angle=90, vjust=0.5),
-        strip.text=element_text(size=8))
-p1
-
-ggsave('img/Case_Studies/F.png', p1, width=10, height=4)
-
-
-p1 <- ggplot(F_SPR_df, aes(x=Date, y=SPR)) +
-  facet_wrap(~Site, ncol=4) +
-  expand_limits(y=c(0,1)) +
-  geom_line() + theme_bw() +
-  labs(y='Spawning Potential Ratio (SPR)') +
-  theme(axis.text.x=element_text(angle=90, vjust=0.5),
-        strip.text=element_text(size=8))
-p1
-
-ggsave('img/Case_Studies/SPR.png', p1, width=10, height=4)
-
-
-## Plot Seasonal Recruitment
-R0_list <- list()
-
-
-
-for (i in seq_along(assess_list)) {
-  data <- assess_list[[i]]$Data
-  df <- get_seasonal_recruitment(assess_list[[i]])
-  df$Site <- data$Metadata$Value[1]
-
-  R0_list[[i]] <- df
-
-}
-R0_df <- do.call('rbind', R0_list)
-R0_df$Month_Name <- factor(R0_df$Month_Name, levels=month.abb, ordered = TRUE)
-R0_df$Month <- factor(R0_df$Month, levels=1:12, ordered = TRUE)
-
-p1 <- ggplot(R0_df, aes(x=Month_Name, y=Recruitment, group=1)) +
-  facet_wrap(~Site) +
-  geom_line() +
-  expand_limits(y=0) +
-  theme_bw() +
-  labs(x='Month', y='Relative Annual Recruitment') +
-  theme(axis.text.x=element_text(angle=90, vjust=0.5))
-
-ggsave('img/Case_Studies/SeasonalR0.png', p1, width=8, height=5)
-
-## Plot Selectivity
-select_list <- list()
-for (i in seq_along(assess_list)) {
-  data <- assess_list[[i]]$Data
-  df <- data.frame(Age=0:14, Selectivity=assess_list[[i]]$rep$selA)
-  df$Site <- data$Metadata$Value[1]
-  select_list[[i]] <- df
-}
-select_df <- do.call('rbind', select_list)
-
-p1 <- ggplot(select_df, aes(x=Age, y=Selectivity)) +
-  facet_wrap(~Site) +
-  geom_line() +
-  expand_limits(y=0) +
-  theme_bw() +
-  labs(x='Age', y='Selectivity')
-
-ggsave('img/Case_Studies/Select.png', p1, width=8, height=5)
-
-
 
 
 
@@ -400,7 +512,7 @@ ref_df <- do.call('rbind', ref_list)
 ref_df$Month_Name <- factor(ref_df$Month_Name, levels=month.abb, ordered = TRUE)
 ref_df$Month <- factor(ref_df$Month, levels=1:12, ordered = TRUE)
 
-p1 <- ggplot(ref_df, aes(x=Month_Name, y=Value, color=Name, group=Name)) +
+p1 <- ggplot(ref_df , aes(x=Month_Name, y=Value, color=Name, group=Name)) +
   facet_grid(Variable~Site) +
   geom_line() +
   expand_limits(y=0) +
@@ -409,8 +521,28 @@ p1 <- ggplot(ref_df, aes(x=Month_Name, y=Value, color=Name, group=Name)) +
   theme(axis.text.x=element_text(angle=90, vjust=0.5),
         strip.text = element_text(size=8))
 
-ggsave('img/Case_Studies/Refs.png', p1, width=10, height=4)
+p1 <- ggplot(ref_df %>% filter(Variable=='F') , aes(x=Month_Name, y=Value, color=Name, group=Name)) +
+  facet_wrap(~Site) +
+  geom_line() +
+  expand_limits(y=0) +
+  theme_bw() +
+  labs(x='Month', y='Fishing Mortality', color='Legend') +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        strip.text = element_text(size=6))
 
+ggsave('img/Case_Studies/F_Refs.png', p1, width=10, height=8)
+
+
+p1 <- ggplot(ref_df %>% filter(Variable=='SPR') , aes(x=Month_Name, y=Value, color=Name, group=Name)) +
+  facet_wrap(~Site) +
+  geom_line() +
+  expand_limits(y=0) +
+  theme_bw() +
+  labs(x='Month', y='Spawning Potential Ratio', color='Legend') +
+  theme(axis.text.x=element_text(angle=90, vjust=0.5),
+        strip.text = element_text(size=6))
+
+ggsave('img/Case_Studies/SPR_Refs.png', p1, width=10, height=8)
 
 
 
